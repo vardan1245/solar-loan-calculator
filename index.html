@@ -107,8 +107,7 @@
                         <option value="totalAmountDesc" data-en="Total Amount (High to Low)" data-hy="Ընդհանուր գումար (բարձրից ցածր)">Total Amount (High to Low)</option>
                         <option value="interestRate" data-en="Interest Rate (Low to High)" data-hy="Տոկոսադրույք (ցածրից բարձր)">Interest Rate (Low to High)</option>
                         <option value="interestRateDesc" data-en="Interest Rate (High to Low)" data-hy="Տոկոսադրույք (բարձրից ցածր)">Interest Rate (High to Low)</option>
-                        <option value="commission" data-en="Commission (Low to High)" data-hy="Հանձնաժողով (ցածրից բարձր)">Commission (Low to High)</option>
-                        <option value="commissionDesc" data-en="Commission (High to Low)" data-hy="Հանձնաժողով (բարձրից ցածր)">Commission (High to Low)</option>
+
                         <option value="loanPeriod" data-en="Loan Period (Low to High)" data-hy="Վարկի ժամկետ (ցածրից բարձր)">Loan Period (Low to High)</option>
                         <option value="loanPeriodDesc" data-en="Loan Period (High to Low)" data-hy="Վարկի ժամկետ (բարձրից ցածր)">Loan Period (High to Low)</option>
                     </select>
@@ -133,9 +132,7 @@
                             <th class="border p-3 text-center font-medium w-24 cursor-pointer hover:bg-gray-100" onclick="sortTable('interestRate')">
                                 <span data-en="Interest Rate" data-hy="Տոկոսադրույք">Interest Rate</span> <span id="rateSortIcon" class="ml-1">↕</span>
                             </th>
-                            <th class="border p-3 text-center font-medium w-28 cursor-pointer hover:bg-gray-100" onclick="sortTable('commission')">
-                                <span data-en="Commission" data-hy="Հանձնաժողով">Commission</span> <span id="commissionSortIcon" class="ml-1">↕</span>
-                            </th>
+
                             <th class="border p-3 text-center font-medium w-40 cursor-pointer hover:bg-gray-100" onclick="sortTable('loanAmount')">
                                 <span data-en="Loan Amount" data-hy="Վարկի գումար">Loan Amount</span> <span id="amountSortIcon" class="ml-1">↕</span>
                             </th>
@@ -472,7 +469,7 @@
 
         function updateSortIcons(field, direction) {
             // Reset all icons
-            const icons = ['bankSortIcon', 'periodSortIcon', 'rateSortIcon', 'commissionSortIcon', 
+            const icons = ['bankSortIcon', 'periodSortIcon', 'rateSortIcon', 
                           'amountSortIcon', 'paymentSortIcon', 'interestSortIcon', 'totalSortIcon'];
             icons.forEach(id => {
                 document.getElementById(id).textContent = '↕';
@@ -483,7 +480,6 @@
                 'bankName': 'bankSortIcon',
                 'loanPeriod': 'periodSortIcon',
                 'interestRate': 'rateSortIcon',
-                'commission': 'commissionSortIcon',
                 'loanAmount': 'amountSortIcon',
                 'monthlyPayment': 'paymentSortIcon',
                 'totalInterest': 'interestSortIcon',
@@ -539,7 +535,6 @@
                     <td class="border p-3 font-medium">${option.bankName}</td>
                     <td class="border p-3 text-center w-32">${option.loanPeriod} months</td>
                     <td class="border p-3 text-center w-24">${(option.interestRate * 100).toFixed(1)}%</td>
-                    <td class="border p-3 text-center w-28">${(option.commission * 100).toFixed(2)}%</td>
                     <td class="border p-3 text-center font-semibold text-green-600 w-40">${option.loanAmount.toLocaleString()}</td>
                     <td class="border p-3 text-center font-semibold text-blue-600 w-36">${option.monthlyPayment.toLocaleString()}</td>
                     <td class="border p-3 text-center font-semibold text-red-600 w-40">${Math.abs(option.totalInterest).toLocaleString()}</td>
