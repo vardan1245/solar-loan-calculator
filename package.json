@@ -6,7 +6,7 @@
   "scripts": {
     "start": "live-server --port=3000",
     "dev": "live-server --port=3000",
-    "build": "echo 'No build step required for static HTML'",
+    "build": "cp index.html public/ && cp tIAMAT\\ white\\ blue-06.ico public/",
     "deploy": "echo 'Deploy to your preferred hosting service'"
   },
   "keywords": [
