@@ -48,36 +48,6 @@
                         </select>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Cost per kW (AMD)</label>
-                        <input type="number" id="costPerKw" placeholder="Enter cost per kW" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-solar-yellow">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Profit per kW (AMD)</label>
-                        <input type="number" id="profitPerKw" placeholder="Enter profit per kW" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-solar-yellow">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Sales Team (%)</label>
-                        <input type="number" id="salesTeamPct" placeholder="Enter sales team percentage" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-solar-yellow">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Unanticipated Expenses (%)</label>
-                        <input type="number" id="unanticipatedExpensesPct" placeholder="Enter unanticipated expenses percentage" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-solar-yellow">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Down Payment (AMD)</label>
-                        <input type="number" id="downPayment" placeholder="Enter down payment amount" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-solar-yellow">
-                    </div>
-
                     <button onclick="calculateLoan()" 
                             class="w-full bg-solar-yellow hover:bg-yellow-400 text-gray-900 font-semibold py-2 px-4 rounded-md transition-colors">
                         Calculate Loan Options
@@ -165,15 +135,36 @@
         function calculateLoan() {
             // Get input values
             const systemPower = parseFloat(document.getElementById('systemPower').value);
-            const costPerKw = parseFloat(document.getElementById('costPerKw').value);
-            const profitPerKw = parseFloat(document.getElementById('profitPerKw').value);
-            const salesTeamPct = parseFloat(document.getElementById('salesTeamPct').value) / 100;
-            const unanticipatedExpensesPct = parseFloat(document.getElementById('unanticipatedExpensesPct').value) / 100;
-            const downPaymentAmount = parseFloat(document.getElementById('downPayment').value);
+            const installationType = document.getElementById('installationType').value;
 
-            if (!systemPower || !costPerKw || !profitPerKw || !downPaymentAmount) {
-                alert('Please fill in all required fields');
+            if (!systemPower) {
+                alert('Please enter system power');
                 return;
+            }
+
+            // Fixed values
+            const profitPerKw = 30000;
+            const salesTeamPct = 0.06; // 6%
+            const unanticipatedExpensesPct = 0.02; // 2%
+            const downPaymentAmount = 0;
+
+            // Get cost per kW based on installation type
+            let costPerKw;
+            switch(installationType) {
+                case 'onRoof':
+                    costPerKw = 147000;
+                    break;
+                case 'metalConstructionOnRoof':
+                    costPerKw = 155000;
+                    break;
+                case 'systemOnGround':
+                    costPerKw = 160000;
+                    break;
+                case 'aluminiumConstructionOnRoof':
+                    costPerKw = 175000;
+                    break;
+                default:
+                    costPerKw = 147000;
             }
 
             // Calculate base value
@@ -257,11 +248,6 @@
         // Set default values
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('systemPower').value = '10.44';
-            document.getElementById('costPerKw').value = '147000';
-            document.getElementById('profitPerKw').value = '30000';
-            document.getElementById('salesTeamPct').value = '6';
-            document.getElementById('unanticipatedExpensesPct').value = '2';
-            document.getElementById('downPayment').value = '500000';
         });
     </script>
 </body>

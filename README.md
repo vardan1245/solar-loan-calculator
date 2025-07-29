@@ -1,103 +1,38 @@
-# Solar Loan Calculator with Database Integration
+# Solar Loan Calculator
 
-A standalone web application for calculating and comparing solar system loan options from different banks in Armenia, with full database integration for persistent settings.
+A standalone web application for calculating and comparing solar system loan options from different banks in Armenia.
 
 ## Features
 
-- **Database Integration**: Settings are stored and retrieved from Supabase database
 - **System Configuration**: Input system power, cost, profit, and percentage settings
 - **Real-time Calculations**: Instant calculation of loan options
 - **Bank Comparison**: Compare loan terms from multiple banks
 - **Detailed Breakdown**: View loan amount, monthly payments, total interest, and total amount
 - **Responsive Design**: Works on desktop and mobile devices
-- **Persistent Settings**: All configuration values are saved to database
 
 ## Live Demo
 
-[View the live calculator](https://vardan1245.github.io/solar-loan-calculator)
+[View the live calculator](https://your-username.github.io/solar-loan-calculator)
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/vardan1245/solar-loan-calculator.git
+git clone https://github.com/your-username/solar-loan-calculator.git
 cd solar-loan-calculator
 ```
 
-2. Install dependencies:
+2. Install dependencies (optional, for development):
 ```bash
 npm install
 ```
 
-3. Set up environment variables:
+3. Start the development server:
 ```bash
-# Create .env file
-echo "SUPABASE_URL=https://ylmcwkabyqvgdrbnunri.supabase.co" > .env
-echo "SUPABASE_ANON_KEY=your-supabase-anon-key" >> .env
+npm start
 ```
 
-4. Start the development server:
-```bash
-npm run dev
-```
-
-5. Open your browser and navigate to `http://localhost:3000`
-
-## Database Setup
-
-This application requires a Supabase database with the following setup:
-
-### Required Tables
-
-1. **system_cost_settings** table:
-```sql
-CREATE TABLE system_cost_settings (
-    setting_key VARCHAR(50) PRIMARY KEY,
-    setting_value NUMERIC NOT NULL,
-    description TEXT
-);
-```
-
-2. **Required Database Function**:
-```sql
-CREATE OR REPLACE FUNCTION get_system_cost_settings()
-RETURNS TABLE (
-    setting_key text,
-    setting_value numeric,
-    description text
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-BEGIN
-    RETURN QUERY
-    SELECT 
-        s.setting_key::text,
-        s.setting_value,
-        COALESCE(s.description, '')::text
-    FROM system_cost_settings s
-    WHERE s.setting_key IN (
-        'on_roof_cost_per_kw',
-        'metal_construction_on_roof_cost_per_kw',
-        'aluminium_construction_on_roof_cost_per_kw',
-        'system_on_ground_cost_per_kw',
-        'on_roof_profit_per_kw',
-        'metal_construction_on_roof_profit_per_kw',
-        'aluminium_construction_on_roof_profit_per_kw',
-        'system_on_ground_profit_per_kw',
-        'on_roof_sales_pct',
-        'metal_roof_sales_pct',
-        'aluminium_roof_sales_pct',
-        'ground_system_sales_pct',
-        'on_roof_unexp_pct',
-        'metal_roof_unexp_pct',
-        'aluminium_roof_unexp_pct',
-        'ground_unexp_pct'
-    )
-    ORDER BY s.setting_key;
-END;
-$$;
-```
+4. Open your browser and navigate to `http://localhost:3000`
 
 ## Usage
 
@@ -110,13 +45,6 @@ $$;
 - **Sales Team (%)**: Sales team commission percentage
 - **Unanticipated Expenses (%)**: Buffer for unexpected costs
 - **Down Payment (AMD)**: Initial payment amount
-
-### Database Integration
-
-The application automatically:
-- **Loads settings** from the database when you change installation type
-- **Saves settings** to the database when you calculate loan options
-- **Persists values** between sessions and users
 
 ### Calculation Formula
 
@@ -151,47 +79,20 @@ The calculator provides:
 - 4% commission
 - 96-month loan period
 
-## API Endpoints
-
-### GET /api/system-settings
-Returns all system cost settings from the database.
-
-### POST /api/update-setting
-Updates a specific setting in the database.
-Body: `{ "settingKey": "string", "settingValue": number }`
-
 ## Deployment
 
-### Local Development
-```bash
-npm run dev
-```
+### GitHub Pages
 
-### Production Deployment
+1. Push your code to GitHub
+2. Go to repository Settings > Pages
+3. Select source branch (usually `main`)
+4. Your site will be available at `https://your-username.github.io/solar-loan-calculator`
 
-1. **Heroku**:
-   ```bash
-   heroku create your-app-name
-   heroku config:set SUPABASE_URL=your-supabase-url
-   heroku config:set SUPABASE_ANON_KEY=your-supabase-key
-   git push heroku main
-   ```
+### Other Hosting Services
 
-2. **Railway**:
-   - Connect your GitHub repository
-   - Set environment variables
-   - Deploy automatically
-
-3. **Vercel**:
-   - Connect your GitHub repository
-   - Set environment variables
-   - Deploy automatically
-
-### Environment Variables
-
-- `SUPABASE_URL`: Your Supabase project URL
-- `SUPABASE_ANON_KEY`: Your Supabase anonymous key
-- `PORT`: Server port (default: 3000)
+- **Netlify**: Drag and drop the `index.html` file
+- **Vercel**: Connect your GitHub repository
+- **Any static hosting**: Upload the files to your web server
 
 ## Development
 
@@ -199,26 +100,23 @@ npm run dev
 
 ```
 solar-loan-calculator/
-├── server.js              # Express server with API endpoints
-├── public/
-│   └── index.html         # Main application file
-├── package.json           # Project configuration
-├── README.md             # This file
-├── .gitignore            # Git ignore rules
-└── LICENSE               # MIT License
+├── index.html          # Main application file
+├── package.json        # Project configuration
+├── README.md          # This file
+├── .gitignore         # Git ignore rules
+└── LICENSE            # MIT License
 ```
 
 ### Technologies Used
 
-- **Backend**: Node.js, Express.js
-- **Database**: Supabase (PostgreSQL)
-- **Frontend**: HTML5, CSS3, JavaScript
-- **Styling**: Tailwind CSS
-- **API**: RESTful endpoints
+- **HTML5**: Semantic markup
+- **CSS3**: Styling with Tailwind CSS
+- **JavaScript**: Vanilla JS for calculations
+- **Tailwind CSS**: Utility-first CSS framework
 
 ### Customization
 
-To add new banks or modify existing ones, edit the `bankConfigurations` array in `public/index.html`:
+To add new banks or modify existing ones, edit the `bankConfigurations` array in `index.html`:
 
 ```javascript
 const bankConfigurations = [
@@ -248,12 +146,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For support, email support@tiamatsolar.com or create an issue in this repository.
 
 ## Changelog
-
-### Version 1.1.0
-- Added database integration with Supabase
-- Settings are now persisted between sessions
-- Added API endpoints for CRUD operations
-- Improved error handling and validation
 
 ### Version 1.0.0
 - Initial release
