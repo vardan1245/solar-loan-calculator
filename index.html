@@ -71,23 +71,82 @@
         <div id="loanTable" class="bg-white rounded-lg shadow-md p-6 hidden">
             <h2 class="text-xl font-semibold mb-4">Available Loan Options</h2>
             
+            <!-- Filters and Sorting -->
+            <div class="mb-4 flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">Filter by Bank:</label>
+                    <select id="bankFilter" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-solar-yellow">
+                        <option value="">All Banks</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">Filter by Period:</label>
+                    <select id="periodFilter" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-solar-yellow">
+                        <option value="">All Periods</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">Sort by:</label>
+                    <select id="sortBy" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-solar-yellow">
+                        <option value="monthlyPayment">Monthly Payment (Low to High)</option>
+                        <option value="monthlyPaymentDesc">Monthly Payment (High to Low)</option>
+                        <option value="loanAmount">Loan Amount (Low to High)</option>
+                        <option value="loanAmountDesc">Loan Amount (High to Low)</option>
+                        <option value="totalAmount">Total Amount (Low to High)</option>
+                        <option value="totalAmountDesc">Total Amount (High to Low)</option>
+                        <option value="interestRate">Interest Rate (Low to High)</option>
+                        <option value="interestRateDesc">Interest Rate (High to Low)</option>
+                        <option value="commission">Commission (Low to High)</option>
+                        <option value="commissionDesc">Commission (High to Low)</option>
+                        <option value="loanPeriod">Loan Period (Low to High)</option>
+                        <option value="loanPeriodDesc">Loan Period (High to Low)</option>
+                    </select>
+                </div>
+                
+                <button onclick="clearFilters()" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md text-sm transition-colors">
+                    Clear Filters
+                </button>
+            </div>
+            
             <div class="overflow-x-auto">
                 <table class="w-full border-collapse border border-gray-300">
                     <thead>
                         <tr class="bg-gray-50">
-                            <th class="border p-3 text-left font-medium">Bank</th>
-                            <th class="border p-3 text-center font-medium w-32">Loan Period</th>
-                            <th class="border p-3 text-center font-medium w-24">Interest Rate</th>
-                            <th class="border p-3 text-center font-medium w-28">Commission</th>
-                            <th class="border p-3 text-center font-medium w-40">Loan Amount</th>
-                            <th class="border p-3 text-center font-medium w-36">Monthly Payment</th>
-                            <th class="border p-3 text-center font-medium w-40">Total Interest</th>
-                            <th class="border p-3 text-center font-medium w-44">Total Amount</th>
+                            <th class="border p-3 text-left font-medium cursor-pointer hover:bg-gray-100" onclick="sortTable('bankName')">
+                                Bank <span id="bankSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th class="border p-3 text-center font-medium w-32 cursor-pointer hover:bg-gray-100" onclick="sortTable('loanPeriod')">
+                                Loan Period <span id="periodSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th class="border p-3 text-center font-medium w-24 cursor-pointer hover:bg-gray-100" onclick="sortTable('interestRate')">
+                                Interest Rate <span id="rateSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th class="border p-3 text-center font-medium w-28 cursor-pointer hover:bg-gray-100" onclick="sortTable('commission')">
+                                Commission <span id="commissionSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th class="border p-3 text-center font-medium w-40 cursor-pointer hover:bg-gray-100" onclick="sortTable('loanAmount')">
+                                Loan Amount <span id="amountSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th class="border p-3 text-center font-medium w-36 cursor-pointer hover:bg-gray-100" onclick="sortTable('monthlyPayment')">
+                                Monthly Payment <span id="paymentSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th class="border p-3 text-center font-medium w-40 cursor-pointer hover:bg-gray-100" onclick="sortTable('totalInterest')">
+                                Total Interest <span id="interestSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th class="border p-3 text-center font-medium w-44 cursor-pointer hover:bg-gray-100" onclick="sortTable('totalAmount')">
+                                Total Amount <span id="totalSortIcon" class="ml-1">↕</span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody id="loanTableBody">
                     </tbody>
                 </table>
+            </div>
+            
+            <div class="mt-4 text-sm text-gray-600">
+                <span id="resultCount">Showing all results</span>
             </div>
         </div>
     </div>
@@ -219,14 +278,209 @@
                 });
             });
 
-            // Sort by monthly payment
-            loanOptions.sort((a, b) => a.monthlyPayment - b.monthlyPayment);
+            // Store all options globally and sort by monthly payment
+            allLoanOptions = loanOptions.sort((a, b) => a.monthlyPayment - b.monthlyPayment);
+            
+            // Populate filter dropdowns
+            populateFilters();
+            
+            // Display all options initially
+            displayLoanOptions(allLoanOptions);
+            updateResultCount(allLoanOptions.length);
+            
+            // Set initial sort state
+            currentSortField = 'monthlyPayment';
+            currentSortDirection = 'asc';
+            updateSortIcons('monthlyPayment', 'asc');
 
-            // Display loan table
+            document.getElementById('loanTable').classList.remove('hidden');
+        }
+
+        // Global variables for filtering and sorting
+        let allLoanOptions = [];
+        let currentSortField = '';
+        let currentSortDirection = 'asc';
+
+        // Set default values
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('systemPower').value = '10.44';
+            
+            // Add event listeners for filters
+            document.getElementById('bankFilter').addEventListener('change', applyFilters);
+            document.getElementById('periodFilter').addEventListener('change', applyFilters);
+            document.getElementById('sortBy').addEventListener('change', applySorting);
+        });
+
+        function populateFilters() {
+            const bankFilter = document.getElementById('bankFilter');
+            const periodFilter = document.getElementById('periodFilter');
+            
+            // Get unique banks and periods
+            const banks = [...new Set(allLoanOptions.map(option => option.bankName))];
+            const periods = [...new Set(allLoanOptions.map(option => option.loanPeriod))].sort((a, b) => a - b);
+            
+            // Clear existing options (except first)
+            bankFilter.innerHTML = '<option value="">All Banks</option>';
+            periodFilter.innerHTML = '<option value="">All Periods</option>';
+            
+            // Add bank options
+            banks.forEach(bank => {
+                const option = document.createElement('option');
+                option.value = bank;
+                option.textContent = bank;
+                bankFilter.appendChild(option);
+            });
+            
+            // Add period options
+            periods.forEach(period => {
+                const option = document.createElement('option');
+                option.value = period;
+                option.textContent = `${period} months`;
+                periodFilter.appendChild(option);
+            });
+        }
+
+        function applyFilters() {
+            const bankFilter = document.getElementById('bankFilter').value;
+            const periodFilter = document.getElementById('periodFilter').value;
+            
+            let filteredOptions = allLoanOptions.filter(option => {
+                const bankMatch = !bankFilter || option.bankName === bankFilter;
+                const periodMatch = !periodFilter || option.loanPeriod === parseInt(periodFilter);
+                return bankMatch && periodMatch;
+            });
+            
+            // Apply current sorting
+            if (currentSortField) {
+                filteredOptions = sortOptions(filteredOptions, currentSortField, currentSortDirection);
+            }
+            
+            displayLoanOptions(filteredOptions);
+            updateResultCount(filteredOptions.length);
+        }
+
+        function applySorting() {
+            const sortBy = document.getElementById('sortBy').value;
+            if (!sortBy) return;
+            
+            const [field, direction] = sortBy.includes('Desc') 
+                ? [sortBy.replace('Desc', ''), 'desc'] 
+                : [sortBy, 'asc'];
+            
+            currentSortField = field;
+            currentSortDirection = direction;
+            
+            // Get current filtered options
+            const bankFilter = document.getElementById('bankFilter').value;
+            const periodFilter = document.getElementById('periodFilter').value;
+            
+            let filteredOptions = allLoanOptions.filter(option => {
+                const bankMatch = !bankFilter || option.bankName === bankFilter;
+                const periodMatch = !periodFilter || option.loanPeriod === parseInt(periodFilter);
+                return bankMatch && periodMatch;
+            });
+            
+            filteredOptions = sortOptions(filteredOptions, field, direction);
+            displayLoanOptions(filteredOptions);
+        }
+
+        function sortOptions(options, field, direction) {
+            return options.sort((a, b) => {
+                let aVal = a[field];
+                let bVal = b[field];
+                
+                // Handle string comparison
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                
+                if (direction === 'asc') {
+                    return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+                } else {
+                    return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+                }
+            });
+        }
+
+        function sortTable(field) {
+            // Toggle direction if same field
+            if (currentSortField === field) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortField = field;
+                currentSortDirection = 'asc';
+            }
+            
+            // Get current filtered options
+            const bankFilter = document.getElementById('bankFilter').value;
+            const periodFilter = document.getElementById('periodFilter').value;
+            
+            let filteredOptions = allLoanOptions.filter(option => {
+                const bankMatch = !bankFilter || option.bankName === bankFilter;
+                const periodMatch = !periodFilter || option.loanPeriod === parseInt(periodFilter);
+                return bankMatch && periodMatch;
+            });
+            
+            filteredOptions = sortOptions(filteredOptions, field, currentSortDirection);
+            displayLoanOptions(filteredOptions);
+            updateSortIcons(field, currentSortDirection);
+        }
+
+        function updateSortIcons(field, direction) {
+            // Reset all icons
+            const icons = ['bankSortIcon', 'periodSortIcon', 'rateSortIcon', 'commissionSortIcon', 
+                          'amountSortIcon', 'paymentSortIcon', 'interestSortIcon', 'totalSortIcon'];
+            icons.forEach(id => {
+                document.getElementById(id).textContent = '↕';
+            });
+            
+            // Set active icon
+            const iconMap = {
+                'bankName': 'bankSortIcon',
+                'loanPeriod': 'periodSortIcon',
+                'interestRate': 'rateSortIcon',
+                'commission': 'commissionSortIcon',
+                'loanAmount': 'amountSortIcon',
+                'monthlyPayment': 'paymentSortIcon',
+                'totalInterest': 'interestSortIcon',
+                'totalAmount': 'totalSortIcon'
+            };
+            
+            const activeIcon = document.getElementById(iconMap[field]);
+            if (activeIcon) {
+                activeIcon.textContent = direction === 'asc' ? '↑' : '↓';
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('bankFilter').value = '';
+            document.getElementById('periodFilter').value = '';
+            document.getElementById('sortBy').value = 'monthlyPayment';
+            
+            currentSortField = 'monthlyPayment';
+            currentSortDirection = 'asc';
+            
+            // Reset sort icons
+            updateSortIcons('monthlyPayment', 'asc');
+            
+            // Display all options sorted by monthly payment
+            const sortedOptions = sortOptions([...allLoanOptions], 'monthlyPayment', 'asc');
+            displayLoanOptions(sortedOptions);
+            updateResultCount(sortedOptions.length);
+        }
+
+        function updateResultCount(count) {
+            const totalCount = allLoanOptions.length;
+            document.getElementById('resultCount').textContent = 
+                count === totalCount ? `Showing all ${totalCount} results` : `Showing ${count} of ${totalCount} results`;
+        }
+
+        function displayLoanOptions(options) {
             const tableBody = document.getElementById('loanTableBody');
             tableBody.innerHTML = '';
 
-            loanOptions.forEach(option => {
+            options.forEach(option => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
                 row.innerHTML = `
@@ -241,14 +495,7 @@
                 `;
                 tableBody.appendChild(row);
             });
-
-            document.getElementById('loanTable').classList.remove('hidden');
         }
-
-        // Set default values
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('systemPower').value = '10.44';
-        });
     </script>
 </body>
 </html> 
