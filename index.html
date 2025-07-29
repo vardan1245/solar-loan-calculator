@@ -310,6 +310,9 @@
         function switchLanguage(lang) {
             currentLanguage = lang;
             
+            // Save language preference to localStorage
+            localStorage.setItem('loanCalculatorLanguage', lang);
+            
             // Update language buttons
             document.getElementById('langEn').className = lang === 'en' 
                 ? 'px-3 py-1 rounded-md text-sm font-medium bg-solar-yellow text-gray-900'
@@ -349,6 +352,12 @@
             document.getElementById('bankFilter').addEventListener('change', applyFilters);
             document.getElementById('periodFilter').addEventListener('change', applyFilters);
             document.getElementById('sortBy').addEventListener('change', applySorting);
+            
+            // Load saved language preference
+            const savedLanguage = localStorage.getItem('loanCalculatorLanguage');
+            if (savedLanguage) {
+                switchLanguage(savedLanguage);
+            }
         });
 
         function populateFilters() {
