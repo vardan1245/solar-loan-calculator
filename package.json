@@ -1,0 +1,30 @@
+{
+  "name": "solar-loan-calculator",
+  "version": "1.0.0",
+  "description": "Standalone solar loan calculator for comparing different bank loan options",
+  "main": "index.html",
+  "scripts": {
+    "start": "live-server --port=3000",
+    "dev": "live-server --port=3000",
+    "build": "echo 'No build step required for static HTML'",
+    "deploy": "echo 'Deploy to your preferred hosting service'"
+  },
+  "keywords": [
+    "solar",
+    "loan",
+    "calculator",
+    "armenia",
+    "bank",
+    "financing"
+  ],
+  "author": "Tiamat Solar",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/solar-loan-calculator.git"
+  },
+  "homepage": "https://your-username.github.io/solar-loan-calculator"
+} 

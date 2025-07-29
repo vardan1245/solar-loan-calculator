@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Loan Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'solar-yellow': '#FFD700',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto p-6 space-y-6">
+        <div class="flex items-center gap-3 mb-6">
+            <svg class="h-8 w-8 text-solar-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+            <h1 class="text-3xl font-bold text-gray-900">Solar Loan Calculator</h1>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Input Form -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">System Configuration</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">System Power (kW)</label>
+                        <input type="number" id="systemPower" placeholder="Enter system power" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-solar-yellow">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Installation Type</label>
+                        <select id="installationType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-solar-yellow">
+                            <option value="onRoof">On Roof</option>
+                            <option value="metalConstructionOnRoof">Metal Construction on Roof</option>
+                            <option value="aluminiumConstructionOnRoof">Aluminium Construction on Roof</option>
+                            <option value="systemOnGround">System on Ground</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Cost per kW (AMD)</label>
+                        <input type="number" id="costPerKw" placeholder="Enter cost per kW" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-solar-yellow">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Profit per kW (AMD)</label>
+                        <input type="number" id="profitPerKw" placeholder="Enter profit per kW" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-solar-yellow">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Sales Team (%)</label>
+                        <input type="number" id="salesTeamPct" placeholder="Enter sales team percentage" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-solar-yellow">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Unanticipated Expenses (%)</label>
+                        <input type="number" id="unanticipatedExpensesPct" placeholder="Enter unanticipated expenses percentage" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-solar-yellow">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Down Payment (AMD)</label>
+                        <input type="number" id="downPayment" placeholder="Enter down payment amount" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-solar-yellow">
+                    </div>
+
+                    <button onclick="calculateLoan()" 
+                            class="w-full bg-solar-yellow hover:bg-yellow-400 text-gray-900 font-semibold py-2 px-4 rounded-md transition-colors">
+                        Calculate Loan Options
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">Calculation Results</h2>
+                
+                <div id="results" class="space-y-4">
+                    <div class="text-center text-gray-500">
+                        Enter system parameters and click "Calculate Loan Options" to see results
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loan Options Table -->
+        <div id="loanTable" class="bg-white rounded-lg shadow-md p-6 hidden">
+            <h2 class="text-xl font-semibold mb-4">Available Loan Options</h2>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="border p-3 text-left font-medium">Bank</th>
+                            <th class="border p-3 text-center font-medium w-32">Loan Period</th>
+                            <th class="border p-3 text-center font-medium w-24">Interest Rate</th>
+                            <th class="border p-3 text-center font-medium w-28">Commission</th>
+                            <th class="border p-3 text-center font-medium w-40">Loan Amount</th>
+                            <th class="border p-3 text-center font-medium w-36">Monthly Payment</th>
+                            <th class="border p-3 text-center font-medium w-40">Total Interest</th>
+                            <th class="border p-3 text-center font-medium w-44">Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="loanTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Bank configurations
+        const bankConfigurations = [
+            {
+                name: 'ArmEconomBank',
+                options: [
+                    { interestRate: 0, commission: 0.21, periods: [36] },
+                    { interestRate: 0, commission: 0.32, periods: [60] },
+                    { interestRate: 0, commission: 0.41, periods: [84] },
+                    { interestRate: 0.03, commission: 0.18, periods: [36] },
+                    { interestRate: 0.03, commission: 0.27, periods: [60] },
+                    { interestRate: 0.03, commission: 0.34, periods: [84] },
+                    { interestRate: 0.05, commission: 0.16, periods: [36] },
+                    { interestRate: 0.05, commission: 0.23, periods: [60] },
+                    { interestRate: 0.05, commission: 0.3, periods: [84] },
+                    { interestRate: 0.09, commission: 0.1, periods: [36] },
+                    { interestRate: 0.09, commission: 0.15, periods: [60] },
+                    { interestRate: 0.09, commission: 0.19, periods: [84] },
+                    { interestRate: 0.12, commission: 0.06, periods: [36] },
+                    { interestRate: 0.12, commission: 0.09, periods: [60] },
+                    { interestRate: 0.12, commission: 0.11, periods: [84] },
+                    { interestRate: 0.15, commission: 0.02, periods: [36] },
+                    { interestRate: 0.15, commission: 0.03, periods: [60] },
+                    { interestRate: 0.15, commission: 0.04, periods: [84] }
+                ]
+            },
+            {
+                name: 'ACBA Bank',
+                options: [
+                    { interestRate: 0.11, commission: 0.04, periods: [96] }
+                ]
+            }
+        ];
+
+        function calculateLoanPayment(principal, annualRate, months) {
+            const monthlyRate = annualRate / 12;
+            if (monthlyRate === 0) return principal / months;
+            return principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+        }
+
+        function calculateLoan() {
+            // Get input values
+            const systemPower = parseFloat(document.getElementById('systemPower').value);
+            const costPerKw = parseFloat(document.getElementById('costPerKw').value);
+            const profitPerKw = parseFloat(document.getElementById('profitPerKw').value);
+            const salesTeamPct = parseFloat(document.getElementById('salesTeamPct').value) / 100;
+            const unanticipatedExpensesPct = parseFloat(document.getElementById('unanticipatedExpensesPct').value) / 100;
+            const downPaymentAmount = parseFloat(document.getElementById('downPayment').value);
+
+            if (!systemPower || !costPerKw || !profitPerKw || !downPaymentAmount) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            // Calculate base value
+            const baseValue = systemPower * (costPerKw + profitPerKw);
+            
+            // Calculate system value for cash (without bank commission)
+            const systemValueForCash = baseValue / (1 - salesTeamPct - unanticipatedExpensesPct);
+
+            // Display results
+            document.getElementById('results').innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="font-medium">Base Value:</span>
+                        <span class="text-green-600 font-semibold">${baseValue.toLocaleString()} AMD</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">System Value for Cash:</span>
+                        <span class="text-green-600 font-semibold">${systemValueForCash.toLocaleString()} AMD</span>
+                    </div>
+                </div>
+            `;
+
+            // Calculate loan options
+            const loanOptions = [];
+            
+            bankConfigurations.forEach(bank => {
+                bank.options.forEach(option => {
+                    option.periods.forEach(period => {
+                        // Calculate loan amount with commission
+                        const totalPercentage = salesTeamPct + unanticipatedExpensesPct + option.commission;
+                        const loanAmountWithCommission = baseValue / (1 - totalPercentage);
+                        
+                        // Calculate actual loan amount (after down payment)
+                        const actualLoanAmount = loanAmountWithCommission - downPaymentAmount;
+                        
+                        // Calculate monthly payment
+                        const monthlyPayment = calculateLoanPayment(actualLoanAmount, option.interestRate, period);
+                        const totalInterest = (monthlyPayment * period) - actualLoanAmount;
+                        const totalAmount = monthlyPayment * period;
+                        
+                        loanOptions.push({
+                            bankName: bank.name,
+                            interestRate: option.interestRate,
+                            commission: option.commission,
+                            loanPeriod: period,
+                            monthlyPayment: Math.round(monthlyPayment),
+                            totalInterest: Math.round(totalInterest),
+                            totalAmount: Math.round(totalAmount),
+                            loanAmount: Math.round(actualLoanAmount)
+                        });
+                    });
+                });
+            });
+
+            // Sort by monthly payment
+            loanOptions.sort((a, b) => a.monthlyPayment - b.monthlyPayment);
+
+            // Display loan table
+            const tableBody = document.getElementById('loanTableBody');
+            tableBody.innerHTML = '';
+
+            loanOptions.forEach(option => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="border p-3 font-medium">${option.bankName}</td>
+                    <td class="border p-3 text-center w-32">${option.loanPeriod} months</td>
+                    <td class="border p-3 text-center w-24">${(option.interestRate * 100).toFixed(1)}%</td>
+                    <td class="border p-3 text-center w-28">${(option.commission * 100).toFixed(2)}%</td>
+                    <td class="border p-3 text-center font-semibold text-green-600 w-40">${option.loanAmount.toLocaleString()}</td>
+                    <td class="border p-3 text-center font-semibold text-blue-600 w-36">${option.monthlyPayment.toLocaleString()}</td>
+                    <td class="border p-3 text-center font-semibold text-red-600 w-40">${Math.abs(option.totalInterest).toLocaleString()}</td>
+                    <td class="border p-3 text-center font-semibold text-purple-600 w-44">${option.totalAmount.toLocaleString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            document.getElementById('loanTable').classList.remove('hidden');
+        }
+
+        // Set default values
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('systemPower').value = '10.44';
+            document.getElementById('costPerKw').value = '147000';
+            document.getElementById('profitPerKw').value = '30000';
+            document.getElementById('salesTeamPct').value = '6';
+            document.getElementById('unanticipatedExpensesPct').value = '2';
+            document.getElementById('downPayment').value = '500000';
+        });
+    </script>
+</body>
+</html> 
