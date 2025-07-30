@@ -308,11 +308,11 @@
                 bank.options.forEach(option => {
                     option.periods.forEach(period => {
                         // Calculate loan amount with commission
-                        const totalPercentage = salesTeamPct + unanticipatedExpensesPct + option.commission;
-                        const loanAmountWithCommission = baseValue / (1 - totalPercentage);
+                        const totalPercentage = option.commission;
+                        const loanAmountWithCommission = totalSystemPrice / (1 - totalPercentage);
                         
                         // Calculate actual loan amount (after down payment)
-                        const actualLoanAmount = loanAmountWithCommission - downPaymentAmount;
+                        const actualLoanAmount = loanAmountWithCommission - 0; // No down payment for now
                         
                         // Calculate monthly payment
                         const monthlyPayment = calculateLoanPayment(actualLoanAmount, option.interestRate, period);
