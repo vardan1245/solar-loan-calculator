@@ -283,20 +283,11 @@
 
             // Display results
             const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վաճառքի գին:';
-            const inverterText = currentLanguage === 'en' ? 'Inverter (kW, price):' : 'Ինվերտոր (կՎտ, գին):';
             document.getElementById('results').innerHTML = `
                 <div class="space-y-3">
                     <div class="flex justify-between">
                         <span class="font-medium text-lg">${systemValueText}</span>
                         <span class="text-green-600 font-semibold text-lg">${totalSystemPrice.toLocaleString()} AMD</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="font-medium">${inverterText}</span>
-                        <span>${inverterKw} kW, ${inverterPrice.toLocaleString()} AMD</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="font-medium">Base Price (no inverter):</span>
-                        <span>${basePrice.toLocaleString()} AMD</span>
                     </div>
                 </div>
             `;
