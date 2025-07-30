@@ -442,18 +442,24 @@
         // Populate inverter dropdown
         function populateInverterDropdown() {
             const inverterSelect = document.getElementById('inverterSelect');
+            const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
             inverterSelect.innerHTML = '<option value="auto" data-en="Auto Select (Recommended)" data-hy="Ավտոմատ ընտրություն (Խորհուրդ է տրվում)">Auto Select (Recommended)</option>';
             
+            // Only show inverters that are not more than 10% smaller than system power
+            const minAllowedKw = systemPower * 0.9; // 10% less than system power
+            
             inverters.forEach(inverter => {
-                const option = document.createElement('option');
-                option.value = inverter.kw;
-                const text = currentLanguage === 'en' 
-                    ? `${inverter.kw} kW`
-                    : `${inverter.kw} կՎտ`;
-                option.textContent = text;
-                option.setAttribute('data-en', `${inverter.kw} kW`);
-                option.setAttribute('data-hy', `${inverter.kw} կՎտ`);
-                inverterSelect.appendChild(option);
+                if (inverter.kw >= minAllowedKw) {
+                    const option = document.createElement('option');
+                    option.value = inverter.kw;
+                    const text = currentLanguage === 'en' 
+                        ? `${inverter.kw} kW`
+                        : `${inverter.kw} կՎտ`;
+                    option.textContent = text;
+                    option.setAttribute('data-en', `${inverter.kw} kW`);
+                    option.setAttribute('data-hy', `${inverter.kw} կՎտ`);
+                    inverterSelect.appendChild(option);
+                }
             });
         }
 
@@ -468,6 +474,9 @@
             document.getElementById('bankFilter').addEventListener('change', applyFilters);
             document.getElementById('periodFilter').addEventListener('change', applyFilters);
             document.getElementById('sortBy').addEventListener('change', applySorting);
+            
+            // Add event listener for system power to update inverter dropdown
+            document.getElementById('systemPower').addEventListener('input', populateInverterDropdown);
             
             // Load saved language preference
             const savedLanguage = localStorage.getItem('loanCalculatorLanguage');
