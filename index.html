@@ -284,6 +284,7 @@
 
             // Check if system is larger than 110 kW
             if (systemPower > 110) {
+                const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
                 const message = currentLanguage === 'en' 
                     ? 'System size exceeds 110 kW. Please contact upper management for pricing.'
                     : 'Համակարգի չափը գերազանցում է 110 կՎտ-ը: Խնդրում ենք կապ հաստատել վերին ղեկավարության հետ գնագոյացման համար:';
@@ -339,6 +340,7 @@
             const totalSystemPrice = (basePrice + profitAmount + inverterPrice) / (1 - salesTeamPct - unanticipatedExpensesPct);
 
             // Display results
+            const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
             const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վաճառքի գին:';
             const breakdownTitle = currentLanguage === 'en' ? 'Calculation Breakdown:' : 'Հաշվարկի մանրամասները:';
             const basePriceText = currentLanguage === 'en' ? 'Base Price (no inverter):' : 'Բազային գին (առանց ինվերտորի):';
