@@ -301,8 +301,15 @@
             const inverterPrice = selectedInverter.price;
             const inverterKw = selectedInverter.kw;
 
-            // Total system price
-            const totalSystemPrice = basePrice + inverterPrice;
+            // Calculate total system price including sales team and unexpected expenses
+            const salesTeamPct = 0.06; // 6%
+            const unanticipatedExpensesPct = 0.02; // 2%
+            
+            // Base price with inverter
+            const basePriceWithInverter = basePrice + inverterPrice;
+            
+            // Total system price including sales team and unexpected expenses
+            const totalSystemPrice = basePriceWithInverter / (1 - salesTeamPct - unanticipatedExpensesPct);
 
             // Display results
             const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վաճառքի գին:';
