@@ -199,6 +199,35 @@
             return principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
         }
 
+        // Inverter list (use upper price for duplicates)
+        const inverters = [
+            { kw: 3, price: 201600 },
+            { kw: 3.6, price: 208800 },
+            { kw: 5.3, price: 237600 },
+            { kw: 6, price: 396000 },
+            { kw: 8, price: 417600 },
+            { kw: 10, price: 432000 }, // upper price for 10kW
+            { kw: 12, price: 446400 },
+            { kw: 15, price: 460800 },
+            { kw: 20, price: 532800 },
+            { kw: 25, price: 576000 },
+            { kw: 30, price: 936000 },
+            { kw: 40, price: 1036800 },
+            { kw: 50, price: 1094400 },
+            { kw: 60, price: 1180800 },
+            { kw: 75, price: 1260000 },
+            { kw: 100, price: 1648800 },
+            { kw: 110, price: 1728000 }
+        ];
+
+        // New base prices per kW (without inverter)
+        const basePrices = {
+            aluminiumConstructionOnRoof: 105000,
+            metalConstructionOnRoof: 115000,
+            onRoof: 130000, // Assuming this is aluminium ground
+            systemOnGround: 117000
+        };
+
         function calculateLoan() {
             // Get input values
             const systemPower = parseFloat(document.getElementById('systemPower').value);
@@ -209,44 +238,44 @@
                 return;
             }
 
-            // Fixed values
-            const profitPerKw = 30000;
-            const salesTeamPct = 0.06; // 6%
-            const unanticipatedExpensesPct = 0.02; // 2%
-            const downPaymentAmount = 0;
+            // Get base price per kW (without inverter)
+            let basePricePerKw = basePrices[installationType] || 130000;
+            const basePrice = systemPower * basePricePerKw;
 
-            // Get cost per kW based on installation type
-            let costPerKw;
-            switch(installationType) {
-                case 'onRoof':
-                    costPerKw = 147000;
+            // Find inverter: smallest inverter where inverter.kw * 1.15 >= systemPower
+            let selectedInverter = null;
+            for (let i = 0; i < inverters.length; i++) {
+                if (inverters[i].kw * 1.15 >= systemPower) {
+                    selectedInverter = inverters[i];
                     break;
-                case 'metalConstructionOnRoof':
-                    costPerKw = 155000;
-                    break;
-                case 'systemOnGround':
-                    costPerKw = 160000;
-                    break;
-                case 'aluminiumConstructionOnRoof':
-                    costPerKw = 175000;
-                    break;
-                default:
-                    costPerKw = 147000;
+                }
             }
+            if (!selectedInverter) {
+                alert('No suitable inverter found for this system size!');
+                return;
+            }
+            const inverterPrice = selectedInverter.price;
+            const inverterKw = selectedInverter.kw;
 
-            // Calculate base value
-            const baseValue = systemPower * (costPerKw + profitPerKw);
-            
-            // Calculate system value for cash (without bank commission)
-            const systemValueForCash = baseValue / (1 - salesTeamPct - unanticipatedExpensesPct);
+            // Total system price
+            const totalSystemPrice = basePrice + inverterPrice;
 
             // Display results
             const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վաճառքի գին:';
+            const inverterText = currentLanguage === 'en' ? 'Inverter (kW, price):' : 'Ինվերտոր (կՎտ, գին):';
             document.getElementById('results').innerHTML = `
                 <div class="space-y-3">
                     <div class="flex justify-between">
                         <span class="font-medium text-lg">${systemValueText}</span>
-                        <span class="text-green-600 font-semibold text-lg">${systemValueForCash.toLocaleString()} AMD</span>
+                        <span class="text-green-600 font-semibold text-lg">${totalSystemPrice.toLocaleString()} AMD</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">${inverterText}</span>
+                        <span>${inverterKw} kW, ${inverterPrice.toLocaleString()} AMD</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Base Price (no inverter):</span>
+                        <span>${basePrice.toLocaleString()} AMD</span>
                     </div>
                 </div>
             `;
