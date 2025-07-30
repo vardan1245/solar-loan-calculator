@@ -263,7 +263,9 @@
 
             // Get base price per kW (without inverter)
             let basePricePerKw = basePrices[installationType] || 130000;
+            const profitPerKw = 30000;
             const basePrice = systemPower * basePricePerKw;
+            const profitAmount = systemPower * profitPerKw;
 
             // Check if system is larger than 110 kW
             if (systemPower > 110) {
@@ -306,18 +308,19 @@
             const unanticipatedExpensesPct = 0.02; // 2%
             
             // Total system price including sales team and unexpected expenses
-            const totalSystemPrice = (basePrice + inverterPrice) / (1 - salesTeamPct - unanticipatedExpensesPct);
+            const totalSystemPrice = (basePrice + profitAmount + inverterPrice) / (1 - salesTeamPct - unanticipatedExpensesPct);
 
             // Display results
             const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վաճառքի գին:';
             const breakdownTitle = currentLanguage === 'en' ? 'Calculation Breakdown:' : 'Հաշվարկի մանրամասները:';
             const basePriceText = currentLanguage === 'en' ? 'Base Price (no inverter):' : 'Բազային գին (առանց ինվերտորի):';
+            const profitText = currentLanguage === 'en' ? 'Profit (30k per kW):' : 'Շահույթ (30k կՎտ-ի համար):';
             const inverterPriceText = currentLanguage === 'en' ? 'Inverter Price:' : 'Ինվերտորի գին:';
-            const subtotalText = currentLanguage === 'en' ? 'Subtotal (Base + Inverter):' : 'Ենթագումար (Բազային + Ինվերտոր):';
+            const subtotalText = currentLanguage === 'en' ? 'Subtotal (Base + Profit + Inverter):' : 'Ենթագումար (Բազային + Շահույթ + Ինվերտոր):';
             const salesTeamText = currentLanguage === 'en' ? 'Sales Team (6%):' : 'Վաճառքի թիմ (6%):';
             const unexpectedExpensesText = currentLanguage === 'en' ? 'Unexpected Expenses (2%):' : 'Անսպասելի ծախսեր (2%):';
             
-            const basePriceWithInverter = basePrice + inverterPrice;
+            const basePriceWithProfitAndInverter = basePrice + profitAmount + inverterPrice;
             const salesTeamAmount = totalSystemPrice * salesTeamPct;
             const unexpectedExpensesAmount = totalSystemPrice * unanticipatedExpensesPct;
             
@@ -336,12 +339,16 @@
                                 <span>${basePrice.toLocaleString()} AMD</span>
                             </div>
                             <div class="flex justify-between">
+                                <span>${profitText}</span>
+                                <span>${profitAmount.toLocaleString()} AMD</span>
+                            </div>
+                            <div class="flex justify-between">
                                 <span>${inverterPriceText}</span>
                                 <span>${inverterPrice.toLocaleString()} AMD (${inverterKw} kW)</span>
                             </div>
                             <div class="flex justify-between border-t pt-2">
                                 <span class="font-medium">${subtotalText}</span>
-                                <span class="font-medium">${basePriceWithInverter.toLocaleString()} AMD</span>
+                                <span class="font-medium">${basePriceWithProfitAndInverter.toLocaleString()} AMD</span>
                             </div>
                             <div class="flex justify-between">
                                 <span>${salesTeamText}</span>
