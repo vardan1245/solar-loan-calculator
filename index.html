@@ -59,6 +59,13 @@
                         </select>
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Inverter Model" data-hy="Ինվերտորի մոդել">Inverter Model</label>
+                        <select id="inverterSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                            <option value="auto" data-en="Auto Select (Recommended)" data-hy="Ավտոմատ ընտրություն (Խորհուրդ է տրվում)">Auto Select (Recommended)</option>
+                        </select>
+                    </div>
+
                     <button onclick="calculateLoan()" 
                             class="w-full bg-tiamat-blue hover:bg-tiamat-dark-blue text-white font-semibold py-2 px-4 rounded-md transition-colors"
                             data-en="Calculate Loan Options" data-hy="Հաշվարկել վարկի տարբերակները">
@@ -267,18 +274,31 @@
                 return;
             }
 
-            // Find inverter: smallest inverter where inverter.kw * 1.15 >= systemPower
+            // Get selected inverter
+            const selectedInverterKw = document.getElementById('inverterSelect').value;
             let selectedInverter = null;
-            for (let i = 0; i < inverters.length; i++) {
-                if (inverters[i].kw * 1.15 >= systemPower) {
-                    selectedInverter = inverters[i];
-                    break;
+            
+            if (selectedInverterKw === 'auto') {
+                // Auto select: smallest inverter where inverter.kw * 1.15 >= systemPower
+                for (let i = 0; i < inverters.length; i++) {
+                    if (inverters[i].kw * 1.15 >= systemPower) {
+                        selectedInverter = inverters[i];
+                        break;
+                    }
+                }
+                if (!selectedInverter) {
+                    alert('No suitable inverter found for this system size!');
+                    return;
+                }
+            } else {
+                // Manual selection
+                selectedInverter = inverters.find(inv => inv.kw == selectedInverterKw);
+                if (!selectedInverter) {
+                    alert('Selected inverter not found!');
+                    return;
                 }
             }
-            if (!selectedInverter) {
-                alert('No suitable inverter found for this system size!');
-                return;
-            }
+            
             const inverterPrice = selectedInverter.price;
             const inverterKw = selectedInverter.kw;
 
@@ -303,11 +323,16 @@
             const salesTeamAmount = totalSystemPrice * salesTeamPct;
             const unexpectedExpensesAmount = totalSystemPrice * unanticipatedExpensesPct;
             
+            const selectedInverterText = currentLanguage === 'en' ? 'Selected Inverter:' : 'Ընտրված ինվերտոր:';
             document.getElementById('results').innerHTML = `
                 <div class="space-y-4">
                     <div class="flex justify-between">
                         <span class="font-medium text-lg">${systemValueText}</span>
                         <span class="text-green-600 font-semibold text-lg">${totalSystemPrice.toLocaleString()} AMD</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-600">
+                        <span>${selectedInverterText}</span>
+                        <span>${inverterKw} kW - ${inverterPrice.toLocaleString()} AMD</span>
                     </div>
                 </div>
             `;
@@ -409,11 +434,35 @@
             if (allLoanOptions.length > 0) {
                 calculateLoan();
             }
+            
+            // Update inverter dropdown language
+            populateInverterDropdown();
+        }
+
+        // Populate inverter dropdown
+        function populateInverterDropdown() {
+            const inverterSelect = document.getElementById('inverterSelect');
+            inverterSelect.innerHTML = '<option value="auto" data-en="Auto Select (Recommended)" data-hy="Ավտոմատ ընտրություն (Խորհուրդ է տրվում)">Auto Select (Recommended)</option>';
+            
+            inverters.forEach(inverter => {
+                const option = document.createElement('option');
+                option.value = inverter.kw;
+                const text = currentLanguage === 'en' 
+                    ? `${inverter.kw} kW - ${inverter.price.toLocaleString()} AMD`
+                    : `${inverter.kw} կՎտ - ${inverter.price.toLocaleString()} AMD`;
+                option.textContent = text;
+                option.setAttribute('data-en', `${inverter.kw} kW - ${inverter.price.toLocaleString()} AMD`);
+                option.setAttribute('data-hy', `${inverter.kw} կՎտ - ${inverter.price.toLocaleString()} AMD`);
+                inverterSelect.appendChild(option);
+            });
         }
 
         // Set default values
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('systemPower').value = '10.44';
+            
+            // Populate inverter dropdown
+            populateInverterDropdown();
             
             // Add event listeners for filters
             document.getElementById('bankFilter').addEventListener('change', applyFilters);
