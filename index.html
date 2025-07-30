@@ -332,7 +332,7 @@
                     </div>
                     <div class="flex justify-between text-sm text-gray-600">
                         <span>${selectedInverterText}</span>
-                        <span>${inverterKw} kW - ${inverterPrice.toLocaleString()} AMD</span>
+                        <span>${inverterKw} kW</span>
                     </div>
                 </div>
             `;
@@ -448,11 +448,11 @@
                 const option = document.createElement('option');
                 option.value = inverter.kw;
                 const text = currentLanguage === 'en' 
-                    ? `${inverter.kw} kW - ${inverter.price.toLocaleString()} AMD`
-                    : `${inverter.kw} կՎտ - ${inverter.price.toLocaleString()} AMD`;
+                    ? `${inverter.kw} kW`
+                    : `${inverter.kw} կՎտ`;
                 option.textContent = text;
-                option.setAttribute('data-en', `${inverter.kw} kW - ${inverter.price.toLocaleString()} AMD`);
-                option.setAttribute('data-hy', `${inverter.kw} կՎտ - ${inverter.price.toLocaleString()} AMD`);
+                option.setAttribute('data-en', `${inverter.kw} kW`);
+                option.setAttribute('data-hy', `${inverter.kw} կՎտ`);
                 inverterSelect.appendChild(option);
             });
         }
