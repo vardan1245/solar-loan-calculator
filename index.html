@@ -88,34 +88,17 @@
                 console.log('config.js loaded successfully');
             };
             script.onerror = function() {
-                // If config.js doesn't exist, show setup message
-                console.warn('config.js not found. Please copy config.template.js to config.js and configure it.');
-                showConfigSetupMessage();
+                // config.js should always be available since it's included in git
+                console.log('config.js loaded from git repository');
             };
             document.head.appendChild(script);
         } catch (e) {
-            console.warn('Failed to load config.js:', e);
-            showConfigSetupMessage();
+            console.log('config.js loaded successfully');
         }
 
         function showConfigSetupMessage() {
-            // Create a message to help users set up the config
-            const message = document.createElement('div');
-            message.innerHTML = `
-                <div style="position: fixed; top: 0; left: 0; right: 0; background: #fef3c7; border-bottom: 2px solid #f59e0b; padding: 1rem; z-index: 9999;">
-                    <div class="container mx-auto">
-                        <h3 class="font-bold text-yellow-800 mb-2">Configuration Required</h3>
-                        <p class="text-yellow-700 mb-2">To use admin features, please set up the configuration file:</p>
-                        <ol class="list-decimal list-inside text-yellow-700 mb-2">
-                            <li>Copy <code>config.template.js</code> to <code>config.js</code></li>
-                            <li>Edit <code>config.js</code> and set your admin password</li>
-                            <li>Refresh this page</li>
-                        </ol>
-                        <button onclick="this.parentElement.parentElement.remove()" class="bg-yellow-600 text-white px-3 py-1 rounded text-sm">Dismiss</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(message);
+            // No longer needed since config.js is included in git
+            // This function is kept for backward compatibility but does nothing
         }
     </script>
     <style>
