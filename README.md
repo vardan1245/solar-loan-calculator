@@ -22,17 +22,29 @@ git clone https://github.com/your-username/solar-loan-calculator.git
 cd solar-loan-calculator
 ```
 
-2. Install dependencies (optional, for development):
+2. **Set up configuration file** (required for admin functionality):
+```bash
+cp config.template.js config.js
+```
+Then edit `config.js` and customize the values:
+- Change `ADMIN_PASSWORD` to your desired password
+- Update bank configurations if needed
+- Adjust inverter prices as required
+- Modify base prices for different installation types
+- Set profit margins by warranty years
+- Configure sales team and unexpected expenses percentages
+
+3. Install dependencies (optional, for development):
 ```bash
 npm install
 ```
 
-3. Start the development server:
+4. Start the development server:
 ```bash
 npm start
 ```
 
-4. Open your browser and navigate to `http://localhost:3000`
+5. Open your browser and navigate to `http://localhost:3000`
 
 ## Usage
 
@@ -66,6 +78,19 @@ The calculator provides:
 - **Base Value**: Raw cost + profit calculation
 - **System Value for Cash**: Total value without bank commission
 - **Loan Options Table**: Detailed comparison of all available loan options
+
+### Admin Access
+
+The calculator includes an admin section with detailed calculation breakdowns:
+
+- **Access Method**: Press `A` + `S` + `D` + `Space` + `Enter` + `Enter` in sequence
+- **Admin Features**: 
+  - Detailed calculation breakdown
+  - Base prices display
+  - Profit margins by warranty years
+  - Commission rates for each bank
+  - Sensitive information is hidden as spoilers (click to reveal)
+- **Security**: Admin password is stored in `config.js` (not committed to git)
 
 ## Supported Banks
 
