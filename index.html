@@ -6,6 +6,37 @@
     <title>Solar Loan Calculator</title>
     <link rel="icon" type="image/x-icon" href="tIAMAT white blue-06.ico">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="config.js"></script>
+    <style>
+        .spoiler {
+            cursor: pointer;
+            user-select: none;
+            background: linear-gradient(45deg, #333 25%, transparent 25%), 
+                        linear-gradient(-45deg, #333 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #333 75%), 
+                        linear-gradient(-45deg, transparent 75%, #333 75%);
+            background-size: 4px 4px;
+            background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
+            color: transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .spoiler:hover {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .spoiler-revealed {
+            cursor: pointer;
+            background: #f3f4f6;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        .spoiler-revealed:hover {
+            background: #e5e7eb;
+        }
+    </style>
     <script>
         tailwind.config = {
             theme: {
@@ -32,6 +63,12 @@
             <div class="flex items-center gap-2">
                 <button onclick="switchLanguage('en')" id="langEn" class="px-3 py-1 rounded-md text-sm font-medium bg-tiamat-blue text-white">EN</button>
                 <button onclick="switchLanguage('hy')" id="langHy" class="px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300">ՀԱՅ</button>
+                
+                <!-- Admin Login Button (Hidden) -->
+                <button id="adminLoginBtn" onclick="showAdminLogin()" 
+                        class="px-3 py-1 rounded-md text-sm font-medium bg-gray-500 text-white hover:bg-gray-600 transition-colors hidden">
+                    <span data-en="Admin" data-hy="Ադմին">Admin</span>
+                </button>
             </div>
         </div>
 
@@ -152,6 +189,9 @@
                             <th class="border p-3 text-center font-medium w-24 cursor-pointer hover:bg-gray-100" onclick="sortTable('interestRate')">
                                 <span data-en="Interest Rate" data-hy="Տոկոսադրույք">Interest Rate</span> <span id="rateSortIcon" class="ml-1">↕</span>
                             </th>
+                            <th class="border p-3 text-center font-medium w-24 cursor-pointer hover:bg-gray-100 admin-only" onclick="sortTable('commission')" style="display: none;">
+                                <span data-en="Commission" data-hy="Կոմիսիա">Commission</span> <span id="commissionSortIcon" class="ml-1">↕</span>
+                            </th>
 
                             <th class="border p-3 text-center font-medium w-40 cursor-pointer hover:bg-gray-100" onclick="sortTable('loanAmount')">
                                 <span data-en="Loan Amount" data-hy="Վարկի գումար">Loan Amount</span> <span id="amountSortIcon" class="ml-1">↕</span>
@@ -180,37 +220,7 @@
 
     <script>
         // Bank configurations
-        const bankConfigurations = [
-            {
-                name: 'ArmEconomBank',
-                options: [
-                    { interestRate: 0, commission: 0.21, periods: [36] },
-                    { interestRate: 0, commission: 0.32, periods: [60] },
-                    { interestRate: 0, commission: 0.41, periods: [84] },
-                    { interestRate: 0.03, commission: 0.18, periods: [36] },
-                    { interestRate: 0.03, commission: 0.27, periods: [60] },
-                    { interestRate: 0.03, commission: 0.34, periods: [84] },
-                    { interestRate: 0.05, commission: 0.16, periods: [36] },
-                    { interestRate: 0.05, commission: 0.23, periods: [60] },
-                    { interestRate: 0.05, commission: 0.3, periods: [84] },
-                    { interestRate: 0.09, commission: 0.1, periods: [36] },
-                    { interestRate: 0.09, commission: 0.15, periods: [60] },
-                    { interestRate: 0.09, commission: 0.19, periods: [84] },
-                    { interestRate: 0.12, commission: 0.06, periods: [36] },
-                    { interestRate: 0.12, commission: 0.09, periods: [60] },
-                    { interestRate: 0.12, commission: 0.11, periods: [84] },
-                    { interestRate: 0.15, commission: 0.02, periods: [36] },
-                    { interestRate: 0.15, commission: 0.03, periods: [60] },
-                    { interestRate: 0.15, commission: 0.04, periods: [84] }
-                ]
-            },
-            {
-                name: 'ACBA Bank',
-                options: [
-                    { interestRate: 0.11, commission: 0.04, periods: [96] }
-                ]
-            }
-        ];
+        const bankConfigurations = CONFIG.BANK_CONFIGURATIONS;
 
         function calculateLoanPayment(principal, annualRate, months) {
             const monthlyRate = annualRate / 12;
@@ -219,33 +229,10 @@
         }
 
         // Inverter list (use upper price for duplicates)
-        const inverters = [
-            { kw: 3, price: 201600 },
-            { kw: 3.6, price: 208800 },
-            { kw: 5.3, price: 237600 },
-            { kw: 6, price: 396000 },
-            { kw: 8, price: 417600 },
-            { kw: 10, price: 432000 }, // upper price for 10kW
-            { kw: 12, price: 446400 },
-            { kw: 15, price: 460800 },
-            { kw: 20, price: 532800 },
-            { kw: 25, price: 576000 },
-            { kw: 30, price: 936000 },
-            { kw: 40, price: 1036800 },
-            { kw: 50, price: 1094400 },
-            { kw: 60, price: 1180800 },
-            { kw: 75, price: 1260000 },
-            { kw: 100, price: 1648800 },
-            { kw: 110, price: 1728000 }
-        ];
+        const inverters = CONFIG.INVERTERS;
 
         // New base prices per kW (without inverter)
-        const basePrices = {
-            aluminiumConstructionOnRoof: 130000,
-            metalConstructionOnRoof: 115000,
-            onRoof: 105000,
-            systemOnGround: 117000
-        };
+        const basePrices = CONFIG.BASE_PRICES;
 
         function calculateLoan() {
             // Get input values
@@ -262,25 +249,10 @@
             
             // Get warranty years and determine profit per kW
             const warrantyYears = parseInt(document.getElementById('warrantyYears').value) || 12;
-            let profitPerKw;
-            switch(warrantyYears) {
-                case 2:
-                    profitPerKw = 15000;
-                    break;
-                case 3:
-                    profitPerKw = 20000;
-                    break;
-                case 6:
-                    profitPerKw = 25000;
-                    break;
-                case 12:
-                default:
-                    profitPerKw = 30000;
-                    break;
-            }
+            const profitPerKw = CONFIG.PROFIT_BY_WARRANTY[warrantyYears] || CONFIG.PROFIT_BY_WARRANTY[12];
             
-            const basePrice = systemPower * basePricePerKw;
-            const profitAmount = systemPower * profitPerKw;
+            const basePrice = Math.ceil(systemPower * basePricePerKw);
+            const profitAmount = Math.ceil(systemPower * profitPerKw);
 
             // Check if system is larger than 110 kW
             if (systemPower > 110) {
@@ -333,40 +305,185 @@
             const inverterKw = selectedInverter.kw;
 
             // Calculate total system price including sales team and unexpected expenses
-            const salesTeamPct = 0.06; // 6%
-            const unanticipatedExpensesPct = 0.02; // 2%
+            const salesTeamPct = CONFIG.PERCENTAGES.salesTeam; // 6%
+            const unanticipatedExpensesPct = CONFIG.PERCENTAGES.unexpectedExpenses; // 2%
             
             // Total system price including sales team and unexpected expenses
-            const totalSystemPrice = (basePrice + profitAmount + inverterPrice) / (1 - salesTeamPct - unanticipatedExpensesPct);
+            const totalSystemPrice = Math.ceil((basePrice + profitAmount + inverterPrice) / (1 - salesTeamPct - unanticipatedExpensesPct));
 
             // Display results
             const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
             const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վաճառքի գին:';
             const breakdownTitle = currentLanguage === 'en' ? 'Calculation Breakdown:' : 'Հաշվարկի մանրամասները:';
             const basePriceText = currentLanguage === 'en' ? 'Base Price (no inverter):' : 'Բազային գին (առանց ինվերտորի):';
-            const profitText = currentLanguage === 'en' ? 'Profit (30k per kW):' : 'Շահույթ (30k կՎտ-ի համար):';
+            const profitText = currentLanguage === 'en' ? `Profit (${profitPerKw.toLocaleString()} per kW):` : `Շահույթ (${profitPerKw.toLocaleString()} կՎտ-ի համար):`;
             const inverterPriceText = currentLanguage === 'en' ? 'Inverter Price:' : 'Ինվերտորի գին:';
             const subtotalText = currentLanguage === 'en' ? 'Subtotal (Base + Profit + Inverter):' : 'Ենթագումար (Բազային + Շահույթ + Ինվերտոր):';
             const salesTeamText = currentLanguage === 'en' ? 'Sales Team (6%):' : 'Վաճառքի թիմ (6%):';
             const unexpectedExpensesText = currentLanguage === 'en' ? 'Unexpected Expenses (2%):' : 'Անսպասելի ծախսեր (2%):';
             
             const basePriceWithProfitAndInverter = basePrice + profitAmount + inverterPrice;
-            const salesTeamAmount = totalSystemPrice * salesTeamPct;
-            const unexpectedExpensesAmount = totalSystemPrice * unanticipatedExpensesPct;
+            const salesTeamAmount = Math.ceil(totalSystemPrice * salesTeamPct);
+            const unexpectedExpensesAmount = Math.ceil(totalSystemPrice * unanticipatedExpensesPct);
             
             const selectedInverterText = currentLanguage === 'en' ? 'Selected Inverter:' : 'Ընտրված ինվերտոր:';
-            document.getElementById('results').innerHTML = `
-                <div class="space-y-4">
-                    <div class="flex justify-between">
-                        <span class="font-medium text-lg">${systemValueText}</span>
-                        <span class="text-green-600 font-semibold text-lg">${totalSystemPrice.toLocaleString()} AMD</span>
+            
+            // Show detailed breakdown for admin, simple view for regular users
+            if (isAdminLoggedIn) {
+                // Calculate percentages for display
+                const basePricePct = ((basePrice / totalSystemPrice) * 100).toFixed(1);
+                const profitPct = ((profitAmount / totalSystemPrice) * 100).toFixed(1);
+                const inverterPct = ((inverterPrice / totalSystemPrice) * 100).toFixed(1);
+                const salesTeamPctDisplay = (salesTeamPct * 100).toFixed(1);
+                const unexpectedExpensesPctDisplay = (unanticipatedExpensesPct * 100).toFixed(1);
+                
+                // Get installation type name for display
+                const installationTypeNames = {
+                    'aluminiumConstructionOnRoof': currentLanguage === 'en' ? 'Aluminium Construction on Roof' : 'Ալյումինե կոնստրուկցիա տանիքի վրա',
+                    'metalConstructionOnRoof': currentLanguage === 'en' ? 'Metal Construction on Roof' : 'Մետաղական կոնստրուկցիա տանիքի վրա',
+                    'onRoof': currentLanguage === 'en' ? 'On Roof (Sloped)' : 'Տանիքի վրա (լանջային)',
+                    'systemOnGround': currentLanguage === 'en' ? 'System on Ground' : 'Համակարգ գետնի վրա'
+                };
+                const installationTypeName = installationTypeNames[installationType] || installationType;
+                
+                document.getElementById('results').innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex justify-between">
+                            <span class="font-medium text-lg">${systemValueText}</span>
+                            <span class="text-green-600 font-semibold text-lg">${totalSystemPrice.toLocaleString()} AMD</span>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-md space-y-4">
+                            <h4 class="font-semibold text-gray-800 border-b pb-2">${breakdownTitle}</h4>
+                            
+                            <!-- Step 1: Base Price -->
+                            <div class="space-y-2">
+                                <div class="text-sm font-medium text-gray-700">Step 1: Base Price Calculation</div>
+                                <div class="pl-4 space-y-1 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Installation Type:</span>
+                                        <span>${installationTypeName}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Base Price per kW:</span>
+                                        <span class="font-mono">${basePricePerKw.toLocaleString()} AMD</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>System Power:</span>
+                                        <span>${systemPower} kW</span>
+                                    </div>
+                                    <div class="flex justify-between font-medium">
+                                        <span>Base Price:</span>
+                                        <span class="font-mono">${basePrice.toLocaleString()} AMD (${basePricePct}%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 2: Profit -->
+                            <div class="space-y-2">
+                                <div class="text-sm font-medium text-gray-700">Step 2: Profit Calculation</div>
+                                <div class="pl-4 space-y-1 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Warranty Period:</span>
+                                        <span>${warrantyYears} years</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Profit per kW:</span>
+                                        <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="${profitPerKw.toLocaleString()} AMD">████████████</span>
+                                    </div>
+                                    <div class="flex justify-between font-medium">
+                                        <span>Total Profit:</span>
+                                        <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="${profitAmount.toLocaleString()} AMD (${profitPct}%)">████████████</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 3: Inverter -->
+                            <div class="space-y-2">
+                                <div class="text-sm font-medium text-gray-700">Step 3: Inverter Selection</div>
+                                <div class="pl-4 space-y-1 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Selected Inverter:</span>
+                                        <span>${inverterKw} kW</span>
+                                    </div>
+                                    <div class="flex justify-between font-medium">
+                                        <span>Inverter Price:</span>
+                                        <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="${inverterPrice.toLocaleString()} AMD (${inverterPct}%)">████████████</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 4: Subtotal -->
+                            <div class="space-y-2 border-t pt-3">
+                                <div class="text-sm font-medium text-gray-700">Step 4: Subtotal</div>
+                                <div class="pl-4 space-y-1 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Base Price:</span>
+                                        <span class="font-mono">${basePrice.toLocaleString()} AMD</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>+ Profit:</span>
+                                        <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="${profitAmount.toLocaleString()} AMD">████████████</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>+ Inverter:</span>
+                                        <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="${inverterPrice.toLocaleString()} AMD">████████████</span>
+                                    </div>
+                                    <div class="flex justify-between font-semibold border-t pt-1">
+                                        <span>Subtotal:</span>
+                                        <span class="font-mono">${basePriceWithProfitAndInverter.toLocaleString()} AMD</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 5: Final Calculation -->
+                            <div class="space-y-2 border-t pt-3">
+                                <div class="text-sm font-medium text-gray-700">Step 5: Final Price Calculation</div>
+                                <div class="pl-4 space-y-1 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Subtotal:</span>
+                                        <span class="font-mono">${basePriceWithProfitAndInverter.toLocaleString()} AMD</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>÷ (1 - Sales Team ${salesTeamPctDisplay}% - Unexpected ${unexpectedExpensesPctDisplay}%):</span>
+                                        <span class="font-mono">÷ 0.92</span>
+                                    </div>
+                                    <div class="flex justify-between text-blue-600">
+                                        <span>Sales Team (${salesTeamPctDisplay}%):</span>
+                                        <span class="font-mono">${salesTeamAmount.toLocaleString()} AMD</span>
+                                    </div>
+                                    <div class="flex justify-between text-orange-600">
+                                        <span>Unexpected Expenses (${unexpectedExpensesPctDisplay}%):</span>
+                                        <span class="font-mono">${unexpectedExpensesAmount.toLocaleString()} AMD</span>
+                                    </div>
+                                    <div class="flex justify-between font-semibold text-green-600 border-t pt-1">
+                                        <span>Final System Value:</span>
+                                        <span class="font-mono">${totalSystemPrice.toLocaleString()} AMD</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>${selectedInverterText}</span>
+                            <span>${inverterKw} kW</span>
+                        </div>
                     </div>
-                    <div class="flex justify-between text-sm text-gray-600">
-                        <span>${selectedInverterText}</span>
-                        <span>${inverterKw} kW</span>
+                `;
+            } else {
+                document.getElementById('results').innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex justify-between">
+                            <span class="font-medium text-lg">${systemValueText}</span>
+                            <span class="text-green-600 font-semibold text-lg">${totalSystemPrice.toLocaleString()} AMD</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>${selectedInverterText}</span>
+                            <span>${inverterKw} kW</span>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
 
             // Calculate loan options
             const loanOptions = [];
@@ -376,13 +493,13 @@
                     option.periods.forEach(period => {
                         // Calculate loan amount with commission
                         const totalPercentage = option.commission;
-                        const loanAmountWithCommission = totalSystemPrice / (1 - totalPercentage);
+                        const loanAmountWithCommission = Math.ceil(totalSystemPrice / (1 - totalPercentage));
                         
                         // Calculate actual loan amount (after down payment)
                         const actualLoanAmount = loanAmountWithCommission - 0; // No down payment for now
                         
                         // Calculate monthly payment
-                        const monthlyPayment = calculateLoanPayment(actualLoanAmount, option.interestRate, period);
+                        const monthlyPayment = Math.ceil(calculateLoanPayment(actualLoanAmount, option.interestRate, period));
                         const totalInterest = (monthlyPayment * period) - actualLoanAmount;
                         const totalAmount = monthlyPayment * period;
                         
@@ -391,10 +508,10 @@
                             interestRate: option.interestRate,
                             commission: option.commission,
                             loanPeriod: period,
-                            monthlyPayment: Math.round(monthlyPayment),
-                            totalInterest: Math.round(totalInterest),
-                            totalAmount: Math.round(totalAmount),
-                            loanAmount: Math.round(actualLoanAmount)
+                            monthlyPayment: monthlyPayment,
+                            totalInterest: totalInterest,
+                            totalAmount: totalAmount,
+                            loanAmount: actualLoanAmount
                         });
                     });
                 });
@@ -642,7 +759,7 @@
 
         function updateSortIcons(field, direction) {
             // Reset all icons
-            const icons = ['bankSortIcon', 'periodSortIcon', 'rateSortIcon', 
+            const icons = ['bankSortIcon', 'periodSortIcon', 'rateSortIcon', 'commissionSortIcon',
                           'amountSortIcon', 'paymentSortIcon', 'interestSortIcon', 'totalSortIcon'];
             icons.forEach(id => {
                 document.getElementById(id).textContent = '↕';
@@ -653,6 +770,7 @@
                 'bankName': 'bankSortIcon',
                 'loanPeriod': 'periodSortIcon',
                 'interestRate': 'rateSortIcon',
+                'commission': 'commissionSortIcon',
                 'loanAmount': 'amountSortIcon',
                 'monthlyPayment': 'paymentSortIcon',
                 'totalInterest': 'interestSortIcon',
@@ -705,10 +823,17 @@
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
                 const monthsText = currentLanguage === 'en' ? 'months' : 'ամիս';
+                
+                // Create commission cell conditionally
+                const commissionCell = isAdminLoggedIn 
+                    ? `<td class="border p-3 text-center w-24 text-orange-600 font-medium">${(option.commission * 100).toFixed(1)}%</td>`
+                    : '';
+                
                 row.innerHTML = `
                     <td class="border p-3 font-medium">${option.bankName}</td>
                     <td class="border p-3 text-center w-32">${option.loanPeriod} ${monthsText}</td>
                     <td class="border p-3 text-center w-24">${(option.interestRate * 100).toFixed(1)}%</td>
+                    ${commissionCell}
                     <td class="border p-3 text-center font-semibold text-green-600 w-40">${option.loanAmount.toLocaleString()}</td>
                     <td class="border p-3 text-center font-semibold text-blue-600 w-36">${option.monthlyPayment.toLocaleString()}</td>
                     <td class="border p-3 text-center font-semibold text-red-600 w-40">${Math.abs(option.totalInterest).toLocaleString()}</td>
@@ -717,6 +842,357 @@
                 tableBody.appendChild(row);
             });
         }
+
+        // Admin functionality
+        let isAdminLoggedIn = false;
+        const ADMIN_PASSWORD = CONFIG.ADMIN_PASSWORD;
+
+        function showAdminLogin() {
+            document.getElementById('adminModal').classList.remove('hidden');
+            document.getElementById('adminPassword').focus();
+        }
+
+        function hideAdminLogin() {
+            document.getElementById('adminModal').classList.add('hidden');
+            document.getElementById('adminPassword').value = '';
+        }
+
+        function loginAdmin() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === ADMIN_PASSWORD) {
+                isAdminLoggedIn = true;
+                hideAdminLogin();
+                showAdminDetails();
+                updateAdminButton();
+                showCommissionColumn();
+                // Recalculate to show detailed breakdown
+                if (allLoanOptions.length > 0) {
+                    calculateLoan();
+                }
+            } else {
+                alert('Incorrect password');
+            }
+        }
+
+        function logoutAdmin() {
+            isAdminLoggedIn = false;
+            hideAdminDetails();
+            updateAdminButton();
+            hideCommissionColumn();
+            // Recalculate to hide detailed breakdown
+            if (allLoanOptions.length > 0) {
+                calculateLoan();
+            }
+        }
+
+        function showCommissionColumn() {
+            // Show commission header
+            const commissionHeader = document.querySelector('.admin-only');
+            if (commissionHeader) {
+                commissionHeader.style.display = 'table-cell';
+            }
+        }
+
+        function hideCommissionColumn() {
+            // Hide commission header
+            const commissionHeader = document.querySelector('.admin-only');
+            if (commissionHeader) {
+                commissionHeader.style.display = 'none';
+            }
+        }
+
+        // Spoiler functionality
+        function toggleSpoiler(element) {
+            if (element.classList.contains('spoiler')) {
+                // Show the actual value
+                element.textContent = element.getAttribute('data-value');
+                element.classList.remove('spoiler');
+                element.classList.add('spoiler-revealed');
+            } else {
+                // Hide the value
+                element.textContent = '████████████';
+                element.classList.add('spoiler');
+                element.classList.remove('spoiler-revealed');
+            }
+        }
+
+        // Handle Enter key in admin password field
+        function handleAdminPasswordKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                loginAdmin();
+            }
+        }
+
+        function showAdminDetails() {
+            document.getElementById('adminDetails').classList.remove('hidden');
+        }
+
+        function hideAdminDetails() {
+            document.getElementById('adminDetails').classList.add('hidden');
+        }
+
+        function updateAdminButton() {
+            const adminBtn = document.getElementById('adminLoginBtn');
+            if (isAdminLoggedIn) {
+                adminBtn.classList.remove('bg-gray-500', 'hover:bg-gray-600');
+                adminBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+                adminBtn.innerHTML = '<span data-en="Admin ✓" data-hy="Ադմին ✓">Admin ✓</span>';
+            } else {
+                adminBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                adminBtn.classList.add('bg-gray-500', 'hover:bg-gray-600');
+                adminBtn.innerHTML = '<span data-en="Admin" data-hy="Ադմին">Admin</span>';
+            }
+        }
+
+        // Add admin details section to the page
+        function addAdminSection() {
+            const adminSection = `
+                <div id="adminDetails" class="bg-white rounded-lg shadow-md p-6 mt-6 hidden">
+                    <h2 class="text-xl font-semibold mb-4 text-tiamat-blue" data-en="Admin: Calculation Details" data-hy="Ադմին: Հաշվարկի մանրամասները">Admin: Calculation Details</h2>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Base Prices -->
+                        <div class="space-y-4">
+                            <h3 class="font-semibold text-gray-800" data-en="Base Prices (per kW, without inverter)" data-hy="Բազային գները (կՎտ-ի համար, առանց ինվերտորի)">Base Prices (per kW, without inverter)</h3>
+                            <div class="bg-gray-50 p-4 rounded-md space-y-2">
+                                <div class="flex justify-between">
+                                    <span data-en="Aluminium Construction on Roof" data-hy="Ալյումինե կոնստրուկցիա տանիքի վրա">Aluminium Construction on Roof:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="130,000 AMD">████████████</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span data-en="Metal Construction on Roof" data-hy="Մետաղական կոնստրուկցիա տանիքի վրա">Metal Construction on Roof:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="115,000 AMD">████████████</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span data-en="On Roof (Sloped)" data-hy="Տանիքի վրա (լանջային)">On Roof (Sloped):</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="105,000 AMD">████████████</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span data-en="System on Ground" data-hy="Համակարգ գետնի վրա">System on Ground:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="117,000 AMD">████████████</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profit by Warranty -->
+                        <div class="space-y-4">
+                            <h3 class="font-semibold text-gray-800" data-en="Profit per kW by Warranty" data-hy="Շահույթ կՎտ-ի համար ըստ երաշխիքի">Profit per kW by Warranty</h3>
+                            <div class="bg-gray-50 p-4 rounded-md space-y-2">
+                                <div class="flex justify-between">
+                                    <span data-en="2 Years" data-hy="2 Տարի">2 Years:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="15,000 AMD">████████████</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span data-en="3 Years" data-hy="3 Տարի">3 Years:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="20,000 AMD">████████████</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span data-en="6 Years" data-hy="6 Տարի">6 Years:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="25,000 AMD">████████████</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span data-en="12 Years" data-hy="12 Տարի">12 Years:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="30,000 AMD">████████████</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Commission Rates -->
+                    <div class="mt-6">
+                        <h3 class="font-semibold text-gray-800 mb-4" data-en="Bank Commission Rates" data-hy="Բանկի կոմիսիոն վճարներ">Bank Commission Rates</h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- ArmEconomBank -->
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-2">ArmEconomBank</h4>
+                                <div class="bg-gray-50 p-4 rounded-md text-sm space-y-1">
+                                    <div class="grid grid-cols-3 gap-2 text-xs font-medium text-gray-600">
+                                        <span>Period</span>
+                                        <span>Interest</span>
+                                        <span>Commission</span>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>36m</span><span>0%</span><span>21%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>60m</span><span>0%</span><span>32%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>84m</span><span>0%</span><span>41%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>36m</span><span>3%</span><span>18%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>60m</span><span>3%</span><span>27%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>84m</span><span>3%</span><span>34%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>36m</span><span>5%</span><span>16%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>60m</span><span>5%</span><span>23%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>84m</span><span>5%</span><span>30%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>36m</span><span>9%</span><span>10%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>60m</span><span>9%</span><span>15%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>84m</span><span>9%</span><span>19%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>36m</span><span>12%</span><span>6%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>60m</span><span>12%</span><span>9%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>84m</span><span>12%</span><span>11%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>36m</span><span>15%</span><span>2%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>60m</span><span>15%</span><span>3%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>84m</span><span>15%</span><span>4%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ACBA Bank -->
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-2">ACBA Bank</h4>
+                                <div class="bg-gray-50 p-4 rounded-md text-sm space-y-1">
+                                    <div class="grid grid-cols-3 gap-2 text-xs font-medium text-gray-600">
+                                        <span>Period</span>
+                                        <span>Interest</span>
+                                        <span>Commission</span>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>96m</span><span>11%</span><span>4%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logout Button -->
+                    <div class="mt-6 text-center">
+                        <button onclick="logoutAdmin()" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">
+                            <span data-en="Logout Admin" data-hy="Դուրս գալ ադմինից">Logout Admin</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Insert admin section after the loan table
+            const loanTable = document.getElementById('loanTable');
+            loanTable.insertAdjacentHTML('afterend', adminSection);
+        }
+
+        // Initialize admin section on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            addAdminSection();
+        });
+
+        // Keyboard shortcut for admin login (A+S+D+Space+Enter+Enter)
+        let keySequence = [];
+        let lastKeyTime = 0;
+        
+        document.addEventListener('keydown', function(event) {
+            const currentTime = Date.now();
+            
+            // Reset sequence if too much time has passed (2 seconds)
+            if (currentTime - lastKeyTime > 2000) {
+                keySequence = [];
+            }
+            
+            lastKeyTime = currentTime;
+            
+            // Track all key presses
+            let keyPressed = '';
+            
+            if (event.code === 'KeyA') {
+                keyPressed = 'A';
+            } else if (event.code === 'KeyS') {
+                keyPressed = 'S';
+            } else if (event.code === 'KeyD') {
+                keyPressed = 'D';
+            } else if (event.key === ' ') {
+                keyPressed = 'Space';
+            } else if (event.code === 'Enter') {
+                keyPressed = 'Enter';
+            }
+            
+            if (keyPressed) {
+                keySequence.push(keyPressed);
+                
+                // Keep only last 6 keys
+                if (keySequence.length > 6) {
+                    keySequence.shift();
+                }
+                
+                // Debug: log the sequence
+                console.log('Key sequence:', keySequence);
+                
+                // Check if sequence matches admin shortcut: A+S+D+Space+Enter+Enter
+                if (keySequence.length === 6 && 
+                    keySequence[0] === 'A' && 
+                    keySequence[1] === 'S' && 
+                    keySequence[2] === 'D' && 
+                    keySequence[3] === 'Space' && 
+                    keySequence[4] === 'Enter' && 
+                    keySequence[5] === 'Enter') {
+                    
+                    // Prevent default behavior
+                    event.preventDefault();
+                    
+                    // Show admin login
+                    showAdminLogin();
+                    
+                    // Reset sequence
+                    keySequence = [];
+                    console.log('Admin shortcut activated!');
+                }
+            }
+        });
     </script>
+
+    <!-- Admin Login Modal -->
+    <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg p-6 w-full max-w-md">
+                <h3 class="text-lg font-semibold mb-4" data-en="Admin Login" data-hy="Ադմին մուտք">Admin Login</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Password" data-hy="Գաղտնաբառ">Password</label>
+                        <input type="password" id="adminPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue" onkeydown="handleAdminPasswordKeydown(event)">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="loginAdmin()" class="flex-1 bg-tiamat-blue text-white px-4 py-2 rounded-md hover:bg-tiamat-dark-blue">
+                            <span data-en="Login" data-hy="Մուտք">Login</span>
+                        </button>
+                        <button onclick="hideAdminLogin()" class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
+                            <span data-en="Cancel" data-hy="Չեղարկել">Cancel</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html> 

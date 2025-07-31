@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Loan Calculator</title>
+    <link rel="icon" type="image/x-icon" href="tIAMAT white blue-06.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tiamat-blue': '#0066CC',
+                        'tiamat-light-blue': '#4A90E2',
+                        'tiamat-dark-blue': '#004499',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto p-6 space-y-6">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <img src="tIAMAT white blue-06.ico" alt="Tiamat Logo" class="h-8 w-8">
+                <h1 class="text-3xl font-bold text-tiamat-blue" data-en="Solar Loan Calculator" data-hy="Արևային կայանի վարկի հաշվիչ">Solar Loan Calculator</h1>
+            </div>
+            
+            <!-- Language Switcher -->
+            <div class="flex items-center gap-2">
+                <button onclick="switchLanguage('en')" id="langEn" class="px-3 py-1 rounded-md text-sm font-medium bg-tiamat-blue text-white">EN</button>
+                <button onclick="switchLanguage('hy')" id="langHy" class="px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300">ՀԱՅ</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Input Form -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4" data-en="System Configuration" data-hy="Համակարգի կարգավորում">System Configuration</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="System Power (kW)" data-hy="Համակարգի հզորություն (կՎտ)">System Power (kW)</label>
+                        <input type="number" id="systemPower" data-en-placeholder="Enter system power" data-hy-placeholder="Մուտքագրեք համակարգի հզորությունը" placeholder="Enter system power" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Installation Type" data-hy="Տեղադրման տեսակը">Installation Type</label>
+                        <select id="installationType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                            <option value="onRoof" data-en="On Roof" data-hy="Տանիքի վրա (լանջային)">On Roof</option>
+                            <option value="metalConstructionOnRoof" data-en="Metal Construction on Roof" data-hy="Մետաղական կոնստրուկցիա տանիքի վրա">Metal Construction on Roof</option>
+                            <option value="aluminiumConstructionOnRoof" data-en="Aluminium Construction on Roof" data-hy="Ալյումինե կոնստրուկցիա տանիքի վրա">Aluminium Construction on Roof</option>
+                            <option value="systemOnGround" data-en="System on Ground" data-hy="Համակարգ գետնի վրա">System on Ground</option>
+                        </select>
+                    </div>
+
+                    <button onclick="calculateLoan()" 
+                            class="w-full bg-tiamat-blue hover:bg-tiamat-dark-blue text-white font-semibold py-2 px-4 rounded-md transition-colors"
+                            data-en="Calculate Loan Options" data-hy="Հաշվարկել վարկի տարբերակները">
+                        Calculate Loan Options
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4" data-en="Calculation Results" data-hy="Հաշվարկի արդյունքները">Calculation Results</h2>
+                
+                <div id="results" class="space-y-4">
+                    <div class="text-center text-gray-500" data-en="Enter system parameters and click 'Calculate Loan Options' to see results" data-hy="Մուտքագրեք համակարգի պարամետրերը և սեղմեք 'Հաշվարկել վարկի տարբերակները' արդյունքները տեսնելու համար">
+                        Enter system parameters and click "Calculate Loan Options" to see results
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loan Options Table -->
+        <div id="loanTable" class="bg-white rounded-lg shadow-md p-6 hidden">
+            <h2 class="text-xl font-semibold mb-4">Available Loan Options</h2>
+            
+            <!-- Filters and Sorting -->
+            <div class="mb-4 flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700" data-en="Filter by Bank:" data-hy="Զտել ըստ բանկի:">Filter by Bank:</label>
+                    <select id="bankFilter" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                        <option value="" data-en="All Banks" data-hy="Բոլոր բանկերը">All Banks</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700" data-en="Filter by Period:" data-hy="Զտել ըստ ժամկետի:">Filter by Period:</label>
+                    <select id="periodFilter" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                        <option value="" data-en="All Periods" data-hy="Ամբողջը">All Periods</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700" data-en="Sort by:" data-hy="Դասավորել ըստ:">Sort by:</label>
+                    <select id="sortBy" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                        <option value="monthlyPayment" data-en="Monthly Payment (Low to High)" data-hy="Ամսական վճար (ցածրից բարձր)">Monthly Payment (Low to High)</option>
+                        <option value="monthlyPaymentDesc" data-en="Monthly Payment (High to Low)" data-hy="Ամսական վճար (բարձրից ցածր)">Monthly Payment (High to Low)</option>
+                        <option value="loanAmount" data-en="Loan Amount (Low to High)" data-hy="Վարկի գումար (ցածրից բարձր)">Loan Amount (Low to High)</option>
+                        <option value="loanAmountDesc" data-en="Loan Amount (High to Low)" data-hy="Վարկի գումար (բարձրից ցածր)">Loan Amount (High to Low)</option>
+                        <option value="totalAmount" data-en="Total Amount (Low to High)" data-hy="Ընդհանուր գումար (ցածրից բարձր)">Total Amount (Low to High)</option>
+                        <option value="totalAmountDesc" data-en="Total Amount (High to Low)" data-hy="Ընդհանուր գումար (բարձրից ցածր)">Total Amount (High to Low)</option>
+                        <option value="interestRate" data-en="Interest Rate (Low to High)" data-hy="Տոկոսադրույք (ցածրից բարձր)">Interest Rate (Low to High)</option>
+                        <option value="interestRateDesc" data-en="Interest Rate (High to Low)" data-hy="Տոկոսադրույք (բարձրից ցածր)">Interest Rate (High to Low)</option>
+
+                        <option value="loanPeriod" data-en="Loan Period (Low to High)" data-hy="Վարկի ժամկետ (ցածրից բարձր)">Loan Period (Low to High)</option>
+                        <option value="loanPeriodDesc" data-en="Loan Period (High to Low)" data-hy="Վարկի ժամկետ (բարձրից ցածր)">Loan Period (High to Low)</option>
+                    </select>
+                </div>
+                
+                <button onclick="clearFilters()" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md text-sm transition-colors"
+                        data-en="Clear Filters" data-hy="Մաքրել զտիչները">
+                    Clear Filters
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="border p-3 text-left font-medium cursor-pointer hover:bg-gray-100" onclick="sortTable('bankName')">
+                                <span data-en="Bank" data-hy="Բանկ">Bank</span> <span id="bankSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th class="border p-3 text-center font-medium w-32 cursor-pointer hover:bg-gray-100" onclick="sortTable('loanPeriod')">
+                                <span data-en="Loan Period" data-hy="Վարկի ժամկետ">Loan Period</span> <span id="periodSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th class="border p-3 text-center font-medium w-24 cursor-pointer hover:bg-gray-100" onclick="sortTable('interestRate')">
+                                <span data-en="Interest Rate" data-hy="Տոկոսադրույք">Interest Rate</span> <span id="rateSortIcon" class="ml-1">↕</span>
+                            </th>
+
+                            <th class="border p-3 text-center font-medium w-40 cursor-pointer hover:bg-gray-100" onclick="sortTable('loanAmount')">
+                                <span data-en="Loan Amount" data-hy="Վարկի գումար">Loan Amount</span> <span id="amountSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th class="border p-3 text-center font-medium w-36 cursor-pointer hover:bg-gray-100" onclick="sortTable('monthlyPayment')">
+                                <span data-en="Monthly Payment" data-hy="Ամսական վճար">Monthly Payment</span> <span id="paymentSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th class="border p-3 text-center font-medium w-40 cursor-pointer hover:bg-gray-100" onclick="sortTable('totalInterest')">
+                                <span data-en="Total Interest" data-hy="Ընդհանուր տոկոս">Total Interest</span> <span id="interestSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th class="border p-3 text-center font-medium w-44 cursor-pointer hover:bg-gray-100" onclick="sortTable('totalAmount')">
+                                <span data-en="Total Amount" data-hy="Ընդհանուր գումար">Total Amount</span> <span id="totalSortIcon" class="ml-1">↕</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="loanTableBody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-4 text-sm text-gray-600">
+                <span id="resultCount" data-en="Showing all results" data-hy="Ցուցադրվում են բոլոր արդյունքները">Showing all results</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Bank configurations
+        const bankConfigurations = [
+            {
+                name: 'ArmEconomBank',
+                options: [
+                    { interestRate: 0, commission: 0.21, periods: [36] },
+                    { interestRate: 0, commission: 0.32, periods: [60] },
+                    { interestRate: 0, commission: 0.41, periods: [84] },
+                    { interestRate: 0.03, commission: 0.18, periods: [36] },
+                    { interestRate: 0.03, commission: 0.27, periods: [60] },
+                    { interestRate: 0.03, commission: 0.34, periods: [84] },
+                    { interestRate: 0.05, commission: 0.16, periods: [36] },
+                    { interestRate: 0.05, commission: 0.23, periods: [60] },
+                    { interestRate: 0.05, commission: 0.3, periods: [84] },
+                    { interestRate: 0.09, commission: 0.1, periods: [36] },
+                    { interestRate: 0.09, commission: 0.15, periods: [60] },
+                    { interestRate: 0.09, commission: 0.19, periods: [84] },
+                    { interestRate: 0.12, commission: 0.06, periods: [36] },
+                    { interestRate: 0.12, commission: 0.09, periods: [60] },
+                    { interestRate: 0.12, commission: 0.11, periods: [84] },
+                    { interestRate: 0.15, commission: 0.02, periods: [36] },
+                    { interestRate: 0.15, commission: 0.03, periods: [60] },
+                    { interestRate: 0.15, commission: 0.04, periods: [84] }
+                ]
+            },
+            {
+                name: 'ACBA Bank',
+                options: [
+                    { interestRate: 0.11, commission: 0.04, periods: [96] }
+                ]
+            }
+        ];
+
+        function calculateLoanPayment(principal, annualRate, months) {
+            const monthlyRate = annualRate / 12;
+            if (monthlyRate === 0) return principal / months;
+            return principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+        }
+
+        function calculateLoan() {
+            // Get input values
+            const systemPower = parseFloat(document.getElementById('systemPower').value);
+            const installationType = document.getElementById('installationType').value;
+
+            if (!systemPower) {
+                alert('Please enter system power');
+                return;
+            }
+
+            // Fixed values
+            const profitPerKw = 30000;
+            const salesTeamPct = 0.06; // 6%
+            const unanticipatedExpensesPct = 0.02; // 2%
+            const downPaymentAmount = 0;
+
+            // Get cost per kW based on installation type
+            let costPerKw;
+            switch(installationType) {
+                case 'onRoof':
+                    costPerKw = 147000;
+                    break;
+                case 'metalConstructionOnRoof':
+                    costPerKw = 155000;
+                    break;
+                case 'systemOnGround':
+                    costPerKw = 160000;
+                    break;
+                case 'aluminiumConstructionOnRoof':
+                    costPerKw = 175000;
+                    break;
+                default:
+                    costPerKw = 147000;
+            }
+
+            // Calculate base value
+            const baseValue = systemPower * (costPerKw + profitPerKw);
+            
+            // Calculate system value for cash (without bank commission)
+            const systemValueForCash = baseValue / (1 - salesTeamPct - unanticipatedExpensesPct);
+
+            // Display results
+            const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վճարման համակարգի արժեք:';
+            document.getElementById('results').innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="font-medium">${systemValueText}</span>
+                        <span class="text-green-600 font-semibold">${systemValueForCash.toLocaleString()} AMD</span>
+                    </div>
+                </div>
+            `;
+
+            // Calculate loan options
+            const loanOptions = [];
+            
+            bankConfigurations.forEach(bank => {
+                bank.options.forEach(option => {
+                    option.periods.forEach(period => {
+                        // Calculate loan amount with commission
+                        const totalPercentage = salesTeamPct + unanticipatedExpensesPct + option.commission;
+                        const loanAmountWithCommission = baseValue / (1 - totalPercentage);
+                        
+                        // Calculate actual loan amount (after down payment)
+                        const actualLoanAmount = loanAmountWithCommission - downPaymentAmount;
+                        
+                        // Calculate monthly payment
+                        const monthlyPayment = calculateLoanPayment(actualLoanAmount, option.interestRate, period);
+                        const totalInterest = (monthlyPayment * period) - actualLoanAmount;
+                        const totalAmount = monthlyPayment * period;
+                        
+                        loanOptions.push({
+                            bankName: bank.name,
+                            interestRate: option.interestRate,
+                            commission: option.commission,
+                            loanPeriod: period,
+                            monthlyPayment: Math.round(monthlyPayment),
+                            totalInterest: Math.round(totalInterest),
+                            totalAmount: Math.round(totalAmount),
+                            loanAmount: Math.round(actualLoanAmount)
+                        });
+                    });
+                });
+            });
+
+            // Store all options globally and sort by monthly payment
+            allLoanOptions = loanOptions.sort((a, b) => a.monthlyPayment - b.monthlyPayment);
+            
+            // Populate filter dropdowns
+            populateFilters();
+            
+            // Display all options initially
+            displayLoanOptions(allLoanOptions);
+            updateResultCount(allLoanOptions.length);
+            
+            // Set initial sort state
+            currentSortField = 'monthlyPayment';
+            currentSortDirection = 'asc';
+            updateSortIcons('monthlyPayment', 'asc');
+
+            document.getElementById('loanTable').classList.remove('hidden');
+        }
+
+        // Global variables for filtering and sorting
+        let allLoanOptions = [];
+        let currentSortField = '';
+        let currentSortDirection = 'asc';
+        let currentLanguage = 'en';
+
+        // Language switching function
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Save language preference to localStorage
+            localStorage.setItem('loanCalculatorLanguage', lang);
+            
+            // Update language buttons
+            document.getElementById('langEn').className = lang === 'en' 
+                ? 'px-3 py-1 rounded-md text-sm font-medium bg-tiamat-blue text-white'
+                : 'px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300';
+            
+            document.getElementById('langHy').className = lang === 'hy' 
+                ? 'px-3 py-1 rounded-md text-sm font-medium bg-tiamat-blue text-white'
+                : 'px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300';
+            
+            // Update all elements with data attributes
+            document.querySelectorAll('[data-en][data-hy]').forEach(element => {
+                element.textContent = element.getAttribute(`data-${lang}`);
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-en-placeholder][data-hy-placeholder]').forEach(element => {
+                element.placeholder = element.getAttribute(`data-${lang}-placeholder`);
+            });
+            
+            // Update select options
+            document.querySelectorAll('option[data-en][data-hy]').forEach(option => {
+                option.textContent = option.getAttribute(`data-${lang}`);
+            });
+            
+            // Update result count if it exists
+            const resultCount = document.getElementById('resultCount');
+            if (resultCount && allLoanOptions.length > 0) {
+                updateResultCount(allLoanOptions.length);
+            }
+        }
+
+        // Set default values
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('systemPower').value = '10.44';
+            
+            // Add event listeners for filters
+            document.getElementById('bankFilter').addEventListener('change', applyFilters);
+            document.getElementById('periodFilter').addEventListener('change', applyFilters);
+            document.getElementById('sortBy').addEventListener('change', applySorting);
+            
+            // Load saved language preference
+            const savedLanguage = localStorage.getItem('loanCalculatorLanguage');
+            if (savedLanguage) {
+                switchLanguage(savedLanguage);
+            }
+        });
+
+        function populateFilters() {
+            const bankFilter = document.getElementById('bankFilter');
+            const periodFilter = document.getElementById('periodFilter');
+            
+            // Get unique banks and periods
+            const banks = [...new Set(allLoanOptions.map(option => option.bankName))];
+            const periods = [...new Set(allLoanOptions.map(option => option.loanPeriod))].sort((a, b) => a - b);
+            
+            // Clear existing options (except first)
+            bankFilter.innerHTML = '<option value="">All Banks</option>';
+            periodFilter.innerHTML = '<option value="">All Periods</option>';
+            
+            // Add bank options
+            banks.forEach(bank => {
+                const option = document.createElement('option');
+                option.value = bank;
+                option.textContent = bank;
+                bankFilter.appendChild(option);
+            });
+            
+            // Add period options
+            periods.forEach(period => {
+                const option = document.createElement('option');
+                option.value = period;
+                const monthsText = currentLanguage === 'en' ? 'months' : 'ամիս';
+                option.textContent = `${period} ${monthsText}`;
+                periodFilter.appendChild(option);
+            });
+        }
+
+        function applyFilters() {
+            const bankFilter = document.getElementById('bankFilter').value;
+            const periodFilter = document.getElementById('periodFilter').value;
+            
+            let filteredOptions = allLoanOptions.filter(option => {
+                const bankMatch = !bankFilter || option.bankName === bankFilter;
+                const periodMatch = !periodFilter || option.loanPeriod === parseInt(periodFilter);
+                return bankMatch && periodMatch;
+            });
+            
+            // Apply current sorting
+            if (currentSortField) {
+                filteredOptions = sortOptions(filteredOptions, currentSortField, currentSortDirection);
+            }
+            
+            displayLoanOptions(filteredOptions);
+            updateResultCount(filteredOptions.length);
+        }
+
+        function applySorting() {
+            const sortBy = document.getElementById('sortBy').value;
+            if (!sortBy) return;
+            
+            const [field, direction] = sortBy.includes('Desc') 
+                ? [sortBy.replace('Desc', ''), 'desc'] 
+                : [sortBy, 'asc'];
+            
+            currentSortField = field;
+            currentSortDirection = direction;
+            
+            // Get current filtered options
+            const bankFilter = document.getElementById('bankFilter').value;
+            const periodFilter = document.getElementById('periodFilter').value;
+            
+            let filteredOptions = allLoanOptions.filter(option => {
+                const bankMatch = !bankFilter || option.bankName === bankFilter;
+                const periodMatch = !periodFilter || option.loanPeriod === parseInt(periodFilter);
+                return bankMatch && periodMatch;
+            });
+            
+            filteredOptions = sortOptions(filteredOptions, field, direction);
+            displayLoanOptions(filteredOptions);
+        }
+
+        function sortOptions(options, field, direction) {
+            return options.sort((a, b) => {
+                let aVal = a[field];
+                let bVal = b[field];
+                
+                // Handle string comparison
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                
+                if (direction === 'asc') {
+                    return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+                } else {
+                    return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+                }
+            });
+        }
+
+        function sortTable(field) {
+            // Toggle direction if same field
+            if (currentSortField === field) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortField = field;
+                currentSortDirection = 'asc';
+            }
+            
+            // Get current filtered options
+            const bankFilter = document.getElementById('bankFilter').value;
+            const periodFilter = document.getElementById('periodFilter').value;
+            
+            let filteredOptions = allLoanOptions.filter(option => {
+                const bankMatch = !bankFilter || option.bankName === bankFilter;
+                const periodMatch = !periodFilter || option.loanPeriod === parseInt(periodFilter);
+                return bankMatch && periodMatch;
+            });
+            
+            filteredOptions = sortOptions(filteredOptions, field, currentSortDirection);
+            displayLoanOptions(filteredOptions);
+            updateSortIcons(field, currentSortDirection);
+        }
+
+        function updateSortIcons(field, direction) {
+            // Reset all icons
+            const icons = ['bankSortIcon', 'periodSortIcon', 'rateSortIcon', 
+                          'amountSortIcon', 'paymentSortIcon', 'interestSortIcon', 'totalSortIcon'];
+            icons.forEach(id => {
+                document.getElementById(id).textContent = '↕';
+            });
+            
+            // Set active icon
+            const iconMap = {
+                'bankName': 'bankSortIcon',
+                'loanPeriod': 'periodSortIcon',
+                'interestRate': 'rateSortIcon',
+                'loanAmount': 'amountSortIcon',
+                'monthlyPayment': 'paymentSortIcon',
+                'totalInterest': 'interestSortIcon',
+                'totalAmount': 'totalSortIcon'
+            };
+            
+            const activeIcon = document.getElementById(iconMap[field]);
+            if (activeIcon) {
+                activeIcon.textContent = direction === 'asc' ? '↑' : '↓';
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('bankFilter').value = '';
+            document.getElementById('periodFilter').value = '';
+            document.getElementById('sortBy').value = 'monthlyPayment';
+            
+            currentSortField = 'monthlyPayment';
+            currentSortDirection = 'asc';
+            
+            // Reset sort icons
+            updateSortIcons('monthlyPayment', 'asc');
+            
+            // Display all options sorted by monthly payment
+            const sortedOptions = sortOptions([...allLoanOptions], 'monthlyPayment', 'asc');
+            displayLoanOptions(sortedOptions);
+            updateResultCount(sortedOptions.length);
+        }
+
+        function updateResultCount(count) {
+            const totalCount = allLoanOptions.length;
+            const resultCount = document.getElementById('resultCount');
+            
+            if (currentLanguage === 'en') {
+                resultCount.textContent = count === totalCount 
+                    ? `Showing all ${totalCount} results` 
+                    : `Showing ${count} of ${totalCount} results`;
+            } else {
+                resultCount.textContent = count === totalCount 
+                    ? `Ցուցադրվում են բոլոր ${totalCount} արդյունքները` 
+                    : `Ցուցադրվում են ${count} ${totalCount}-ից`;
+            }
+        }
+
+        function displayLoanOptions(options) {
+            const tableBody = document.getElementById('loanTableBody');
+            tableBody.innerHTML = '';
+
+            options.forEach(option => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                const monthsText = currentLanguage === 'en' ? 'months' : 'ամիս';
+                row.innerHTML = `
+                    <td class="border p-3 font-medium">${option.bankName}</td>
+                    <td class="border p-3 text-center w-32">${option.loanPeriod} ${monthsText}</td>
+                    <td class="border p-3 text-center w-24">${(option.interestRate * 100).toFixed(1)}%</td>
+                    <td class="border p-3 text-center font-semibold text-green-600 w-40">${option.loanAmount.toLocaleString()}</td>
+                    <td class="border p-3 text-center font-semibold text-blue-600 w-36">${option.monthlyPayment.toLocaleString()}</td>
+                    <td class="border p-3 text-center font-semibold text-red-600 w-40">${Math.abs(option.totalInterest).toLocaleString()}</td>
+                    <td class="border p-3 text-center font-semibold text-purple-600 w-44">${option.totalAmount.toLocaleString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html> 
