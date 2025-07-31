@@ -1,5 +1,5 @@
 # Configuration files with sensitive data
-config.js
+# config.js - removed to ensure admin functionality works for all users
 
 # Node modules (if any)
 node_modules/
