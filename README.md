@@ -1,180 +1,147 @@
-# Solar Loan Calculator
+# Tiamat Solar Calculator with React Authentication
 
-A standalone web application for calculating and comparing solar system loan options from different banks in Armenia.
+A modern React-based Solar Loan Calculator with Supabase authentication.
 
 ## Features
 
-- **System Configuration**: Input system power, cost, profit, and percentage settings
-- **Real-time Calculations**: Instant calculation of loan options
-- **Bank Comparison**: Compare loan terms from multiple banks
-- **Detailed Breakdown**: View loan amount, monthly payments, total interest, and total amount
-- **Responsive Design**: Works on desktop and mobile devices
+- 🔐 **Secure Authentication**: Login, forgot password, and password reset
+- 🎨 **Modern UI**: Built with React + Tailwind CSS
+- 🚀 **Fast Development**: Vite build tool for rapid development
+- 📱 **Responsive Design**: Works on all devices
+- 🔒 **Protected Routes**: Dashboard access requires authentication
 
-## Live Demo
+## Tech Stack
 
-[View the live calculator](https://your-username.github.io/solar-loan-calculator)
+- **Frontend**: React 18 + TypeScript
+- **Styling**: Tailwind CSS
+- **Build Tool**: Vite
+- **Authentication**: Supabase
+- **Routing**: React Router DOM
 
-## Installation
+## Getting Started
 
-1. Clone the repository:
-```bash
-git clone https://github.com/your-username/solar-loan-calculator.git
-cd solar-loan-calculator
-```
+### Prerequisites
 
-2. **Set up configuration file** (required for admin functionality):
-```bash
-cp config.template.js config.js
-```
-Then edit `config.js` and customize the values:
-- Change `ADMIN_PASSWORD` to your desired password
-- Update bank configurations if needed
-- Adjust inverter prices as required
-- Modify base prices for different installation types
-- Set profit margins by warranty years
-- Configure sales team and unexpected expenses percentages
+- Node.js 18+ 
+- npm or yarn
 
-3. Install dependencies (optional, for development):
-```bash
-npm install
-```
+### Installation
 
-4. Start the development server:
-```bash
-npm start
-```
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-5. Open your browser and navigate to `http://localhost:3000`
+2. **Start development server:**
+   ```bash
+   npm run dev
+   ```
 
-## Usage
+3. **Open your browser:**
+   Navigate to `http://localhost:3000`
 
-### Input Parameters
+### Available Scripts
 
-- **System Power (kW)**: The total power of the solar system
-- **Installation Type**: Type of solar installation (On Roof, Metal Construction, etc.)
-- **Cost per kW (AMD)**: Cost per kilowatt in Armenian Drams
-- **Profit per kW (AMD)**: Profit margin per kilowatt
-- **Sales Team (%)**: Sales team commission percentage
-- **Unanticipated Expenses (%)**: Buffer for unexpected costs
-- **Down Payment (AMD)**: Initial payment amount
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run start` - Start the backend server
+- `npm run server` - Start the backend server (alternative)
 
-### Calculation Formula
-
-The calculator uses the following formula:
+## Project Structure
 
 ```
-System Value for Cash = (System Power × (Cost per kW + Profit per kW)) / (1 - Sales Team % - Unanticipated Expenses %)
+src/
+├── components/          # React components
+│   ├── Login.tsx       # Login form
+│   ├── ForgotPassword.tsx  # Password reset request
+│   ├── ResetPassword.tsx   # New password setup
+│   ├── Dashboard.tsx   # Protected dashboard
+│   └── Loading.tsx     # Loading spinner
+├── lib/
+│   └── supabaseClient.ts  # Supabase configuration
+├── App.tsx             # Main app component
+├── main.tsx            # React entry point
+└── index.css           # Tailwind CSS imports
 ```
 
-For loan calculations:
-```
-Loan Amount = (System Power × (Cost per kW + Profit per kW)) / (1 - Sales Team % - Unanticipated Expenses % - Bank Commission %)
-```
+## Authentication Flow
 
-### Output Information
+1. **Login** (`/login`)
+   - Email and password authentication
+   - Redirects to `/dashboard` on success
+   - Shows error messages on failure
 
-The calculator provides:
+2. **Forgot Password** (`/forgot-password`)
+   - Email input for password reset
+   - Sends reset link via Supabase
+   - Shows confirmation message
 
-- **Base Value**: Raw cost + profit calculation
-- **System Value for Cash**: Total value without bank commission
-- **Loan Options Table**: Detailed comparison of all available loan options
+3. **Reset Password** (`/reset-password`)
+   - New password input (accessed via email link)
+   - Password validation and confirmation
+   - Redirects to login after success
 
-### Admin Access
+4. **Dashboard** (`/dashboard`)
+   - Protected route requiring authentication
+   - Shows user information
+   - Logout functionality
 
-The calculator includes an admin section with detailed calculation breakdowns:
+## Supabase Configuration
 
-- **Access Method**: Press `A` + `S` + `D` + `Space` + `Enter` + `Enter` in sequence
-- **Admin Features**: 
-  - Detailed calculation breakdown
-  - Base prices display
-  - Profit margins by warranty years
-  - Commission rates for each bank
-  - Sensitive information is hidden as spoilers (click to reveal)
-- **Security**: Admin password is stored in `config.js` (not committed to git)
-
-## Supported Banks
-
-### ArmEconomBank
-- Multiple interest rates (0% to 15%)
-- Commission rates from 2% to 41%
-- Loan periods: 36, 60, and 84 months
-
-### ACBA Bank
-- 11% interest rate
-- 4% commission
-- 96-month loan period
-
-## Deployment
-
-### GitHub Pages
-
-1. Push your code to GitHub
-2. Go to repository Settings > Pages
-3. Select source branch (usually `main`)
-4. Your site will be available at `https://your-username.github.io/solar-loan-calculator`
-
-### Other Hosting Services
-
-- **Netlify**: Drag and drop the `index.html` file
-- **Vercel**: Connect your GitHub repository
-- **Any static hosting**: Upload the files to your web server
+The project is configured to use the existing Supabase database:
+- **URL**: `https://ylmcwkabyqvgdrbnunri.supabase.co`
+- **Tables**: `profiles` table for user data
 
 ## Development
 
-### Project Structure
+### Adding New Components
 
-```
-solar-loan-calculator/
-├── index.html          # Main application file
-├── package.json        # Project configuration
-├── README.md          # This file
-├── .gitignore         # Git ignore rules
-└── LICENSE            # MIT License
-```
+1. Create component in `src/components/`
+2. Import and add to routing in `App.tsx`
+3. Style with Tailwind CSS classes
 
-### Technologies Used
+### Styling
 
-- **HTML5**: Semantic markup
-- **CSS3**: Styling with Tailwind CSS
-- **JavaScript**: Vanilla JS for calculations
-- **Tailwind CSS**: Utility-first CSS framework
+- Use Tailwind CSS utility classes
+- Custom components defined in `src/index.css`
+- Responsive design with Tailwind breakpoints
 
-### Customization
+### State Management
 
-To add new banks or modify existing ones, edit the `bankConfigurations` array in `index.html`:
+- React hooks for local state
+- Supabase for authentication state
+- React Router for navigation state
 
-```javascript
-const bankConfigurations = [
-    {
-        name: 'New Bank',
-        options: [
-            { interestRate: 0.10, commission: 0.05, periods: [60] }
-        ]
-    }
-];
+## Deployment
+
+### Build for Production
+
+```bash
+npm run build
 ```
 
-## Contributing
+### Deploy
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+The built files will be in the `dist/` directory, ready for deployment to:
+- Vercel
+- Netlify
+- Any static hosting service
 
-## License
+## Backend Integration
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+The existing Node.js backend (`server.js`) continues to work alongside the React frontend:
+- API endpoints remain at `localhost:3001`
+- Database connections unchanged
+- Can be extended to work with React frontend
 
 ## Support
 
-For support, email support@tiamatsolar.com or create an issue in this repository.
+For issues or questions:
+1. Check the console for error messages
+2. Verify Supabase connection
+3. Ensure all dependencies are installed
 
-## Changelog
+---
 
-### Version 1.0.0
-- Initial release
-- Basic loan calculation functionality
-- Support for ArmEconomBank and ACBA Bank
-- Responsive design
-- Real-time calculations 
+**Note**: This React version replaces the previous vanilla HTML/JS implementation while maintaining all the core functionality and adding modern authentication features. 
