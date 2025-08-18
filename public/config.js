@@ -4,8 +4,8 @@
 
 // Modify existing CONFIG instead of redeclaring
 Object.assign(CONFIG, {
-    // Admin password - CHANGE THIS TO YOUR OWN PASSWORD
-    ADMIN_PASSWORD: 'Gordzara!12',
+    // Admin authentication is now handled by Supabase Auth
+    // No hardcoded passwords needed
     
     // Bank configurations - CUSTOMIZE AS NEEDED
     BANK_CONFIGURATIONS: [

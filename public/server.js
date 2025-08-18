@@ -1,0 +1,592 @@
+import express from 'express';
+import pg from 'pg';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+dotenv.config();
+
+const { Pool } = pg;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+// Middleware
+app.use(cors({
+    origin: true, // Allow all origins for development
+    credentials: true
+}));
+app.use(express.json());
+
+// Database connection - using Supabase
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
+});
+
+// Test database connection
+pool.query('SELECT NOW()', (err, res) => {
+    if (err) {
+        console.error('Database connection error:', err);
+        
+    } else {
+        
+    }
+});
+
+// API Routes
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        message: 'Tiamat Solar CRM API is running'
+    });
+});
+
+// Get all system cost settings organized by category
+app.get('/api/system-cost-settings', async (req, res) => {
+    try {
+        const query = 'SELECT * FROM system_cost_settings ORDER BY id';
+        const result = await pool.query(query);
+        
+        // Organize data by installation type and setting category
+        const organizedData = {
+            installationCosts: {
+                description: "Base installation costs per kW (excluding inverter and panels)",
+                fields: {
+                    setting_key: "Installation type identifier",
+                    setting_value: "Cost per kW in Armenian Dram (AMD)"
+                },
+                data: {}
+            },
+            profitMargins: {
+                description: "Profit margins per kW for each installation type",
+                fields: {
+                    setting_key: "Installation type identifier",
+                    setting_value: "Profit margin per kW in Armenian Dram (AMD)"
+                },
+                data: {}
+            },
+            salesCommissions: {
+                description: "Sales team commission percentages for each installation type",
+                fields: {
+                    setting_key: "Installation type identifier",
+                    setting_value: "Commission percentage (e.g., 6.00 = 6%)"
+                },
+                data: {}
+            },
+            unanticipatedExpenses: {
+                description: "Unanticipated expenses buffer percentages for each installation type",
+                fields: {
+                    setting_key: "Installation type identifier",
+                    setting_value: "Expense buffer percentage (e.g., 2.00 = 2%)"
+                },
+                data: {}
+            }
+        };
+        
+        result.rows.forEach(row => {
+            const key = row.setting_key;
+            const value = parseFloat(row.setting_value);
+            
+            if (key.includes('cost_per_kw')) {
+                const installationType = key.replace('_cost_per_kw', '');
+                organizedData.installationCosts.data[installationType] = {
+                    id: row.id,
+                    key: key,
+                    value: value,
+                    description: row.description,
+                    updated_at: row.updated_at
+                };
+            } else if (row.category === 'profit_margin') {
+                // Handle warranty-based profit margins
+                const warrantyYears = row.warranty_years;
+                const profitKey = `profit_per_kw_${warrantyYears}Y`;
+                organizedData.profitMargins.data[profitKey] = {
+                    id: row.id,
+                    key: profitKey,
+                    value: value,
+                    description: row.description,
+                    updated_at: row.updated_at
+                };
+            } else if (key.includes('profit_per_kw')) {
+                // Handle legacy installation-type-based profit keys (if any exist)
+                const installationType = key.replace('_profit_per_kw', '');
+                organizedData.profitMargins.data[installationType] = {
+                    id: row.id,
+                    key: key,
+                    value: value,
+                    description: row.description,
+                    updated_at: row.updated_at
+                };
+            } else if (key.includes('sales_pct') || key.includes('sales_team_pct')) {
+                // Handle both old sales_pct format and new sales_team_pct format
+                if (key === 'sales_team_pct') {
+                    // This is a common percentage for all installation types
+                    organizedData.salesCommissions.data[key] = {
+                        id: row.id,
+                        key: key,
+                        value: value,
+                        description: row.description,
+                        updated_at: row.updated_at
+                    };
+                } else {
+                    // This is installation-specific sales percentage
+                    const installationType = key.replace('_sales_pct', '');
+                    organizedData.salesCommissions.data[installationType] = {
+                        id: row.id,
+                        key: key,
+                        value: value,
+                        description: row.description,
+                        updated_at: row.updated_at
+                    };
+                }
+            } else if (key.includes('unexp_pct') || key.includes('unanticipated_expenses_pct')) {
+                const installationType = key.replace('_unexp_pct', '').replace('_unanticipated_expenses_pct', '');
+                organizedData.unanticipatedExpenses.data[installationType] = {
+                    id: row.id,
+                    key: key,
+                    value: value,
+                    description: row.description,
+                    updated_at: row.updated_at
+                };
+            }
+        });
+        
+        res.json({
+            success: true,
+            message: "System cost settings retrieved successfully",
+            data: organizedData,
+            totalRecords: result.rows.length,
+            categories: Object.keys(organizedData),
+            lastUpdated: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error fetching system cost settings:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Failed to fetch system cost settings',
+            details: error.message 
+        });
+    }
+});
+
+// Get all inverter options
+app.get('/api/inverters', async (req, res) => {
+    try {
+        const query = 'SELECT * FROM inverter_options WHERE is_active = true ORDER BY kw';
+        const result = await pool.query(query);
+        
+        res.json({
+            success: true,
+            message: "Inverter options retrieved successfully",
+            data: {
+                description: "Solar inverter options with power capacity and pricing",
+                fields: {
+                    kw: "Kilowatt capacity of the inverter system",
+                    price: "Price in Armenian Dram (AMD)",
+                    brand: "Manufacturer brand",
+                    model: "Model number",
+                    efficiency: "Efficiency percentage",
+                    warranty_years: "Warranty period in years"
+                },
+                inverters: result.rows.map(row => ({
+                    id: row.id,
+                    name: row.name,
+                    kw: parseFloat(row.kw),
+                    price: parseInt(row.price),
+                    brand: row.brand,
+                    model: row.model,
+                    efficiency: parseFloat(row.efficiency),
+                    warranty_years: parseInt(row.warranty_years),
+                    description: row.description
+                }))
+            },
+            totalInverters: result.rows.length,
+            lastUpdated: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error fetching inverter options:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Failed to fetch inverter options',
+            details: error.message 
+        });
+    }
+});
+
+// Get all photovoltaic panel options
+app.get('/api/panels', async (req, res) => {
+    try {
+        const query = 'SELECT * FROM panel_options WHERE is_active = true ORDER BY wattage';
+        const result = await pool.query(query);
+        
+        res.json({
+            success: true,
+            message: "Panel options retrieved successfully",
+            data: {
+                description: "Photovoltaic panel options with wattage and pricing",
+                fields: {
+                    wattage: "Panel power output in watts",
+                    price: "Total panel price in Armenian Dram (AMD)",
+                    price_per_watt: "Price per watt in Armenian Dram (AMD)",
+                    brand: "Manufacturer brand",
+                    model: "Model number",
+                    efficiency: "Efficiency percentage",
+                    cell_type: "Type of solar cells",
+                    warranty_years: "Warranty period in years"
+                },
+                panels: result.rows.map(row => ({
+                    id: row.id,
+                    name: row.name,
+                    wattage: parseInt(row.wattage),
+                    price: parseFloat(row.price), // Total panel price in AMD
+                    price_per_watt: parseFloat(row.price_per_watt), // Use the calculated price_per_watt column
+                    brand: row.brand,
+                    model: row.model,
+                    efficiency: parseFloat(row.efficiency),
+                    cell_type: row.cell_type,
+                    dimensions: row.dimensions,
+                    weight_kg: parseFloat(row.weight_kg),
+                    warranty_years: parseInt(row.warranty_years),
+                    description: row.description
+                }))
+            },
+            totalPanels: result.rows.length,
+            lastUpdated: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error fetching panel options:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Failed to fetch panel options',
+            details: error.message 
+        });
+    }
+});
+
+// Get all bank configurations
+app.get('/api/banks', async (req, res) => {
+    try {
+        const query = 'SELECT * FROM bank_configurations WHERE is_active = true ORDER BY bank_name, interest_rate, loan_period';
+        const result = await pool.query(query);
+        
+        // Organize by bank
+        const organizedBanks = {};
+        result.rows.forEach(row => {
+            if (!organizedBanks[row.bank_name]) {
+                organizedBanks[row.bank_name] = {
+                    name: row.bank_name, // Changed from bank_name to name for frontend compatibility
+                    options: []
+                };
+            }
+            organizedBanks[row.bank_name].options.push({
+                id: row.id,
+                interestRate: parseFloat(row.interest_rate), // Changed from interest_rate to interestRate
+                commission: parseFloat(row.commission),
+                periods: [parseInt(row.loan_period)], // Changed from loan_period to periods array
+                name: row.name,
+                description: row.description
+            });
+        });
+        
+        res.json({
+            success: true,
+            message: "Bank configurations retrieved successfully",
+            data: {
+                description: "Bank loan options with interest rates and commissions",
+                fields: {
+                    bank_name: "Name of the bank",
+                    interest_rate: "Annual interest rate as decimal (e.g., 0.12 = 12%)",
+                    commission: "Commission rate as decimal (e.g., 0.21 = 21%)",
+                    loan_period: "Loan period in months"
+                },
+                banks: Object.values(organizedBanks)
+            },
+            totalBanks: Object.keys(organizedBanks).length,
+            totalOptions: result.rows.length,
+            lastUpdated: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error fetching bank configurations:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Failed to fetch bank configurations',
+            details: error.message 
+        });
+    }
+});
+
+// Get comprehensive pricing data (all tables combined)
+app.get('/api/pricing-complete', async (req, res) => {
+    try {
+        // Get all data from all tables
+        const [costSettings, inverters, panels, banks] = await Promise.all([
+            pool.query('SELECT * FROM system_cost_settings ORDER BY id'),
+            pool.query('SELECT * FROM inverter_options WHERE is_active = true ORDER BY kw'),
+            pool.query('SELECT * FROM panel_options WHERE is_active = true ORDER BY wattage'),
+            pool.query('SELECT * FROM bank_configurations WHERE is_active = true ORDER BY bank_name, interest_rate, loan_period')
+        ]);
+        
+        // Organize cost settings
+        const organizedCosts = {
+            installationCosts: {},
+            profitMargins: {},
+            salesCommissions: {},
+            unanticipatedExpenses: {}
+        };
+        
+        costSettings.rows.forEach(row => {
+            const key = row.setting_key;
+            const value = parseFloat(row.setting_value);
+            
+            if (key.includes('cost_per_kw')) {
+                const installationType = key.replace('_cost_per_kw', '');
+                organizedCosts.installationCosts[installationType] = value;
+            } else if (key.includes('profit_per_kw')) {
+                const installationType = key.replace('_profit_per_kw', '');
+                organizedCosts.profitMargins[installationType] = value;
+            } else if (key.includes('sales_pct')) {
+                const installationType = key.replace('_sales_pct', '');
+                organizedCosts.salesCommissions[installationType] = value;
+            } else if (key.includes('unexp_pct') || key.includes('unanticipated_expenses_pct')) {
+                const installationType = key.replace('_unexp_pct', '').replace('_unanticipated_expenses_pct', '');
+                organizedCosts.unanticipatedExpenses[installationType] = value;
+            }
+        });
+        
+        // Organize banks
+        const organizedBanks = {};
+        banks.rows.forEach(row => {
+            if (!organizedBanks[row.bank_name]) {
+                organizedBanks[row.bank_name] = [];
+            }
+            organizedBanks[row.bank_name].push({
+                interest_rate: parseFloat(row.interest_rate),
+                commission: parseFloat(row.commission),
+                loan_period: parseInt(row.loan_period),
+                name: row.name
+            });
+        });
+        
+        res.json({
+            success: true,
+            message: "Complete pricing data retrieved successfully",
+            data: {
+                systemCosts: organizedCosts,
+                inverters: inverters.rows.map(row => ({
+                    kw: parseFloat(row.kw),
+                    price: parseInt(row.price),
+                    name: row.name
+                })),
+                panels: panels.rows.map(row => ({
+                    wattage: parseInt(row.wattage),
+                    price_per_watt: parseFloat(row.price_per_watt),
+                    name: row.name
+                })),
+                banks: organizedBanks
+            },
+            summary: {
+                totalCostSettings: costSettings.rows.length,
+                totalInverters: inverters.rows.length,
+                totalPanels: panels.rows.length,
+                totalBankOptions: banks.rows.length
+            },
+            lastUpdated: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error fetching complete pricing data:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Failed to fetch complete pricing data',
+            details: error.message 
+        });
+    }
+});
+
+// Get specific category of settings
+app.get('/api/system-cost-settings/:category', async (req, res) => {
+    try {
+        const { category } = req.params;
+        const query = 'SELECT * FROM system_cost_settings WHERE setting_key LIKE $1 ORDER BY id';
+        const result = await pool.query(query, [`%${category}%`]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error(`Error fetching ${category} settings:`, error);
+        res.status(500).json({ error: `Failed to fetch ${category} settings` });
+    }
+});
+
+// Create new system cost setting
+app.post('/api/system-cost-settings', async (req, res) => {
+    try {
+        const { setting_key, setting_value, description } = req.body;
+        
+        if (!setting_key || setting_value === undefined) {
+            return res.status(400).json({ error: 'setting_key and setting_value are required' });
+        }
+        
+        const query = 'INSERT INTO system_cost_settings (setting_key, setting_value, description) VALUES ($1, $2, $3) RETURNING *';
+        const result = await pool.query(query, [setting_key, setting_value, description]);
+        
+        res.status(201).json({
+            success: true,
+            message: 'Setting created successfully',
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error creating system cost setting:', error);
+        res.status(500).json({ error: 'Failed to create system cost setting', details: error.message });
+    }
+});
+
+// Update system cost setting
+app.put('/api/system-cost-settings/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { setting_value, description } = req.body;
+        
+        const query = 'UPDATE system_cost_settings SET setting_value = $1, description = $2 WHERE id = $3 RETURNING *';
+        const result = await pool.query(query, [setting_value, description, id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Setting not found' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating system cost setting:', error);
+        res.status(500).json({ error: 'Failed to update system cost setting' });
+    }
+});
+
+// Delete system cost setting
+app.delete('/api/system-cost-settings/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // First check if the record exists
+        const checkQuery = 'SELECT * FROM system_cost_settings WHERE id = $1';
+        const checkResult = await pool.query(checkQuery, [id]);
+        
+        if (checkResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Setting not found' });
+        }
+        
+        // Delete the record
+        const deleteQuery = 'DELETE FROM system_cost_settings WHERE id = $1 RETURNING *';
+        const result = await pool.query(deleteQuery, [id]);
+        
+        res.json({
+            success: true,
+            message: 'Setting deleted successfully',
+            deletedRecord: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error deleting system cost setting:', error);
+        res.status(500).json({ error: 'Failed to delete system cost setting' });
+    }
+});
+
+// Admin authentication endpoint
+app.post('/api/admin/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        if (!username || !password) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Username and password are required' 
+            });
+        }
+        
+        // Query admin users table
+        const query = 'SELECT id, username, password_hash, full_name, role, is_active FROM admin_users WHERE username = $1 AND is_active = true';
+        const result = await pool.query(query, [username]);
+        
+        if (result.rows.length === 0) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Invalid credentials' 
+            });
+        }
+        
+        const user = result.rows[0];
+        
+        // Simple password check (in production, use proper hashing)
+        if (password !== user.password_hash) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Invalid credentials' 
+            });
+        }
+        
+        // Update last login
+        await pool.query('UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
+        
+        res.json({
+            success: true,
+            message: 'Login successful',
+            user: {
+                id: user.id,
+                username: user.username,
+                full_name: user.full_name,
+                role: user.role
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error during admin login:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Internal server error during login' 
+        });
+    }
+});
+
+
+
+
+
+// Serve the login page
+app.get('/login', (req, res) => {
+    res.sendFile(__dirname + '/login.html');
+});
+
+// Serve the main app for the price calculation route
+app.get('/price_calculation', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
+
+// Serve the test route protection page
+app.get('/test', (req, res) => {
+    res.sendFile(__dirname + '/test-route-protection.html');
+});
+
+// Serve the main app for the root route (redirect to login)
+app.get('/', (req, res) => {
+    res.redirect('/login');
+});
+
+// Serve static files (CSS, JS, images) from root directory - AFTER ALL routes
+app.use(express.static(__dirname, {
+    index: false, // Don't serve index.html for directory requests
+    extensions: ['html', 'css', 'js', 'ico', 'png', 'jpg', 'jpeg', 'gif', 'svg'], // Only serve specific file types
+    setHeaders: (res, path) => {
+        // Don't serve files for API routes
+        if (path.startsWith('/api/')) {
+            res.status(404).end();
+        }
+    }
+}));
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
