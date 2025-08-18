@@ -75,25 +75,42 @@
             background: #e5e7eb;
         }
         
-
+        /* Route-based container visibility using CSS */
+        body[data-route="/login"] #authContainer {
+            display: flex !important;
+        }
+        
+        body[data-route="/login"] #appContainer {
+            display: none !important;
+        }
+        
+        body:not([data-route="/login"]) #authContainer {
+            display: none !important;
+        }
+        
+        /* Ensure containers are hidden by default */
+        #authContainer, #appContainer {
+            display: none;
+        }
     </style>
 
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50" data-route="">
     <!-- Immediate route-based container display -->
     <script>
-        // Immediately show correct container based on route before any other JS runs
+        // Immediately set the route attribute and show correct container
         (function() {
             const currentPath = window.location.pathname;
+            document.body.setAttribute('data-route', currentPath);
+            
+            // Also set display directly for immediate effect
             const authContainer = document.getElementById('authContainer');
             const appContainer = document.getElementById('appContainer');
             
             if (currentPath === '/login') {
-                // On login page - show only auth container
                 if (authContainer) authContainer.style.display = 'flex';
                 if (appContainer) appContainer.style.display = 'none';
             } else {
-                // On other pages - hide auth container, let JS handle app container
                 if (authContainer) authContainer.style.display = 'none';
                 if (appContainer) appContainer.style.display = 'none';
             }
