@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System Offer - TIAMAT SOLAR</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border-radius: 20px;
+            overflow: hidden;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.2;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: 1px;
+        }
+        
+        .logo-subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 15px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        
+        .header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #e2e8f0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title::before {
+            content: '☀️';
+            font-size: 20px;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        
+        .system-details {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .system-details table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .system-details td {
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+        
+        .system-details td:first-child {
+            font-weight: 600;
+            color: #4a5568;
+            width: 40%;
+        }
+        
+        .system-details td:last-child {
+            font-weight: 500;
+            color: #2d3748;
+        }
+        
+        .payment-options {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        
+        .cash-option {
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #48bb78;
+            box-shadow: 0 4px 6px -1px rgba(72, 187, 120, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cash-option::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+        
+        .cash-option h4 {
+            color: #22543d;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cash-option h4::before {
+            content: '💰';
+            font-size: 18px;
+        }
+        
+        .cash-price {
+            font-size: 22px;
+            font-weight: 700;
+            color: #22543d;
+            margin: 8px 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .loan-options {
+            background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #4299e1;
+            box-shadow: 0 4px 6px -1px rgba(66, 153, 225, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .loan-options::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+        
+        .loan-options h4 {
+            color: #2c5282;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .loan-options h4::before {
+            content: '🏦';
+            font-size: 18px;
+        }
+        
+        .option-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .option-table th {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+        
+        .option-table td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 12px;
+        }
+        
+        .option-table tr:nth-child(even) {
+            background: #f7fafc;
+        }
+        
+        .option-table tr:hover {
+            background: #edf2f7;
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+        
+        .highlight {
+            background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%) !important;
+            font-weight: 600;
+            color: #2c5282;
+        }
+        
+        .important-notes {
+            background: linear-gradient(135deg, #fef5e7 0%, #fed7aa 100%);
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #ed8936;
+            box-shadow: 0 4px 6px -1px rgba(237, 137, 54, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .important-notes::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+        
+        .important-notes h4 {
+            color: #744210;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .important-notes h4::before {
+            content: '⚠️';
+            font-size: 18px;
+        }
+        
+        .important-notes ul {
+            list-style: none;
+            padding: 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .important-notes li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #744210;
+            font-size: 13px;
+        }
+        
+        .important-notes li::before {
+            content: '•';
+            color: #ed8936;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            font-size: 16px;
+        }
+        
+        .contact-info {
+            background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #38b2ac;
+            box-shadow: 0 4px 6px -1px rgba(56, 178, 172, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .contact-info::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+        
+        .contact-info h3 {
+            color: #234e52;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .contact-info h3::before {
+            content: '📞';
+            font-size: 18px;
+        }
+        
+        .contact-info p {
+            margin: 6px 0;
+            color: #234e52;
+            font-size: 13px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .contact-info strong {
+            color: #2c5282;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 15px 30px;
+            text-align: center;
+            border-top: 2px solid #e2e8f0;
+            color: #4a5568;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            .header {
+                background: #667eea !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .content {
+                padding: 20px;
+            }
+            .header {
+                padding: 30px 20px;
+            }
+            .payment-options {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .option-table {
+                font-size: 10px;
+            }
+            .option-table th,
+            .option-table td {
+                padding: 6px 4px;
+            }
+            .section {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="logo">TIAMAT SOLAR</div>
+                <div class="logo-subtitle">Renewable Energy Solutions</div>
+                <h1>Solar System Offer</h1>
+                <p>Generated on: 2024-01-15</p>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <div class="section-title">System Specifications</div>
+                <div class="system-details">
+                    <table>
+                        <tr>
+                            <td>System Power</td>
+                            <td>10.44 kW</td>
+                        </tr>
+                        <tr>
+                            <td>Installation Type</td>
+                            <td>On Roof (Sloped)</td>
+                        </tr>
+                        <tr>
+                            <td>System Warranty</td>
+                            <td>12 years</td>
+                        </tr>
+                        <tr>
+                            <td>Inverter</td>
+                            <td>12 kW</td>
+                        </tr>
+                        <tr>
+                            <td>Inverter Warranty</td>
+                            <td>12 years</td>
+                        </tr>
+                        <tr>
+                            <td>PV Panels Warranty</td>
+                            <td>30 years</td>
+                        </tr>
+                        <tr>
+                            <td>Efficiency Guarantee</td>
+                            <td>85% of rated output after 25 years</td>
+                        </tr>
+                        <tr>
+                            <td>Annual Yield Guarantee</td>
+                            <td>Minimum 14,000 kWh/year</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Payment Options</div>
+                
+                <div class="payment-options">
+                    <!-- Cash Option -->
+                    <div class="cash-option">
+                        <h4>Cash Payment Option</h4>
+                        <div class="cash-price">2,450,000 AMD</div>
+                        <p><strong>Payment Terms:</strong> Full payment upon installation completion</p>
+                    </div>
+                    
+                    <!-- Loan Options -->
+                    <div class="loan-options">
+                        <h4>Available Loan Options</h4>
+                        <table class="option-table">
+                            <thead>
+                                <tr>
+                                    <th>Bank</th>
+                                    <th>Period</th>
+                                    <th>Interest Rate</th>
+                                    <th>Loan Amount</th>
+                                    <th>Monthly Payment</th>
+                                    <th>Total Interest</th>
+                                    <th>Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>ArmEconomBank</td>
+                                    <td>36 months</td>
+                                    <td>0.0%</td>
+                                    <td>2,450,000 AMD</td>
+                                    <td class="highlight">68,056 AMD</td>
+                                    <td>0 AMD</td>
+                                    <td>2,450,000 AMD</td>
+                                </tr>
+                                <tr>
+                                    <td>ArmEconomBank</td>
+                                    <td>60 months</td>
+                                    <td>0.0%</td>
+                                    <td>2,450,000 AMD</td>
+                                    <td class="highlight">40,833 AMD</td>
+                                    <td>0 AMD</td>
+                                    <td>2,450,000 AMD</td>
+                                </tr>
+                                <tr>
+                                    <td>ArmEconomBank</td>
+                                    <td>84 months</td>
+                                    <td>0.0%</td>
+                                    <td>2,450,000 AMD</td>
+                                    <td class="highlight">29,167 AMD</td>
+                                    <td>0 AMD</td>
+                                    <td>2,450,000 AMD</td>
+                                </tr>
+                                <tr>
+                                    <td>ACBA Bank</td>
+                                    <td>96 months</td>
+                                    <td>11.0%</td>
+                                    <td>2,450,000 AMD</td>
+                                    <td class="highlight">35,417 AMD</td>
+                                    <td>948,000 AMD</td>
+                                    <td>3,398,000 AMD</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="important-notes">
+                    <h4>Important Notes</h4>
+                    <ul>
+                        <li>All prices are in Armenian Drams (AMD)</li>
+                        <li>Loan terms and conditions are subject to bank approval</li>
+                        <li>Monthly payments are calculated based on the loan amount and interest rate</li>
+                        <li>This offer is valid for 30 days from the generation date</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="contact-info">
+                    <h3>Contact Information</h3>
+                    <p><strong>TIAMAT SOLAR</strong></p>
+                    <p>For questions and additional information, please contact us:</p>
+                    <p>Phone: +374 XX XXX XXX</p>
+                    <p>Email: info@tiamatsolar.am</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This offer was generated using the TIAMAT Solar Loan Calculator</p>
+        </div>
+    </div>
+</body>
+</html> 

@@ -5,21 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solar Loan Calculator</title>
     <link rel="icon" type="image/x-icon" href="tIAMAT white blue-06.ico">
-    <script src="https://cdn.tailwindcss.com?v=3.4.1"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Tailwind configuration
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'tiamat-blue': '#0066CC',
-                        'tiamat-light-blue': '#4A90E2',
-                        'tiamat-dark-blue': '#004499',
-                    }
-                }
-            }
-        }
-        
         // Configuration is now loaded from config.js and database
         let CONFIG = {
             // Only essential fallback values remain
@@ -75,46 +62,33 @@
         .spoiler-revealed:hover {
             background: #e5e7eb;
         }
-        
-
     </style>
-
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tiamat-blue': '#0066CC',
+                        'tiamat-light-blue': '#4A90E2',
+                        'tiamat-dark-blue': '#004499',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 <body class="bg-gray-50">
-    <!-- Authentication Container (shown when not logged in) -->
-    <div id="authContainer" class="min-h-screen flex items-center justify-center p-4" style="display: none;">
-        <div class="text-center">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-tiamat-blue rounded-full mb-4 shadow-lg">
-                <img src="tIAMAT white blue-06.ico" alt="Tiamat Logo" class="w-12 h-12">
-            </div>
-            <h1 class="text-3xl font-bold text-tiamat-blue mb-2">Authentication Required</h1>
-            <p class="text-gray-600 mb-4">Please log in to access the Solar Loan Calculator</p>
-            <a href="/login" class="inline-block bg-tiamat-blue text-white px-6 py-3 rounded-lg font-semibold hover:bg-tiamat-dark-blue transition-colors">
-                Go to Login
-            </a>
-        </div>
-    </div>
-
-    <!-- Main Application Container (shown when logged in) -->
-    <div id="appContainer" class="container mx-auto p-6 space-y-6" style="display: none;">
+    <div class="container mx-auto p-6 space-y-6">
         <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
                 <img src="tIAMAT white blue-06.ico" alt="Tiamat Logo" class="h-8 w-8">
                 <h1 class="text-3xl font-bold text-tiamat-blue" data-en="Solar Loan Calculator" data-hy="Արևային կայանի վարկի հաշվիչ">Solar Loan Calculator</h1>
             </div>
             
-            <!-- User Info and Controls -->
-            <div class="flex items-center gap-4">
-                <!-- User Info Display -->
-                <div id="userInfo" class="text-sm text-gray-700">
-                    <!-- Will be populated by auth.js -->
-            </div>
-            
             <!-- Language Switcher -->
             <div class="flex items-center gap-2">
                 <button onclick="switchLanguage('en')" id="langEn" class="px-3 py-1 rounded-md text-sm font-medium bg-tiamat-blue text-white">EN</button>
                 <button onclick="switchLanguage('hy')" id="langHy" class="px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300" style="display: inline-block !important; visibility: visible !important;">ՀԱՅ</button>
-                </div>
                 
                 <!-- Admin Login Button (Hidden) -->
                 <button id="adminLoginBtn" onclick="showAdminLogin()" 
@@ -432,7 +406,9 @@
         </div>
     </div>
 
+    <script src="/calculation.js"></script>
     <script>
+        // Additional UI-specific functions and event handlers
         // Global variables for database values
         let dbBasePrices = {};
         let dbProfitMargins = {};
@@ -485,6 +461,8 @@
                         };
 
                         // Debug: Log the loaded installation costs
+                        console.log('🔍 Loaded installation costs:', dbProfitMargins.installationCosts);
+                        console.log('🔍 Available cost keys:', Object.keys(costs));
                     }
                     
                     // Extract profit margins - now warranty-based instead of installation-type-based
@@ -497,6 +475,8 @@
                         };
                         
                         // Debug: Log the loaded profit margins
+                        console.log('🔍 Loaded profit margins:', dbProfitMargins.profitMargins);
+                        console.log('🔍 Available profit keys:', Object.keys(profits));
                     }
                     
                     // Extract sales commissions - now using common percentage for all installation types
@@ -615,7 +595,9 @@
                     }
                     
                     // Debug: Log the final data structure
-                    
+                    console.log('🔍 Final dbProfitMargins structure:', dbProfitMargins);
+                    console.log('🔍 Final dbSalesCommissions structure:', dbSalesCommissions);
+                    console.log('🔍 Final dbUnanticipatedExpenses structure:', dbUnanticipatedExpenses);
                     
                     // Mark data as loaded
                     isDataLoaded = true;
@@ -854,6 +836,12 @@
             let selectedInverter = null;
             
             // Debug logging for inverter selection
+            console.log('🔍 calculateLoan - Inverter Debug:', {
+                isManualMode,
+                manualBrand: document.getElementById('manualBrand').value,
+                manualPower: document.getElementById('manualPower').value,
+                systemPower
+            });
             
             // Check if manual mode is enabled (variable already declared above)
             
@@ -862,7 +850,11 @@
                 const selectedBrand = document.getElementById('manualBrand').value;
                 const selectedPower = document.getElementById('manualPower').value;
                 
-
+                console.log('🔍 Manual Inverter Mode - Values:', {
+                    selectedBrand,
+                    selectedPower,
+                    invertersAvailable: inverters ? inverters.length : 0
+                });
                 
                 if (!selectedBrand || !selectedPower) {
                     const message = currentLanguage === 'en' 
@@ -887,7 +879,11 @@
                     inv.brand === selectedBrand && inv.kw == selectedPower
                 );
                 
-
+                console.log('🔍 Manual Inverter Found:', {
+                    selectedInverter,
+                    searchCriteria: { brand: selectedBrand, power: selectedPower },
+                    availableInverters: inverters.filter(inv => inv.brand === selectedBrand)
+                });
                 
                 if (!selectedInverter) {
                     const message = currentLanguage === 'en' 
@@ -911,30 +907,47 @@
                 const selectedInverterKw = document.getElementById('inverterSelect').value;
                 
                 // Find the selected inverter from the dropdown (no more auto option)
-                    selectedInverter = inverters.find(inv => inv.kw == selectedInverterKw);
-                    if (!selectedInverter) {
-                        const message = currentLanguage === 'en' 
-                            ? 'Selected inverter not found!'
+                selectedInverter = inverters.find(inv => inv.kw == selectedInverterKw);
+                if (!selectedInverter) {
+                    const message = currentLanguage === 'en' 
+                        ? 'Selected inverter not found!'
                         : 'Ընտրված փոխակերպիչը չի գտնվել:';
-                        
-                        document.getElementById('results').innerHTML = `
-                            <div class="space-y-3">
-                                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                                    <div class="flex items-center">
-                                        <span class="w-5 h-5 text-red-400 mr-2 text-xl font-bold">✕</span>
-                                        <span class="text-red-800 font-medium">${message}</span>
-                                    </div>
+                    
+                    document.getElementById('results').innerHTML = `
+                        <div class="space-y-3">
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <span class="w-5 h-5 text-red-400 mr-2 text-xl font-bold">✕</span>
+                                    <span class="text-red-800 font-medium">${message}</span>
                                 </div>
                             </div>
-                        `;
-                        return;
+                        </div>
+                    `;
+                    return;
                 }
             }
             
             const inverterPrice = selectedInverter.price;
             const inverterKw = selectedInverter.kw;
             
+            console.log('🔍 Inverter Selection Complete:', {
+                selectedInverter: {
+                    brand: selectedInverter.brand,
+                    model: selectedInverter.model,
+                    kw: selectedInverter.kw,
+                    price: selectedInverter.price
+                },
+                inverterPrice,
+                inverterKw,
+                timestamp: new Date().toISOString()
+            });
+            
             // Debug: Log the current system power and installation type
+            console.log('🔍 System Parameters:', {
+                systemPower,
+                installationType,
+                timestamp: new Date().toISOString()
+            });
 
             // Calculate panel price
             let panelPrice = 0;
@@ -996,7 +1009,17 @@
             // Total system price including sales team and unexpected expenses
             const totalSystemPrice = Math.ceil((basePrice + profitAmount + inverterPrice + panelPrice) / (1 - salesTeamPctDecimal - unanticipatedExpensesPctDecimal));
             
-
+            console.log('🔍 Final System Price Calculation:', {
+                basePrice,
+                profitAmount,
+                inverterPrice,
+                panelPrice,
+                salesTeamPct,
+                unanticipatedExpensesPct,
+                salesTeamPctDecimal,
+                unanticipatedExpensesPctDecimal,
+                totalSystemPrice
+            });
 
             // Display results
             const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վաճառքի գին:';
@@ -1043,8 +1066,8 @@
                 const basePricePct = ((basePrice / totalSystemPrice) * 100).toFixed(1);
                 const profitPct = ((profitAmount / totalSystemPrice) * 100).toFixed(1);
                 const panelPct = ((panelPrice / totalSystemPrice) * 100).toFixed(1);
-                const salesTeamPctDisplay = salesTeamPct.toFixed(1);
-                const unexpectedExpensesPctDisplay = unanticipatedExpensesPct.toFixed(1);
+                const salesTeamPctDisplay = (salesTeamPct * 100).toFixed(1);
+                const unexpectedExpensesPctDisplay = (unanticipatedExpensesPct * 100).toFixed(1);
                 
                 // Get installation type name for display
                 const installationTypeNames = {
@@ -1340,6 +1363,7 @@
         function populateInverterDropdown() {
             // Check if inverters are loaded
             if (!inverters || inverters.length === 0) {
+                console.log('⚠️ populateInverterDropdown called but inverters not loaded yet');
                 return;
             }
             
@@ -1381,7 +1405,12 @@
                 const bestInverter = suitableInverters[0];
                 inverterSelect.value = bestInverter.kw;
                 
-
+                console.log('🔍 populateInverterDropdown: Auto-selected best inverter:', {
+                    brand: bestInverter.brand,
+                    model: bestInverter.model,
+                    kw: bestInverter.kw,
+                    systemPower: systemPower
+                });
             }
         }
 
@@ -1389,14 +1418,25 @@
         function populatePanelDropdown() {
             // Check if all required data is loaded
             if (!panels || panels.length === 0) {
+                console.log('⚠️ populatePanelDropdown: No panels available');
                 return;
             }
             
-        if (!inverters || !dbProfitMargins || !dbSalesCommissions || !dbUnanticipatedExpenses) {
-            return;
-        }
-        // Use the intelligent calculation function
-        calculatePanelRequirements();
+            if (!inverters || !dbProfitMargins || !dbSalesCommissions || !dbUnanticipatedExpenses) {
+                console.log('⚠️ populatePanelDropdown: Waiting for all data to load...');
+                console.log('🔍 Available data:', {
+                    panels: panels.length,
+                    inverters: inverters ? inverters.length : 'undefined',
+                    dbProfitMargins: dbProfitMargins ? 'loaded' : 'undefined',
+                    dbSalesCommissions: dbSalesCommissions ? 'loaded' : 'undefined',
+                    dbUnanticipatedExpenses: dbUnanticipatedExpenses ? 'loaded' : 'undefined'
+                });
+                return;
+            }
+            
+            console.log('✅ populatePanelDropdown: All data loaded, proceeding with panel suggestions');
+            // Use the intelligent calculation function
+            calculatePanelRequirements();
         }
 
         // Manual inverter selection functions
@@ -1405,7 +1445,10 @@
             const autoSelection = document.getElementById('autoInverterSelection');
             const manualSelection = document.getElementById('manualInverterSelection');
             
-
+            console.log('🔍 Inverter Selection Toggle:', {
+                checked: toggle.checked,
+                mode: toggle.checked ? 'Manual' : 'Auto'
+            });
             
             if (toggle.checked) {
                 // Switch to manual mode
@@ -1414,7 +1457,7 @@
                 populateManualBrands();
                 populateManualPowers();
                 
-
+                console.log('🔍 Switched to Manual Mode - Dropdowns populated');
             } else {
                 // Switch to auto mode
                 autoSelection.classList.remove('hidden');
@@ -1423,7 +1466,7 @@
                 document.getElementById('manualBrand').value = '';
                 document.getElementById('manualPower').value = '';
                 
-
+                console.log('🔍 Switched to Auto Mode - Manual selections cleared');
             }
             
             // Force recalculation when inverter selection mode changes
@@ -1450,7 +1493,7 @@
                 return;
             }
             
-
+            console.log('🔍 populateManualBrands: Inverters loaded:', inverters.length);
             
             const brandSelect = document.getElementById('manualBrand');
             brandSelect.innerHTML = '<option value="" data-en="Select brand" data-hy="Ընտրեք բրենդը">Select brand</option>';
@@ -1512,7 +1555,7 @@
                 return;
             }
             
-
+            console.log('🔍 populateManualPowers: Inverters loaded:', inverters.length);
             
             const powerSelect = document.getElementById('manualPower');
             powerSelect.innerHTML = '<option value="" data-en="Select power" data-hy="Ընտրեք հզորությունը">Select power</option>';
@@ -1747,6 +1790,14 @@
                     }
                     
                     // Debug logging for quantity calculation
+                    console.log('🔍 Panel Type Quantities:', {
+                        brand,
+                        wattage,
+                        exactQuantity,
+                        minQuantity,
+                        maxQuantity,
+                        quantities: Array.from(quantities)
+                    });
                     
                     // Calculate actual power and deviation for each quantity
                     quantities.forEach(quantity => {
@@ -1772,6 +1823,14 @@
                 panelOptions.sort((a, b) => a.deviation - b.deviation);
                 
                 // Debug logging for final panel options
+                console.log('🔍 Final Panel Options (before slicing):', panelOptions.map(opt => ({
+                    brand: opt.brand,
+                    wattage: opt.wattage,
+                    quantity: opt.quantity,
+                    actualPower: opt.actualPower,
+                    deviation: opt.deviation,
+                    totalPrice: opt.totalPrice
+                })));
                 
                 // Remove duplicate options (same brand, wattage, quantity)
                 const uniquePanelOptions = [];
@@ -1785,12 +1844,27 @@
                     }
                 });
                 
-
+                console.log('🔍 Unique Panel Options (after deduplication):', uniquePanelOptions.map(opt => ({
+                    brand: opt.brand,
+                    wattage: opt.wattage,
+                    quantity: opt.quantity,
+                    actualPower: opt.actualPower,
+                    deviation: opt.deviation,
+                    totalPrice: opt.totalPrice
+                })));
                 
                 // Take top 9 closest unique options to target system power with complete system cost
                 const bestOptions = uniquePanelOptions.slice(0, 9);
                 
                 // Debug logging for best options
+                console.log('🔍 Best Panel Options (after slicing):', bestOptions.map(opt => ({
+                    brand: opt.brand,
+                    wattage: opt.wattage,
+                    quantity: opt.quantity,
+                    actualPower: opt.actualPower,
+                    deviation: opt.deviation,
+                    totalPrice: opt.totalPrice
+                })));
                 
                 // Debug: Log price range for label assignment
                 if (bestOptions.length > 0) {
@@ -1799,7 +1873,14 @@
                     const maxPrice = Math.max(...prices);
                     const firstMinIndex = bestOptions.findIndex(opt => opt.totalPrice === minPrice);
                     const firstMaxIndex = bestOptions.findIndex(opt => opt.totalPrice === maxPrice);
-
+                    console.log('🔍 Price Range for Labels:', {
+                        minPrice,
+                        maxPrice,
+                        priceRange: maxPrice - minPrice,
+                        totalOptions: bestOptions.length,
+                        firstMinIndex,
+                        firstMaxIndex
+                    });
                 }
                 
                 // Display panel options in the suggestions display
@@ -1842,9 +1923,24 @@
                 // Additional validation: ensure min and max are different
                 const hasPriceVariation = minPrice !== maxPrice;
                 
-
+                console.log('🔍 Price Label Assignment Strategy:', {
+                    minPrice,
+                    maxPrice,
+                    firstMinIndex,
+                    firstMaxIndex,
+                    totalOptions: bestOptions.length,
+                    hasPriceVariation,
+                    priceVariation: maxPrice - minPrice
+                });
                 
                 // Debug: Show all prices for verification
+                console.log('🔍 All Panel Option Prices:', bestOptions.map((opt, idx) => ({
+                    index: idx,
+                    option: `${opt.quantity} × ${opt.brand} ${opt.wattage}W`,
+                    price: opt.totalPrice,
+                    isMin: opt.totalPrice === minPrice,
+                    isMax: opt.totalPrice === maxPrice
+                })));
                 
                 bestOptions.forEach((option, index) => {
                     // Create suggestion card
@@ -1878,6 +1974,18 @@
                     }
                     
                     // Debug: Log price label assignment for this option
+                    console.log(`🔍 Option ${index} Price Label:`, {
+                        option: `${option.quantity} × ${option.brand} ${option.wattage}W`,
+                        totalPrice: option.totalPrice,
+                        minPrice,
+                        maxPrice,
+                        priceLabel,
+                        firstMinIndex,
+                        firstMaxIndex,
+                        hasPriceVariation,
+                        isLowest: index === firstMinIndex && hasPriceVariation,
+                        isHighest: index === firstMaxIndex && hasPriceVariation
+                    });
                     
                     const text = currentLanguage === 'en' 
                         ? `${option.quantity} × ${option.brand} ${option.wattage}W = ${option.actualPower} kW`
@@ -1914,6 +2022,14 @@
                 }
                 
                 // Final validation: Log which options got which labels
+                console.log('🔍 Final Label Assignment Summary:', {
+                    totalOptions: bestOptions.length,
+                    hasPriceVariation,
+                    labelsAssigned: {
+                        lowestPrice: firstMinIndex >= 0 ? `${firstMinIndex}: ${bestOptions[firstMinIndex]?.brand} ${bestOptions[firstMinIndex]?.wattage}W` : 'None',
+                        highestPrice: firstMaxIndex >= 0 ? `${firstMaxIndex}: ${bestOptions[firstMaxIndex]?.brand} ${bestOptions[firstMaxIndex]?.wattage}W` : 'None'
+                    }
+                });
                 
                 // Auto-recalculate when panel suggestions are updated
                 autoRecalculate();
@@ -2015,8 +2131,11 @@
             // Only update if we're in auto inverter mode
             const manualToggle = document.getElementById('manualInverterToggle');
             if (manualToggle.checked) {
+                console.log('🔍 updateInverterAutoSelection: Manual mode enabled, skipping auto-update');
                 return;
             }
+            
+            console.log('🔍 updateInverterAutoSelection: Updating inverter selection for system power:', systemPower);
             
             // Check if inverters are loaded
             if (!inverters || inverters.length === 0) {
@@ -2046,7 +2165,12 @@
                     
                     if (targetOption) {
                         inverterSelect.value = targetOption.value;
-
+                        console.log('🔍 updateInverterAutoSelection: Updated to inverter:', {
+                            brand: bestInverter.brand,
+                            model: bestInverter.model,
+                            kw: bestInverter.kw,
+                            power: targetOption.value
+                        });
                     } else {
                         console.log('⚠️ updateInverterAutoSelection: Target inverter option not found in dropdown');
                     }
@@ -2092,9 +2216,20 @@
             const manualBrand = document.getElementById('manualBrand').value;
             const manualPower = document.getElementById('manualPower').value;
             
+            console.log('🔍 forceRecalculate - Inverter Debug:', {
+                isManualMode,
+                manualBrand,
+                manualPower,
+                isDataLoaded,
+                timestamp: new Date().toISOString()
+            });
+            
             // Force immediate recalculation
             if (isDataLoaded) {
+                console.log('🔍 forceRecalculate - Calling calculateLoan()');
                 calculateLoan();
+            } else {
+                console.log('🔍 forceRecalculate - Data not loaded yet, skipping calculation');
             }
         }
 
@@ -2148,9 +2283,6 @@
 
         // Set default values
         document.addEventListener('DOMContentLoaded', function() {
-            // CRITICAL SECURITY: Enforce security immediately on page load
-            enforceSecurityOnLoad();
-            
             document.getElementById('systemPower').value = '10.44';
             
             // Initialize selectedPanelInfo to prevent undefined errors
@@ -2227,25 +2359,49 @@
             // Add event listeners for manual inverter selection changes with real-time updates
             document.getElementById('manualBrand').addEventListener('input', function() {
                 // Real-time update when brand changes
+                console.log('🔍 Manual Brand Changed (Real-time):', {
+                    brand: this.value,
+                    power: document.getElementById('manualPower').value,
+                    timestamp: new Date().toISOString()
+                });
                 forceRecalculate();
             });
             
             document.getElementById('manualPower').addEventListener('input', function() {
                 // Real-time update when power changes
+                console.log('🔍 Manual Power Changed (Real-time):', {
+                    brand: document.getElementById('manualBrand').value,
+                    power: this.value,
+                    timestamp: new Date().toISOString()
+                });
                 forceRecalculate();
             });
             
             // Also keep change events for compatibility
             document.getElementById('manualBrand').addEventListener('change', function() {
+                console.log('🔍 Manual Brand Changed:', {
+                    brand: this.value,
+                    power: document.getElementById('manualPower').value,
+                    timestamp: new Date().toISOString()
+                });
                 forceRecalculate();
             });
             
             document.getElementById('manualPower').addEventListener('change', function() {
+                console.log('🔍 Manual Power Changed:', {
+                    brand: document.getElementById('manualBrand').value,
+                    power: this.value,
+                    timestamp: new Date().toISOString()
+                });
                 forceRecalculate();
             });
             
             // Add event listener for auto inverter selection changes
             document.getElementById('inverterSelect').addEventListener('change', function() {
+                console.log('🔍 Auto Inverter Selection Changed:', {
+                    selectedValue: this.value,
+                    timestamp: new Date().toISOString()
+                });
                 forceRecalculate();
             });
             
@@ -2283,12 +2439,6 @@
             if (savedLanguage) {
                 switchLanguage(savedLanguage);
             }
-            
-            // ADDITIONAL SECURITY: Double-check security on window load
-            window.addEventListener('load', function() {
-                // Force security check again after all resources are loaded
-                enforceSecurityOnLoad();
-            });
             
             // Ensure Armenian button is always visible
             const langHyButton = document.getElementById('langHy');
@@ -2541,9 +2691,9 @@
             });
         }
 
-        // Admin functionality - Database-based authentication
+        // Admin functionality
         let isAdminLoggedIn = false;
-        let currentAdminUser = null;
+        const ADMIN_PASSWORD = CONFIG.ADMIN_PASSWORD;
 
         function showAdminLogin() {
             document.getElementById('adminModal').classList.remove('hidden');
@@ -2552,53 +2702,25 @@
 
         function hideAdminLogin() {
             document.getElementById('adminModal').classList.add('hidden');
-            document.getElementById('adminUsername').value = '';
             document.getElementById('adminPassword').value = '';
         }
 
-        async function loginAdmin() {
-            const username = document.getElementById('adminUsername').value;
+        function loginAdmin() {
             const password = document.getElementById('adminPassword').value;
-            
-            if (!username || !password) {
-                alert('Please enter both username and password');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
+            if (password === ADMIN_PASSWORD) {
                 isAdminLoggedIn = true;
-                    currentAdminUser = result.user;
                 hideAdminLogin();
                 showAdminPanel();
                 showAdminDetails();
                 updateAdminButton();
                 showCommissionColumn();
                 showProfitPerKwDisplay();
-                    
-                    // Show welcome message
-                    alert(`Welcome, ${currentAdminUser.full_name}!`);
-                    
                 // Recalculate to show detailed breakdown
                 if (allLoanOptions.length > 0) {
                     calculateLoan();
                 }
             } else {
-                    alert(result.error || 'Login failed');
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('Login failed. Please try again.');
+                alert('Incorrect password');
             }
         }
 
@@ -2653,7 +2775,7 @@
             }
         }
 
-        // Spoiler functionality - CSS-independent security
+        // Spoiler functionality
         function toggleSpoiler(element) {
             if (element.classList.contains('spoiler')) {
                 // Show the actual value
@@ -2667,44 +2789,6 @@
                 element.classList.remove('spoiler-revealed');
             }
         }
-        
-        // CRITICAL SECURITY: Ensure all sensitive data is hidden on page load
-        function enforceSecurityOnLoad() {
-            // Force hide all admin panels regardless of CSS state
-            const adminElements = [
-                'adminPanelMain',
-                'adminDetails',
-                'profitPerKwDisplayContainer'
-            ];
-            
-            adminElements.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.style.display = 'none';
-                    element.style.visibility = 'hidden';
-                }
-            });
-            
-            // Force hide commission columns
-            const commissionHeaders = document.querySelectorAll('.admin-only');
-            commissionHeaders.forEach(header => {
-                header.style.display = 'none';
-            });
-            
-            // Ensure all spoiler elements are hidden
-            const spoilerElements = document.querySelectorAll('[data-value]');
-            spoilerElements.forEach(element => {
-                if (element.classList.contains('spoiler-revealed')) {
-                    element.textContent = '████████████';
-                    element.classList.remove('spoiler-revealed');
-                    element.classList.add('spoiler');
-                }
-            });
-            
-            // Reset admin state
-            isAdminLoggedIn = false;
-            currentAdminUser = null;
-        }
 
         // Handle Enter key in admin password field
         function handleAdminPasswordKeydown(event) {
@@ -2715,19 +2799,11 @@
         }
 
         function showAdminDetails() {
-            const adminDetails = document.getElementById('adminDetails');
-            if (adminDetails) {
-                adminDetails.style.display = 'block';
-                adminDetails.style.visibility = 'visible';
-            }
+            document.getElementById('adminDetails').classList.remove('hidden');
         }
 
         function hideAdminDetails() {
-            const adminDetails = document.getElementById('adminDetails');
-            if (adminDetails) {
-                adminDetails.style.display = 'none';
-                adminDetails.style.visibility = 'hidden';
-            }
+            document.getElementById('adminDetails').classList.add('hidden');
         }
 
         function updateAdminButton() {
@@ -2743,15 +2819,14 @@
             }
         }
 
-        // New admin panel functions - CSS-independent security
+        // New admin panel functions
         function showAdminPanel() {
             if (!isAdminLoggedIn) return;
             
             // Show the admin panel on the main page
             const adminPanelMain = document.getElementById('adminPanelMain');
             if (adminPanelMain) {
-                adminPanelMain.style.display = 'block';
-                adminPanelMain.style.visibility = 'visible';
+                adminPanelMain.classList.remove('hidden');
                 
                 // Update the last updated timestamp
                 const lastUpdatedElement = document.getElementById('adminLastUpdated');
@@ -2768,8 +2843,7 @@
             isAdminLoggedIn = false;
             const adminPanelMain = document.getElementById('adminPanelMain');
             if (adminPanelMain) {
-                adminPanelMain.style.display = 'none';
-                adminPanelMain.style.visibility = 'hidden';
+                adminPanelMain.classList.add('hidden');
             }
             // Reset admin state
             hideAdminDetails();
@@ -3024,24 +3098,6 @@
         });
     </script>
 
-    <!-- Authentication Script -->
-    <script type="module" src="auth.js"></script>
-    <script type="module" src="route-protection.js"></script>
-    <script>
-        // Initialize authentication and route protection when page loads
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Import and initialize auth
-            const { initAuth } = await import('./auth.js');
-            await initAuth();
-            
-            // Initialize route protection
-            const { initRouteProtection } = await import('./route-protection.js');
-            initRouteProtection();
-        });
-    </script>
-    
-    </div> <!-- Close appContainer -->
-
     <!-- Admin Login Modal -->
     <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -3049,12 +3105,8 @@
                 <h3 class="text-lg font-semibold mb-4" data-en="Admin Login" data-hy="Ադմին մուտք">Admin Login</h3>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Username" data-hy="Օգտանուն">Username</label>
-                        <input type="text" id="adminUsername" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue" placeholder="Enter username">
-                    </div>
-                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Password" data-hy="Գաղտնաբառ">Password</label>
-                        <input type="password" id="adminPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue" onkeydown="handleAdminPasswordKeydown(event)" placeholder="Enter password">
+                        <input type="password" id="adminPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue" onkeydown="handleAdminPasswordKeydown(event)">
                     </div>
                     <div class="flex gap-2">
                         <button onclick="loginAdmin()" class="flex-1 bg-tiamat-blue text-white px-4 py-2 rounded-md hover:bg-tiamat-dark-blue">

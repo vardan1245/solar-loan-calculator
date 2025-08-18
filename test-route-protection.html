@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Route Protection</title>
+    <script src="https://cdn.tailwindcss.com?v=3.4.1"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Route Protection Test</h1>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Current Route Info</h2>
+            <div id="routeInfo" class="space-y-2">
+                <p><strong>Current Path:</strong> <span id="currentPath"></span></p>
+                <p><strong>Authentication Status:</strong> <span id="authStatus"></span></p>
+                <p><strong>User Info:</strong> <span id="userInfo"></span></p>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Test Navigation</h2>
+            <div class="space-y-3">
+                <button onclick="testNavigate('/login')" class="block w-full text-left px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200">
+                    Navigate to /login
+                </button>
+                <button onclick="testNavigate('/price_calculation')" class="block w-full text-left px-4 py-2 bg-green-100 text-green-800 rounded hover:bg-green-200">
+                    Navigate to /price_calculation
+                </button>
+                <button onclick="testNavigate('/')" class="block w-full text-left px-4 py-2 bg-purple-100 text-purple-800 rounded hover:bg-purple-200">
+                    Navigate to / (root)
+                </button>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Route Protection Status</h2>
+            <div id="protectionStatus" class="space-y-2">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getRouteUserInfo, canAccessRoute, checkRouteAuth } from './route-protection.js';
+        
+        // Update route info display
+        function updateRouteInfo() {
+            const routeInfo = getRouteUserInfo();
+            
+            document.getElementById('currentPath').textContent = routeInfo.currentPath;
+            document.getElementById('authStatus').textContent = routeInfo.isAuthenticated ? 'Authenticated' : 'Not Authenticated';
+            document.getElementById('userInfo').textContent = routeInfo.user ? routeInfo.user.email : 'No user';
+            
+            // Update protection status
+            const protectionStatus = document.getElementById('protectionStatus');
+            const routes = ['/login', '/price_calculation', '/', '/test'];
+            
+            protectionStatus.innerHTML = routes.map(route => {
+                const canAccess = canAccessRoute(route);
+                const status = canAccess ? '✅ Accessible' : '❌ Blocked';
+                const color = canAccess ? 'text-green-600' : 'text-red-600';
+                
+                return `<p><strong>${route}:</strong> <span class="${color}">${status}</span></p>`;
+            }).join('');
+        }
+        
+        // Test navigation function
+        window.testNavigate = function(route) {
+            console.log(`Testing navigation to: ${route}`);
+            if (canAccessRoute(route)) {
+                window.location.href = route;
+            } else {
+                alert(`Cannot access ${route} - redirecting to login`);
+                window.location.href = '/login';
+            }
+        };
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateRouteInfo();
+            
+            // Update every 2 seconds
+            setInterval(updateRouteInfo, 2000);
+        });
+        
+        // Listen for auth state changes
+        document.addEventListener('authStateChanged', updateRouteInfo);
+    </script>
+</body>
+</html>

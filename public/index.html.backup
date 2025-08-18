@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Loan Calculator</title>
+    <link rel="icon" type="image/x-icon" href="tIAMAT white blue-06.ico">
+    <link href="./styles.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto p-6 space-y-6">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <img src="tIAMAT white blue-06.ico" alt="Tiamat Logo" class="h-8 w-8">
+                <h1 class="text-3xl font-bold text-tiamat-blue" data-en="Solar Loan Calculator" data-hy="Արևային կայանի վարկի հաշվիչ">Solar Loan Calculator</h1>
+            </div>
+            
+            <!-- Language Switcher -->
+            <div class="flex items-center gap-2">
+                <button onclick="switchLanguage('en')" id="langEn" class="btn btn-primary btn-sm">EN</button>
+                <button onclick="switchLanguage('hy')" id="langHy" class="btn btn-outline btn-sm">ՀԱՅ</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Input Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-xl font-semibold text-tiamat-blue" data-en="System Configuration" data-hy="Համակարգի կարգավորում">System Configuration</h2>
+                </div>
+                <div class="card-body">
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="System Power (kW)" data-hy="Համակարգի հզորություն (կՎտ)">System Power (kW)</label>
+                        <input type="number" id="systemPower" data-en-placeholder="Enter system power" data-hy-placeholder="Մուտքագրեք համակարգի հզորությունը" placeholder="Enter system power" 
+                               class="w-full">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Installation Type" data-hy="Տեղադրման տեսակը">Installation Type</label>
+                        <select id="installationType" class="w-full">
+                            <option value="onRoof" data-en="On Roof" data-hy="Տանիքի վրա (լանջային)">On Roof</option>
+                            <option value="metalConstructionOnRoof" data-en="Metal Construction on Roof" data-hy="Մետաղական կոնստրուկցիա տանիքի վրա">Metal Construction on Roof</option>
+                            <option value="aluminiumConstructionOnRoof" data-en="Aluminium Construction on Roof" data-hy="Ալյումինե կոնստրուկցիա տանիքի վրա">Aluminium Construction on Roof</option>
+                            <option value="systemOnGround" data-en="System on Ground" data-hy="Համակարգ գետնի վրա">System on Ground</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Inverter Model" data-hy="Ինվերտորի մոդելը">Inverter Model</label>
+                        <select id="inverterModel" class="w-full">
+                            <option value="3" data-en="3 kW" data-hy="3 կՎտ">3 kW</option>
+                            <option value="3.6" data-en="3.6 kW" data-hy="3.6 կՎտ">3.6 kW</option>
+                            <option value="5.3" data-en="5.3 kW" data-hy="5.3 կՎտ">5.3 kW</option>
+                            <option value="6" data-en="6 kW" data-hy="6 կՎտ">6 kW</option>
+                            <option value="8" data-en="8 kW" data-hy="8 կՎտ">8 kW</option>
+                            <option value="10" data-en="10 kW" data-hy="10 կՎտ">10 kW</option>
+                            <option value="12" data-en="12 kW" data-hy="12 կՎտ">12 kW</option>
+                            <option value="15" data-en="15 kW" data-hy="15 կՎտ">15 kW</option>
+                            <option value="20" data-en="20 kW" data-hy="20 կՎտ">20 kW</option>
+                            <option value="25" data-en="25 kW" data-hy="25 կՎտ">25 kW</option>
+                            <option value="30" data-en="30 kW" data-hy="30 կՎտ">30 kW</option>
+                            <option value="40" data-en="40 kW" data-hy="40 կՎտ">40 kW</option>
+                            <option value="50" data-en="50 kW" data-hy="50 կՎտ">50 kW</option>
+                            <option value="60" data-en="60 kW" data-hy="60 կՎտ">60 kW</option>
+                            <option value="75" data-en="75 kW" data-hy="75 կՎտ">75 kW</option>
+                            <option value="100" data-en="100 kW" data-hy="100 կՎտ">100 kW</option>
+                            <option value="110" data-en="110 kW" data-hy="110 կՎտ">110 kW</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Warranty Years" data-hy="Երաշխիքի տարիներ">Warranty Years</label>
+                        <select id="warrantyYears" class="w-full">
+                            <option value="2" data-en="2 Years" data-hy="2 տարի">2 Years</option>
+                            <option value="3" data-en="3 Years" data-hy="3 տարի">3 Years</option>
+                            <option value="6" data-en="6 Years" data-hy="6 տարի">6 Years</option>
+                            <option value="12" data-en="12 Years" data-hy="12 տարի" selected>12 Years</option>
+                        </select>
+                    </div>
+
+                    <button onclick="calculateLoan()" 
+                            id="calculateButton"
+                            disabled
+                            class="w-full btn btn-primary opacity-50 cursor-not-allowed"
+                            data-en="Calculate Loan Options" data-hy="Հաշվարկել վարկի տարբերակները">
+                        Calculate Loan Options
+                    </button>
+                    
+                    <!-- Loading indicator -->
+                    <div id="loadingIndicator" class="hidden text-center text-sm text-gray-600">
+                        <div class="animate-spin inline-block w-4 h-4 border-2 border-tiamat-blue border-t-transparent rounded-full mr-2"></div>
+                        Loading system data...
+                    </div>
+                    
+                    <!-- Debug button -->
+                    <button onclick="debugDataLoading()" 
+                            class="w-full mt-2 btn btn-secondary text-sm">
+                        Debug Data Loading
+                    </button>
+                </div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-xl font-semibold text-tiamat-blue" data-en="Calculation Results" data-hy="Հաշվարկի արդյունքները">Calculation Results</h2>
+                </div>
+                <div class="card-body">
+                    <div id="results" class="space-y-4">
+                        <div class="text-center text-gray-500" data-en="Enter system parameters and click 'Calculate Loan Options' to see results" data-hy="Մուտքագրեք համակարգի պարամետրերը և սեղմեք 'Հաշվարկել վարկի տարբերակները' արդյունքները տեսնելու համար">
+                            Enter system parameters and click "Calculate Loan Options" to see results
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel (Hidden by default) -->
+        <div id="adminPanelMain" class="card hidden">
+            <div class="card-header">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold text-tiamat-blue">🔐 Admin Panel</h2>
+                    <button onclick="logoutAdmin()" class="btn btn-outline btn-sm">Logout</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="admin-panel">
+                    <div class="admin-section">
+                        <h4 class="font-semibold mb-3 text-lg text-tiamat-blue">Configuration Details</h4>
+                        <div class="card">
+                            <div class="card-body">
+                                <details class="space-y-3">
+                                    <summary class="cursor-pointer font-medium text-tiamat-blue hover:text-tiamat-dark-blue transition-colors">Click to reveal sensitive information</summary>
+                                    <div class="mt-3 space-y-2 text-sm">
+                                        <p><strong>Admin Password:</strong> <span class="text-red-600">Hidden for security</span></p>
+                                        <p><strong>Database Connection:</strong> <span class="text-green-600">Connected to Supabase</span></p>
+                                        <p><strong>API Endpoints:</strong> <span class="text-blue-600">All endpoints working</span></p>
+                                        <p><strong>Tables:</strong> <span class="text-green-600">system_cost_settings, inverter_options, panel_options, bank_configurations</span></p>
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-section">
+                        <h4 class="font-semibold mb-3 text-lg text-tiamat-blue">Current Settings</h4>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div class="p-3 bg-gray-50 rounded-lg">
+                                        <strong class="text-tiamat-blue">Sales Team %:</strong> <span class="text-green-600 font-semibold">6%</span>
+                                    </div>
+                                    <div class="p-3 bg-gray-50 rounded-lg">
+                                        <strong class="text-tiamat-blue">Unexpected Expenses %:</strong> <span class="text-yellow-600 font-semibold">2%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-section">
+                        <h4 class="font-semibold mb-3 text-lg text-tiamat-blue">System Status</h4>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div class="p-3 bg-gray-50 rounded-lg">
+                                        <strong class="text-tiamat-blue">Database:</strong> <span class="text-green-600 font-semibold">Connected</span>
+                                    </div>
+                                    <div class="p-3 bg-gray-50 rounded-lg">
+                                        <strong class="text-tiamat-blue">API Server:</strong> <span class="text-green-600 font-semibold">Running</span>
+                                    </div>
+                                    <div class="p-3 bg-gray-50 rounded-lg">
+                                        <strong class="text-tiamat-blue">Frontend:</strong> <span class="text-green-600 font-semibold">Live Data</span>
+                                    </div>
+                                    <div class="p-3 bg-gray-50 rounded-lg">
+                                        <strong class="text-tiamat-blue">Last Updated:</strong> <span class="text-blue-600 font-semibold" id="adminLastUpdated"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loan Options Table -->
+        <div id="loanTable" class="card hidden">
+            <div class="card-header">
+                <h2 class="text-xl font-semibold text-tiamat-blue">Available Loan Options</h2>
+            </div>
+            <div class="card-body">
+            
+            <!-- Filters and Sorting -->
+            <div class="mb-4 flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700" data-en="Filter by Bank:" data-hy="Զտել ըստ բանկի:">Filter by Bank:</label>
+                    <select id="bankFilter" class="text-sm">
+                        <option value="" data-en="All Banks" data-hy="Բոլոր բանկերը">All Banks</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700" data-en="Filter by Period:" data-hy="Զտել ըստ ժամկետի:">Filter by Period:</label>
+                    <select id="periodFilter" class="text-sm">
+                        <option value="" data-en="All Periods" data-hy="Ամբողջը">All Periods</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700" data-en="Sort by:" data-hy="Դասավորել ըստ:">Sort by:</label>
+                    <select id="sortBy" class="text-sm">
+                        <option value="monthlyPayment" data-en="Monthly Payment (Low to High)" data-hy="Ամսական վճար (ցածրից բարձր)">Monthly Payment (Low to High)</option>
+                        <option value="monthlyPaymentDesc" data-en="Monthly Payment (High to Low)" data-hy="Ամսական վճար (բարձրից ցածր)">Monthly Payment (High to Low)</option>
+                        <option value="loanAmount" data-en="Loan Amount (Low to High)" data-hy="Վարկի գումար (ցածրից բարձր)">Loan Amount (Low to High)</option>
+                        <option value="loanAmountDesc" data-en="Loan Amount (High to Low)" data-hy="Վարկի գումար (բարձրից ցածր)">Loan Amount (High to Low)</option>
+                        <option value="totalAmount" data-en="Total Amount (Low to High)" data-hy="Ընդհանուր գումար (ցածրից բարձր)">Total Amount (Low to High)</option>
+                        <option value="totalAmountDesc" data-en="Total Amount (High to Low)" data-hy="Ընդհանուր գումար (բարձրից ցածր)">Total Amount (High to Low)</option>
+                        <option value="interestRate" data-en="Interest Rate (Low to High)" data-hy="Տոկոսադրույք (ցածրից բարձր)">Interest Rate (Low to High)</option>
+                        <option value="interestRateDesc" data-en="Interest Rate (High to Low)" data-hy="Տոկոսադրույք (բարձրից ցածր)">Interest Rate (High to Low)</option>
+
+                        <option value="loanPeriod" data-en="Loan Period (Low to High)" data-hy="Վարկի ժամկետ (ցածրից բարձր)">Loan Period (Low to High)</option>
+                        <option value="loanPeriodDesc" data-en="Loan Period (High to Low)" data-hy="Վարկի ժամկետ (բարձրից ցածր)">Loan Period (High to Low)</option>
+                    </select>
+                </div>
+                
+                <button onclick="clearFilters()" class="btn btn-outline btn-sm"
+                        data-en="Clear Filters" data-hy="Մաքրել զտիչները">
+                    Clear Filters
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('bankName')" class="cursor-pointer">
+                                <span data-en="Bank" data-hy="Բանկ">Bank</span> <span id="bankSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th onclick="sortTable('loanPeriod')" class="cursor-pointer text-center">
+                                <span data-en="Loan Period" data-hy="Վարկի ժամկետ">Loan Period</span> <span id="periodSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th onclick="sortTable('interestRate')" class="cursor-pointer text-center">
+                                <span data-en="Interest Rate" data-hy="Տոկոսադրույք">Interest Rate</span> <span id="rateSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th onclick="sortTable('loanAmount')" class="cursor-pointer text-center">
+                                <span data-en="Loan Amount" data-hy="Վարկի գումար">Loan Amount</span> <span id="amountSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th onclick="sortTable('monthlyPayment')" class="cursor-pointer text-center">
+                                <span data-en="Monthly Payment" data-hy="Ամսական վճար">Monthly Payment</span> <span id="paymentSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th onclick="sortTable('totalInterest')" class="cursor-pointer text-center">
+                                <span data-en="Total Interest" data-hy="Ընդհանուր տոկոս">Total Interest</span> <span id="interestSortIcon" class="ml-1">↕</span>
+                            </th>
+                            <th onclick="sortTable('totalAmount')" class="cursor-pointer text-center">
+                                <span data-en="Total Amount" data-hy="Ընդհանուր գումար">Total Amount</span> <span id="totalSortIcon" class="ml-1">↕</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="loanTableBody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-4 text-sm text-gray-600">
+                <span id="resultCount" data-en="Showing all results" data-hy="Ցուցադրվում են բոլոր արդյունքները">Showing all results</span>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables for database-driven data
+        let INVERTERS = [];
+        let bankConfigurations = [];
+        let basePrices = {};
+        let profitMargins = {};
+        let percentages = {};
+
+        // Function to fetch all system cost settings from database
+        async function fetchSystemCostSettings() {
+            try {
+                // Show loading state
+                console.log('🔄 Loading system data from database...');
+                document.getElementById('loadingIndicator').classList.remove('hidden');
+                
+                // Fetch data from multiple endpoints
+                console.log('📡 Fetching from endpoints...');
+                const [costSettingsResponse, invertersResponse, banksResponse] = await Promise.all([
+                    fetch('http://localhost:3001/api/system-cost-settings'),
+                    fetch('http://localhost:3001/api/inverters'),
+                    fetch('http://localhost:3001/api/banks')
+                ]);
+                
+                console.log('📊 Response statuses:', {
+                    costSettings: costSettingsResponse.status,
+                    inverters: invertersResponse.status,
+                    banks: banksResponse.status
+                });
+                
+                if (!costSettingsResponse.ok || !invertersResponse.ok || !banksResponse.ok) {
+                    const errorDetails = {
+                        costSettings: { status: costSettingsResponse.status, statusText: costSettingsResponse.statusText },
+                        inverters: { status: invertersResponse.status, statusText: invertersResponse.statusText },
+                        banks: { status: banksResponse.status, statusText: banksResponse.statusText }
+                    };
+                    console.error('❌ API request failed:', errorDetails);
+                    throw new Error(`HTTP error! status: ${costSettingsResponse.status}, ${invertersResponse.status}, ${banksResponse.status}`);
+                }
+                
+                const costData = await costSettingsResponse.json();
+                const inverterData = await invertersResponse.json();
+                const bankData = await banksResponse.json();
+                
+                console.log('📄 Raw API responses:', {
+                    costSettings: costData.success ? 'success' : 'failed',
+                    inverters: inverterData.success ? 'success' : 'failed',
+                    banks: bankData.success ? 'success' : 'failed'
+                });
+                
+                // Update global variables with new API structure
+                INVERTERS = inverterData.success ? inverterData.data.inverters.map(inv => ({
+                    kw: inv.kw,
+                    price: inv.price,
+                    name: inv.name
+                })) : [];
+                
+                console.log('📊 Inverters loaded:', INVERTERS.length, INVERTERS);
+                
+                bankConfigurations = bankData.success ? bankData.data.banks.map(bank => ({
+                    name: bank.bank_name,
+                    options: bank.options.map(opt => ({
+                        interestRate: opt.interest_rate,
+                        commission: opt.commission,
+                        periods: [opt.loan_period]
+                    }))
+                })) : [];
+                
+                console.log('🏦 Banks loaded:', bankConfigurations.length, bankConfigurations);
+                
+                // Extract base prices and profit margins from cost settings
+                if (costData.success) {
+                    basePrices = {};
+                    profitMargins = {};
+                    percentages = {};
+                    
+                    // Process installation costs
+                    Object.entries(costData.data.installationCosts.data).forEach(([key, value]) => {
+                        const installationType = key.replace('_', '');
+                        basePrices[installationType] = value.value;
+                    });
+                    
+                    // Process profit margins
+                    Object.entries(costData.data.profitMargins.data).forEach(([key, value]) => {
+                        const warrantyYears = key.replace('_profit_per_kw', '');
+                        profitMargins[warrantyYears] = value.value;
+                    });
+                    
+                    // Process percentages
+                    Object.entries(costData.data.salesCommissions.data).forEach(([key, value]) => {
+                        const type = key.replace('_sales_pct', '');
+                        percentages[type] = value.value / 100; // Convert from percentage to decimal
+                    });
+                }
+                
+                console.log('System cost settings loaded from database:', {
+                    inverters: INVERTERS,
+                    banks: bankConfigurations,
+                    basePrices,
+                    profitMargins,
+                    percentages
+                });
+                
+                // Hide loading indicator
+                document.getElementById('loadingIndicator').classList.add('hidden');
+                
+                // Initialize the application with database data
+                initializeApplication();
+                
+                // Enable calculate button if we have data
+                console.log('🔘 Checking if calculate button should be enabled...');
+                console.log('   INVERTERS length:', INVERTERS.length);
+                console.log('   Calculate button element:', document.getElementById('calculateButton'));
+                
+                if (INVERTERS.length > 0) {
+                    console.log('✅ Enabling calculate button...');
+                    document.getElementById('calculateButton').disabled = false;
+                    document.getElementById('calculateButton').classList.remove('opacity-50', 'cursor-not-allowed');
+                    
+                    // Update the inverter dropdown with loaded data
+                    updateInverterDropdown(null, 'auto');
+                    
+                    console.log('✅ Calculate button enabled successfully');
+                } else {
+                    console.log('❌ INVERTERS array is empty, keeping button disabled');
+                }
+            } catch (error) {
+                console.error('❌ Error fetching system cost settings:', error);
+                
+                // Check if it's a connection error
+                if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED')) {
+                    console.log('🌐 Server connection failed - using fallback data');
+                    console.log('💡 Make sure your server is running on port 3001');
+                    console.log('   Run: node server.js or node start-server.js');
+                }
+                
+                // Hide loading indicator
+                document.getElementById('loadingIndicator').classList.add('hidden');
+                
+                // Fallback to hardcoded values if database is not available
+                loadFallbackData();
+            }
+        }
+
+        // Fallback data in case database is not available
+        function loadFallbackData() {
+            console.log('Loading fallback data...');
+            INVERTERS = [
+                { kw: 3, price: 202000 },
+                { kw: 3.6, price: 209000 },
+                { kw: 5.3, price: 238000 },
+                { kw: 6, price: 396000 },
+                { kw: 8, price: 418000 },
+                { kw: 10, price: 432000 },
+                { kw: 12, price: 446000 },
+                { kw: 15, price: 461000 },
+                { kw: 20, price: 533000 },
+                { kw: 25, price: 576000 },
+                { kw: 30, price: 936000 },
+                { kw: 40, price: 1037000 },
+                { kw: 50, price: 1094000 },
+                { kw: 60, price: 1181000 },
+                { kw: 75, price: 1260000 },
+                { kw: 100, price: 1649000 },
+                { kw: 110, price: 1728000 }
+            ];
+            
+            bankConfigurations = [
+                {
+                    name: 'ArmEconomBank',
+                    options: [
+                        { interestRate: 0, commission: 0.21, periods: [36] },
+                        { interestRate: 0, commission: 0.32, periods: [60] },
+                        { interestRate: 0, commission: 0.41, periods: [84] },
+                        { interestRate: 0.03, commission: 0.18, periods: [36] },
+                        { interestRate: 0.03, commission: 0.27, periods: [60] },
+                        { interestRate: 0.03, commission: 0.34, periods: [84] },
+                        { interestRate: 0.05, commission: 0.16, periods: [36] },
+                        { interestRate: 0.05, commission: 0.23, periods: [60] },
+                        { interestRate: 0.05, commission: 0.3, periods: [84] },
+                        { interestRate: 0.09, commission: 0.1, periods: [36] },
+                        { interestRate: 0.09, commission: 0.15, periods: [60] },
+                        { interestRate: 0.09, commission: 0.19, periods: [84] },
+                        { interestRate: 0.12, commission: 0.06, periods: [36] },
+                        { interestRate: 0.12, commission: 0.09, periods: [60] },
+                        { interestRate: 0.12, commission: 0.11, periods: [84] },
+                        { interestRate: 0.15, commission: 0.02, periods: [36] },
+                        { interestRate: 0.15, commission: 0.03, periods: [60] },
+                        { interestRate: 0.15, commission: 0.04, periods: [84] }
+                    ]
+                },
+                {
+                    name: 'ACBA Bank',
+                    options: [
+                        { interestRate: 0.11, commission: 0.04, periods: [96] }
+                    ]
+                }
+            ];
+            
+            basePrices = {
+                onRoof: 105000,
+                metalConstructionOnRoof: 115000,
+                systemOnGround: 117000,
+                aluminiumConstructionOnRoof: 130000
+            };
+            
+            profitMargins = {
+                2: 15000,
+                3: 20000,
+                6: 25000,
+                12: 30000
+            };
+            
+            percentages = {
+                salesTeam: 0.06,
+                unexpectedExpenses: 0.02
+            };
+            
+            initializeApplication();
+            
+            // Enable calculate button with fallback data
+            console.log('🔘 Enabling calculate button with fallback data...');
+            document.getElementById('calculateButton').disabled = false;
+            document.getElementById('calculateButton').classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            // Update the inverter dropdown with fallback data
+            updateInverterDropdown(null, 'auto');
+            
+            console.log('✅ Calculate button enabled with fallback data');
+        }
+
+        function calculateLoanPayment(principal, annualRate, months) {
+            const monthlyRate = annualRate / 12;
+            if (monthlyRate === 0) return principal / months;
+            return principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+        }
+
+        function calculateLoan() {
+            // Check if data is loaded
+            if (!INVERTERS || INVERTERS.length === 0) {
+                alert('System data is still loading. Please wait a moment and try again.');
+                console.error('INVERTERS array is empty:', INVERTERS);
+                return;
+            }
+
+            // Get input values
+            const systemPower = parseFloat(document.getElementById('systemPower').value);
+            const installationType = document.getElementById('installationType').value;
+            const inverterModel = document.getElementById('inverterModel').value;
+            const warrantyYears = parseInt(document.getElementById('warrantyYears').value);
+
+            if (!systemPower) {
+                alert('Please enter system power');
+                return;
+            }
+
+            // Get profit per kW based on warranty years
+            let profitPerKw;
+            switch(warrantyYears) {
+                case 2:
+                    profitPerKw = 15000;
+                    break;
+                case 3:
+                    profitPerKw = 20000;
+                    break;
+                case 6:
+                    profitPerKw = 25000;
+                    break;
+                case 12:
+                    profitPerKw = 30000;
+                    break;
+                default:
+                    profitPerKw = 20000;
+            }
+
+            // Get inverter cost - auto-select or manual selection
+            let inverterCost = 0;
+            let selectedInverter = null;
+            
+            // Auto-select inverter based on system power with 15% tolerance (default behavior)
+            console.log('Auto-selecting inverter for system power:', systemPower, 'kW (with 15% tolerance)');
+            console.log('Available inverters:', INVERTERS.length, INVERTERS);
+            
+            // Find the smallest inverter that can handle the system power with 15% tolerance
+            // Each inverter can handle systems up to 15% higher than its rated power
+            selectedInverter = INVERTERS.find(inv => {
+                if (!inv || typeof inv.kw === 'undefined') {
+                    console.warn('Invalid inverter object:', inv);
+                    return false;
+                }
+                const maxSystemPower = parseFloat(inv.kw) * 1.15;
+                return maxSystemPower >= systemPower;
+            });
+            
+            if (selectedInverter && selectedInverter.kw) {
+                const maxSystemPower = parseFloat(selectedInverter.kw) * 1.15;
+                console.log(`Selected inverter: ${selectedInverter.kw} kW for ${systemPower} kW system (max: ${maxSystemPower.toFixed(1)} kW)`);
+            } else {
+                // If no inverter found, use the largest available
+                if (INVERTERS.length > 0) {
+                    selectedInverter = INVERTERS[INVERTERS.length - 1];
+                    if (selectedInverter && selectedInverter.kw) {
+                        const maxSystemPower = parseFloat(selectedInverter.kw) * 1.15;
+                        console.log(`No suitable inverter found, using largest available: ${selectedInverter.kw} kW (max: ${maxSystemPower.toFixed(1)} kW)`);
+                    }
+                }
+            }
+            
+            // Ensure we have a valid inverter
+            if (selectedInverter && selectedInverter.kw && selectedInverter.price) {
+                inverterCost = Math.round(selectedInverter.price);
+                console.log('Inverter cost:', inverterCost, 'AMD');
+            } else {
+                // Fallback to a default inverter
+                inverterCost = 0;
+                console.error('No suitable inverter found for system power:', systemPower);
+                console.error('Selected inverter object:', selectedInverter);
+                console.error('INVERTERS array:', INVERTERS);
+            }
+
+            // Fixed values
+            const salesTeamPct = 0.06; // 6%
+            const unanticipatedExpensesPct = 0.02; // 2%
+            const downPaymentAmount = 0;
+
+            // Get cost per kW based on installation type
+            let costPerKw;
+            switch(installationType) {
+                case 'onRoof':
+                    costPerKw = 105000;
+                    break;
+                case 'metalConstructionOnRoof':
+                    costPerKw = 115000;
+                    break;
+                case 'systemOnGround':
+                    costPerKw = 117000;
+                    break;
+                case 'aluminiumConstructionOnRoof':
+                    costPerKw = 130000;
+                    break;
+                default:
+                    costPerKw = 105000;
+            }
+
+            // Calculate base value (including inverter cost)
+            const baseValue = Math.round((systemPower * (costPerKw + profitPerKw)) + inverterCost);
+            
+            // Calculate system value for cash (without bank commission)
+            const systemValueForCash = Math.round(baseValue / (1 - salesTeamPct - unanticipatedExpensesPct));
+
+            // Display results
+            const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վճարման համակարգի արժեք:';
+            const inverterText = currentLanguage === 'en' ? 'Selected Inverter:' : 'Ընտրված ինվերտոր:';
+            
+            let inverterInfo = '';
+            if (selectedInverter) {
+                const maxSystemPower = parseFloat(selectedInverter.kw) * 1.15;
+                const toleranceText = currentLanguage === 'en' ? ' (15% tolerance)' : ' (15% հանդուրժողականություն)';
+                inverterInfo = `
+                    <div class="flex justify-between">
+                        <span class="font-medium">${inverterText}${toleranceText}</span>
+                        <span class="text-blue-600 font-semibold">${selectedInverter.kw} kW (max: ${maxSystemPower.toFixed(1)} kW) (auto-selected)</span>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('results').innerHTML = `
+                <div class="space-y-3">
+                    ${inverterInfo}
+                    <div class="flex justify-between">
+                        <span class="font-medium">${systemValueText}</span>
+                        <span class="text-green-600 font-semibold">${Math.round(systemValueForCash).toLocaleString()} AMD</span>
+                    </div>
+                </div>
+            `;
+
+            // Calculate loan options
+            const loanOptions = [];
+            
+            bankConfigurations.forEach(bank => {
+                bank.options.forEach(option => {
+                    option.periods.forEach(period => {
+                        // Calculate loan amount with commission
+                        const totalPercentage = salesTeamPct + unanticipatedExpensesPct + option.commission;
+                        const loanAmountWithCommission = baseValue / (1 - totalPercentage);
+                        
+                        // Calculate actual loan amount (after down payment)
+                        const actualLoanAmount = loanAmountWithCommission - downPaymentAmount;
+                        
+                        // Calculate monthly payment
+                        const monthlyPayment = calculateLoanPayment(actualLoanAmount, option.interestRate, period);
+                        const totalInterest = (monthlyPayment * period) - actualLoanAmount;
+                        const totalAmount = monthlyPayment * period;
+                        
+                        loanOptions.push({
+                            bankName: bank.name,
+                            interestRate: option.interestRate,
+                            commission: option.commission,
+                            loanPeriod: period,
+                            monthlyPayment: Math.round(monthlyPayment),
+                            totalInterest: Math.round(totalInterest),
+                            totalAmount: Math.round(totalAmount),
+                            loanAmount: Math.round(actualLoanAmount)
+                        });
+                    });
+                });
+            });
+
+            // Store all options globally and sort by monthly payment
+            allLoanOptions = loanOptions.sort((a, b) => a.monthlyPayment - b.monthlyPayment);
+            
+            // Update inverter dropdown to show selected inverter
+            updateInverterDropdown(selectedInverter, inverterModel);
+            
+            // Populate filter dropdowns
+            populateFilters();
+            
+            // Display all options initially
+            displayLoanOptions(allLoanOptions);
+            updateResultCount(allLoanOptions.length);
+            
+            // Set initial sort state
+            currentSortField = 'monthlyPayment';
+            currentSortDirection = 'asc';
+            updateSortIcons('monthlyPayment', 'asc');
+
+            document.getElementById('loanTable').classList.remove('hidden');
+        }
+
+        // Global variables for filtering and sorting
+        let allLoanOptions = [];
+        let currentSortField = '';
+        let currentSortDirection = 'asc';
+        let currentLanguage = 'en';
+
+        // Language switching function
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Save language preference to localStorage
+            localStorage.setItem('loanCalculatorLanguage', lang);
+            
+            // Update language buttons
+            document.getElementById('langEn').className = lang === 'en' 
+                ? 'btn btn-primary btn-sm'
+                : 'btn btn-outline btn-sm';
+            
+            document.getElementById('langHy').className = lang === 'hy' 
+                ? 'btn btn-primary btn-sm'
+                : 'btn btn-outline btn-sm';
+            
+            // Update all elements with data attributes
+            document.querySelectorAll('[data-en][data-hy]').forEach(element => {
+                element.textContent = element.getAttribute(`data-${lang}`);
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-en-placeholder][data-hy-placeholder]').forEach(element => {
+                element.placeholder = element.getAttribute(`data-${lang}-placeholder`);
+            });
+            
+            // Update select options
+            document.querySelectorAll('option[data-en][data-hy]').forEach(option => {
+                option.textContent = option.getAttribute(`data-${lang}`);
+            });
+            
+            // Update result count if it exists
+            const resultCount = document.getElementById('resultCount');
+            if (resultCount && allLoanOptions.length > 0) {
+                updateResultCount(allLoanOptions.length);
+            }
+        }
+
+        // Set default values
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('systemPower').value = '10.44';
+            
+            // Add event listeners for filters
+            document.getElementById('bankFilter').addEventListener('change', applyFilters);
+            document.getElementById('periodFilter').addEventListener('change', applyFilters);
+            document.getElementById('sortBy').addEventListener('change', applySorting);
+            
+            // Load saved language preference
+            const savedLanguage = localStorage.getItem('loanCalculatorLanguage');
+            if (savedLanguage) {
+                switchLanguage(savedLanguage);
+            }
+
+        function populateFilters() {
+            const bankFilter = document.getElementById('bankFilter');
+            const periodFilter = document.getElementById('periodFilter');
+            
+            // Get unique banks and periods
+            const banks = [...new Set(allLoanOptions.map(option => option.bankName))];
+            const periods = [...new Set(allLoanOptions.map(option => option.loanPeriod))].sort((a, b) => a - b);
+            
+            // Clear existing options (except first)
+            bankFilter.innerHTML = '<option value="">All Banks</option>';
+            periodFilter.innerHTML = '<option value="">All Periods</option>';
+            
+            // Add bank options
+            banks.forEach(bank => {
+                const option = document.createElement('option');
+                option.value = bank;
+                option.textContent = bank;
+                bankFilter.appendChild(option);
+            });
+            
+            // Add period options
+            periods.forEach(period => {
+                const option = document.createElement('option');
+                option.value = period;
+                const monthsText = currentLanguage === 'en' ? 'months' : 'ամիս';
+                option.textContent = `${period} ${monthsText}`;
+                periodFilter.appendChild(option);
+            });
+        }
+
+        function applyFilters() {
+            const bankFilter = document.getElementById('bankFilter').value;
+            const periodFilter = document.getElementById('periodFilter').value;
+            
+            let filteredOptions = allLoanOptions.filter(option => {
+                const bankMatch = !bankFilter || option.bankName === bankFilter;
+                const periodMatch = !periodFilter || option.loanPeriod === parseInt(periodFilter);
+                return bankMatch && periodMatch;
+            });
+            
+            // Apply current sorting
+            if (currentSortField) {
+                filteredOptions = sortOptions(filteredOptions, currentSortField, currentSortDirection);
+            }
+            
+            displayLoanOptions(filteredOptions);
+            updateResultCount(filteredOptions.length);
+        }
+
+        function applySorting() {
+            const sortBy = document.getElementById('sortBy').value;
+            if (!sortBy) return;
+            
+            const [field, direction] = sortBy.includes('Desc') 
+                ? [sortBy.replace('Desc', ''), 'desc'] 
+                : [sortBy, 'asc'];
+            
+            currentSortField = field;
+            currentSortDirection = direction;
+            
+            // Get current filtered options
+            const bankFilter = document.getElementById('bankFilter').value;
+            const periodFilter = document.getElementById('periodFilter').value;
+            
+            let filteredOptions = allLoanOptions.filter(option => {
+                const bankMatch = !bankFilter || option.bankName === bankFilter;
+                const periodMatch = !periodFilter || option.loanPeriod === parseInt(periodFilter);
+                return bankMatch && periodMatch;
+            });
+            
+            filteredOptions = sortOptions(filteredOptions, field, direction);
+            displayLoanOptions(filteredOptions);
+        }
+
+        function sortOptions(options, field, direction) {
+            return options.sort((a, b) => {
+                let aVal = a[field];
+                let bVal = b[field];
+                
+                // Handle string comparison
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                
+                if (direction === 'asc') {
+                    return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+                } else {
+                    return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+                }
+            });
+        }
+
+        function sortTable(field) {
+            // Toggle direction if same field
+            if (currentSortField === field) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortField = field;
+                currentSortDirection = 'asc';
+            }
+            
+            // Get current filtered options
+            const bankFilter = document.getElementById('bankFilter').value;
+            const periodFilter = document.getElementById('periodFilter').value;
+            
+            let filteredOptions = allLoanOptions.filter(option => {
+                const bankMatch = !bankFilter || option.bankName === bankFilter;
+                const periodMatch = !periodFilter || option.loanPeriod === parseInt(periodFilter);
+                return bankMatch && periodMatch;
+            });
+            
+            filteredOptions = sortOptions(filteredOptions, field, currentSortDirection);
+            displayLoanOptions(filteredOptions);
+            updateSortIcons(field, currentSortDirection);
+        }
+
+        function updateSortIcons(field, direction) {
+            // Reset all icons
+            const icons = ['bankSortIcon', 'periodSortIcon', 'rateSortIcon', 
+                          'amountSortIcon', 'paymentSortIcon', 'interestSortIcon', 'totalSortIcon'];
+            icons.forEach(id => {
+                document.getElementById(id).textContent = '↕';
+            });
+            
+            // Set active icon
+            const iconMap = {
+                'bankName': 'bankSortIcon',
+                'loanPeriod': 'periodSortIcon',
+                'interestRate': 'rateSortIcon',
+                'loanAmount': 'amountSortIcon',
+                'monthlyPayment': 'paymentSortIcon',
+                'totalInterest': 'interestSortIcon',
+                'totalAmount': 'totalSortIcon'
+            };
+            
+            const activeIcon = document.getElementById(iconMap[field]);
+            if (activeIcon) {
+                activeIcon.textContent = direction === 'asc' ? '↑' : '↓';
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('bankFilter').value = '';
+            document.getElementById('periodFilter').value = '';
+            document.getElementById('sortBy').value = 'monthlyPayment';
+            
+            currentSortField = 'monthlyPayment';
+            currentSortDirection = 'asc';
+            
+            // Reset sort icons
+            updateSortIcons('monthlyPayment', 'asc');
+            
+            // Display all options sorted by monthly payment
+            const sortedOptions = sortOptions([...allLoanOptions], 'monthlyPayment', 'asc');
+            displayLoanOptions(sortedOptions);
+            updateResultCount(sortedOptions.length);
+        }
+
+        function updateResultCount(count) {
+            const totalCount = allLoanOptions.length;
+            const resultCount = document.getElementById('resultCount');
+            
+            if (currentLanguage === 'en') {
+                resultCount.textContent = count === totalCount 
+                    ? `Showing all ${totalCount} results` 
+                    : `Showing ${count} of ${totalCount} results`;
+            } else {
+                resultCount.textContent = count === totalCount 
+                    ? `Ցուցադրվում են բոլոր ${totalCount} արդյունքները` 
+                    : `Ցուցադրվում են ${count} ${totalCount}-ից`;
+            }
+        }
+
+        function displayLoanOptions(options) {
+            const tableBody = document.getElementById('loanTableBody');
+            tableBody.innerHTML = '';
+
+            options.forEach(option => {
+                const row = document.createElement('tr');
+                const monthsText = currentLanguage === 'en' ? 'months' : 'ամիս';
+                row.innerHTML = `
+                    <td class="font-medium">${option.bankName}</td>
+                    <td class="text-center">${option.loanPeriod} ${monthsText}</td>
+                    <td class="text-center">${(option.interestRate * 100).toFixed(1)}%</td>
+                    <td class="text-center font-semibold text-green-600">${option.loanAmount.toLocaleString()}</td>
+                    <td class="text-center font-semibold text-blue-600">${option.monthlyPayment.toLocaleString()}</td>
+                    <td class="text-center font-semibold text-red-600">${Math.abs(option.totalInterest).toLocaleString()}</td>
+                    <td class="text-center font-semibold text-purple-600">${option.totalAmount.toLocaleString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Admin functionality
+        let adminAttempts = [];
+        let adminLoggedIn = false;
+
+        document.addEventListener('keydown', function(event) {
+            adminAttempts.push(event.key);
+            
+            // Keep only last 6 key presses
+            if (adminAttempts.length > 6) {
+                adminAttempts.shift();
+            }
+            
+            // Check for admin sequence: A + S + D + Space + Enter + Enter
+            if (adminAttempts.length === 6) {
+                const sequence = adminAttempts.join('');
+                if (sequence === 'asd EnterEnter') {
+                    showAdminLogin();
+                }
+            }
+
+        function showAdminLogin() {
+            const adminModal = document.createElement('div');
+            adminModal.id = 'adminModal';
+            adminModal.className = 'modal-overlay';
+            adminModal.innerHTML = `
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3 class="text-xl font-semibold text-tiamat-blue">Admin Login</h3>
+                        <button onclick="closeAdminLogin()" class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                                <input type="password" id="adminPassword" placeholder="Enter admin password" class="w-full">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button onclick="adminLogin()" class="btn btn-primary">Login</button>
+                        <button onclick="closeAdminLogin()" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(adminModal);
+            document.getElementById('adminPassword').focus();
+        }
+
+        function closeAdminLogin() {
+            const modal = document.getElementById('adminModal');
+            if (modal) {
+                modal.remove();
+            }
+            adminAttempts = [];
+        }
+
+        function adminLogin() {
+            const password = document.getElementById('adminPassword').value;
+            // This should match the password in config.js
+            if (password === 'Gordzara!12') {
+                adminLoggedIn = true;
+                closeAdminLogin();
+                showAdminPanel();
+            } else {
+                alert('Incorrect password');
+            }
+        }
+
+        function showAdminPanel() {
+            if (!adminLoggedIn) return;
+            
+            // Show the admin panel on the main page
+            const adminPanelMain = document.getElementById('adminPanelMain');
+            if (adminPanelMain) {
+                adminPanelMain.classList.remove('hidden');
+                
+                // Update the last updated timestamp
+                const lastUpdatedElement = document.getElementById('adminLastUpdated');
+                if (lastUpdatedElement) {
+                    lastUpdatedElement.textContent = new Date().toLocaleString();
+                }
+                
+                // Scroll to the admin panel
+                adminPanelMain.scrollIntoView({ behavior: 'smooth' });
+            }
+
+
+        function closeAdminPanel() {
+            const panel = document.getElementById('adminPanel');
+            if (panel) {
+                panel.remove();
+            }
+        }
+
+        function logoutAdmin() {
+            adminLoggedIn = false;
+            const adminPanelMain = document.getElementById('adminPanelMain');
+            if (adminPanelMain) {
+                adminPanelMain.classList.add('hidden');
+            }
+            // Reset admin attempts
+            adminAttempts = [];
+        }
+
+        function refreshAdminData() {
+            if (!adminLoggedIn) return;
+            
+            // Update the last updated timestamp
+            const lastUpdatedElement = document.getElementById('adminLastUpdated');
+            if (lastUpdatedElement) {
+                lastUpdatedElement.textContent = new Date().toLocaleString();
+            }
+            
+            // You can add more data refresh logic here
+            console.log('🔄 Admin data refreshed');
+        }
+
+        // Function to update inverter dropdown to show selected inverter
+        function updateInverterDropdown(selectedInverter, inverterModel) {
+            console.log('🔄 Updating inverter dropdown...');
+            console.log('   Selected inverter:', selectedInverter);
+            console.log('   Available inverters:', INVERTERS.length, INVERTERS);
+            
+            const inverterSelect = document.getElementById('inverterModel');
+            const currentValue = inverterSelect.value;
+            
+            // Clear existing options
+            inverterSelect.innerHTML = '';
+            
+            // Always add the auto-selected inverter as FIRST option with (auto-selected) label
+            if (selectedInverter) {
+                const selectedOption = document.createElement('option');
+                selectedOption.value = selectedInverter.kw;
+                selectedOption.textContent = `${selectedInverter.kw} kW (auto-selected)`;
+                selectedOption.setAttribute('data-en', `${selectedInverter.kw} kW (auto-selected)`);
+                selectedOption.setAttribute('data-hy', `${selectedInverter.kw} կՎտ (ավտոմատ ընտրված)`);
+                selectedOption.style.fontStyle = 'italic';
+                selectedOption.style.color = '#6B7280'; // Gray color
+                
+                // Add as FIRST option
+                inverterSelect.appendChild(selectedOption);
+            }
+            
+            // Add ALL available inverter options from the INVERTERS array
+            INVERTERS.forEach(inv => {
+                const option = document.createElement('option');
+                option.value = inv.kw;
+                option.textContent = `${inv.kw} kW`;
+                option.setAttribute('data-en', `${inv.kw} kW`);
+                option.setAttribute('data-hy', `${inv.kw} կՎտ`);
+                inverterSelect.appendChild(option);
+            });
+            
+            // Set the auto-selected inverter as the active selection
+            if (selectedInverter) {
+                inverterSelect.value = selectedInverter.kw;
+            }
+            
+            console.log(`✅ Inverter dropdown updated with ${inverterSelect.options.length} options`);
+        }
+
+        // Test function for inverter auto-selection with 15% tolerance (removed console logs)
+        function testInverterSelection() {
+            // Function kept for compatibility but console logs removed
+            const testPowers = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 20, 25, 30, 40, 50, 60, 75, 100, 110, 120];
+            
+            // Test inverter selection logic without console output
+            testPowers.forEach(power => {
+                const selectedInverter = INVERTERS.find(inv => {
+                    const maxSystemPower = parseFloat(inv.kw) * 1.15;
+                    return maxSystemPower >= power;
+                });
+                
+                // No console output - just test the logic
+                if (selectedInverter) {
+                    const maxSystemPower = parseFloat(selectedInverter.kw) * 1.15;
+                    // console.log removed: ${power} kW system → ${selectedInverter.kw} kW inverter
+                } else {
+                    // console.log removed: ${power} kW system → No suitable inverter found
+                }
+            });
+        }
+
+        // Initialize the application
+        function initializeApplication() {
+            console.log('🚀 Initializing application...');
+            
+            // Set up event listeners for language switching
+            setupLanguageSwitching();
+            
+            // Note: fetchSystemCostSettings() is already called from the main flow
+            // Don't call it again to avoid conflicts
+            console.log('✅ Application initialized');
+        }
+        
+        // Set up language switching functionality
+        function setupLanguageSwitching() {
+            console.log('🌐 Setting up language switching...');
+            
+            // Get language toggle button
+            const langToggle = document.getElementById('langToggle');
+            if (langToggle) {
+                langToggle.addEventListener('click', function() {
+                    // Toggle between English and Armenian
+                    currentLanguage = currentLanguage === 'en' ? 'hy' : 'en';
+                    updateLanguage();
+                });
+                console.log('✅ Language toggle button configured');
+            } else {
+                console.log('⚠️ Language toggle button not found');
+            }
+        }
+        
+        // Update language throughout the interface
+        function updateLanguage() {
+            console.log(`🌐 Updating language to: ${currentLanguage}`);
+            
+            // Update all elements with data-en and data-hy attributes
+            document.querySelectorAll('[data-en][data-hy]').forEach(element => {
+                if (currentLanguage === 'en') {
+                    element.textContent = element.getAttribute('data-en');
+                } else {
+                    element.textContent = element.getAttribute('data-hy');
+                }
+            });
+            
+            console.log('✅ Language updated successfully');
+        }
+        
+        // Debug function to check data loading status
+        function debugDataLoading() {
+            console.log('🔍 Debug Data Loading Status:');
+            console.log('   INVERTERS array:', INVERTERS);
+            console.log('   INVERTERS length:', INVERTERS ? INVERTERS.length : 'undefined');
+            console.log('   bankConfigurations:', bankConfigurations);
+            console.log('   Calculate button element:', document.getElementById('calculateButton'));
+            console.log('   Calculate button disabled:', document.getElementById('calculateButton')?.disabled);
+            console.log('   Calculate button classes:', document.getElementById('calculateButton')?.className);
+            
+            // Try to manually enable the button if we have data
+            if (INVERTERS && INVERTERS.length > 0) {
+                console.log('🔧 Manually enabling calculate button...');
+                document.getElementById('calculateButton').disabled = false;
+                document.getElementById('calculateButton').classList.remove('opacity-50', 'cursor-not-allowed');
+                console.log('✅ Button should now be enabled');
+            } else {
+                console.log('❌ No inverter data available to enable button');
+            }
+        }
+        
+        // Call test function when page loads
+        window.addEventListener('load', function() {
+            console.log('Solar Loan Calculator loaded');
+            console.log('Available inverters:', INVERTERS.length);
+            
+            // Start loading data immediately
+            console.log('📡 Starting data loading on page load...');
+            fetchSystemCostSettings();
+    </script>
+</body>
+</html> 

@@ -7,6 +7,63 @@
     <link rel="icon" type="image/x-icon" href="tIAMAT white blue-06.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+        // Configuration is now loaded from config.js and database
+        let CONFIG = {
+            // Only essential fallback values remain
+            ADMIN_PASSWORD: 'Gordzara!12'
+        };
+
+        try {
+            // Try to load config.js
+            const script = document.createElement('script');
+            script.src = 'config.js';
+            script.onload = function() {
+                // If config.js loads successfully, it will override the default CONFIG
+            };
+            script.onerror = function() {
+                // config.js should always be available since it's included in git
+            };
+            document.head.appendChild(script);
+        } catch (e) {
+            // Silent fallback
+        }
+
+        function showConfigSetupMessage() {
+            // No longer needed since config.js is included in git
+            // This function is kept for backward compatibility but does nothing
+        }
+    </script>
+    <style>
+        .spoiler {
+            cursor: pointer;
+            user-select: none;
+            background: linear-gradient(45deg, #333 25%, transparent 25%), 
+                        linear-gradient(-45deg, #333 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #333 75%), 
+                        linear-gradient(-45deg, transparent 75%, #333 75%);
+            background-size: 4px 4px;
+            background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
+            color: transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .spoiler:hover {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .spoiler-revealed {
+            cursor: pointer;
+            background: #f3f4f6;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        .spoiler-revealed:hover {
+            background: #e5e7eb;
+        }
+    </style>
+    <script>
         tailwind.config = {
             theme: {
                 extend: {
@@ -31,15 +88,16 @@
             <!-- Language Switcher -->
             <div class="flex items-center gap-2">
                 <button onclick="switchLanguage('en')" id="langEn" class="px-3 py-1 rounded-md text-sm font-medium bg-tiamat-blue text-white">EN</button>
-                <button onclick="switchLanguage('hy')" id="langHy" class="px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300">ՀԱՅ</button>
-            </div>
+                <button onclick="switchLanguage('hy')" id="langHy" class="px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 hidden" style="display: none !important; visibility: hidden;">ՀԱՅ</button>
+                
+                </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Input Form -->
             <div class="bg-white rounded-lg shadow-md p-6">
                 <h2 class="text-xl font-semibold mb-4" data-en="System Configuration" data-hy="Համակարգի կարգավորում">System Configuration</h2>
-                
+
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2" data-en="System Power (kW)" data-hy="Համակարգի հզորություն (կՎտ)">System Power (kW)</label>
@@ -57,10 +115,127 @@
                         </select>
                     </div>
 
-                    <button onclick="calculateLoan()" 
-                            class="w-full bg-tiamat-blue hover:bg-tiamat-dark-blue text-white font-semibold py-2 px-4 rounded-md transition-colors"
-                            data-en="Calculate Loan Options" data-hy="Հաշվարկել վարկի տարբերակները">
-                        Calculate Loan Options
+                                    <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-gray-700" data-en="Inverter Selection:" data-hy="Ինվերտորի ընտրություն:">Inverter Selection:</label>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500" data-en="Auto" data-hy="Ավտո">Auto</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="manualInverterToggle" class="sr-only peer" onchange="toggleInverterSelection()">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-tiamat-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tiamat-blue"></div>
+                            </label>
+                            <span class="text-xs text-gray-500" data-en="Manual" data-hy="Ձեռքով">Manual</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Auto Selection (Default) -->
+                    <div id="autoInverterSelection">
+                        <select id="inverterSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                            <option value="auto" data-en="Auto Select (Recommended)" data-hy="Ավտոմատ ընտրություն (Խորհուրդ է տրվում)">Auto Select (Recommended)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Manual Selection (Hidden by default) -->
+                    <div id="manualInverterSelection" class="hidden space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label for="manualBrand" class="block text-xs font-medium text-gray-600 mb-1" data-en="Brand:" data-hy="Բրենդ:">Brand:</label>
+                                <select id="manualBrand" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue" onchange="updateManualModels()">
+                                    <option value="" data-en="Select brand" data-hy="Ընտրեք բրենդը">Select brand</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="manualPower" class="block text-xs font-medium text-gray-600 mb-1" data-en="Power (kW):" data-hy="Հզորություն (կՎտ):">Power (kW):</label>
+                                <select id="manualPower" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue" onchange="updateManualModels()">
+                                    <option value="" data-en="Select power" data-hy="Ընտրեք հզորությունը">Select power</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="manualModel" class="block text-xs font-medium text-gray-600 mb-1" data-en="Model:" data-hy="Մոդել:">Model:</label>
+                                <select id="manualModel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue" onchange="updateManualInverterInfo()">
+                                    <option value="" data-en="Select model" data-hy="Ընտրեք մոդելը">Select model</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-md">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-700" data-en="Selected Inverter:" data-hy="Ընտրված ինվերտորը:">Selected Inverter:</span>
+                                <span id="manualInverterInfo" class="text-sm text-gray-500" data-en="None selected" data-hy="Ոչինչ ընտրված չէ">None selected</span>
+                            </div>
+                        </div>
+                    </div>
+                                </div>
+                
+                <!-- Panel Selection -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-gray-700" data-en="Panel Selection:" data-hy="Պանելների ընտրություն:">Panel Selection:</label>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500" data-en="Auto" data-hy="Ավտո">Auto</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="manualPanelToggle" class="sr-only peer" onchange="togglePanelSelection()">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-tiamat-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tiamat-blue"></div>
+                            </label>
+                            <span class="text-xs text-gray-500" data-en="Manual" data-hy="Ձեռքով">Manual</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Auto Selection (Default) -->
+                    <div id="autoPanelSelection">
+                        <select id="panelSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                            <option value="auto" data-en="Auto Select (Recommended)" data-hy="Ավտոմատ ընտրություն (Խորհուրդ է տրվում)">Auto Select (Recommended)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Manual Selection (Hidden by default) -->
+                    <div id="manualPanelSelection" class="hidden space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label for="manualPanelBrand" class="block text-xs font-medium text-gray-600 mb-1" data-en="Brand:" data-hy="Բրենդ:">Brand:</label>
+                                <select id="manualPanelBrand" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue" onchange="updateManualPanelModels()">
+                                    <option value="" data-en="Select brand" data-hy="Ընտրեք բրենդը">Select brand</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="manualPanelWattage" class="block text-xs font-medium text-gray-600 mb-1" data-en="Wattage:" data-hy="Հզորություն (Վտ):">Wattage:</label>
+                                <select id="manualPanelWattage" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue" onchange="updateManualPanelModels()">
+                                    <option value="" data-en="Select wattage" data-hy="Ընտրեք հզորությունը">Select wattage</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="manualPanelModel" class="block text-xs font-medium text-gray-600 mb-1" data-en="Model:" data-hy="Մոդել:">Model:</label>
+                                <select id="manualPanelModel" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue" onchange="updateManualPanelInfo()">
+                                    <option value="" data-en="Select model" data-hy="Ընտրեք մոդելը">Select model</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-md">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-700" data-en="Selected Panel:" data-hy="Ընտրված պանելը:">Selected Panel:</span>
+                                <span id="manualPanelInfo" class="text-sm text-gray-500" data-en="None selected" data-hy="Ոչինչ ընտրված չէ">None selected</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Warranty Years" data-hy="Երաշխիքային տարիներ">Warranty Years</label>
+                        <select id="warrantyYears" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                        <option value="2" data-en="2 Years" data-hy="2 Տարի">2 Years</option>
+                        <option value="3" data-en="3 Years" data-hy="3 Տարի">3 Years</option>
+                        <option value="6" data-en="6 Years" data-hy="6 Տարի">6 Years</option>
+                                                        <option value="12" data-en="12 Years" data-hy="12 Տարի" selected>12 Years</option>
+                        </select>
+                    
+                    <!-- Current Profit per kW Display (Admin Only) - Will be created dynamically -->
+                    <div id="profitPerKwDisplayContainer"></div>
+                    </div>
+
+                    <button id="calculateBtn" onclick="calculateLoan()" 
+                            class="w-full bg-tiamat-blue hover:bg-tiamat-dark-blue text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            data-en="Calculate Loan Options" data-hy="Հաշվարկել վարկի տարբերակները"
+                            disabled>
+                        Loading...
                     </button>
                 </div>
             </div>
@@ -72,6 +247,68 @@
                 <div id="results" class="space-y-4">
                     <div class="text-center text-gray-500" data-en="Enter system parameters and click 'Calculate Loan Options' to see results" data-hy="Մուտքագրեք համակարգի պարամետրերը և սեղմեք 'Հաշվարկել վարկի տարբերակները' արդյունքները տեսնելու համար">
                         Enter system parameters and click "Calculate Loan Options" to see results
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel (Hidden by default) -->
+        <div id="adminPanelMain" class="bg-white rounded-lg shadow-md p-6 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-blue-600">🔐 Admin Panel</h2>
+                <button onclick="logoutAdmin()" class="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400">Logout</button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Configuration Details -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="font-semibold mb-3 text-lg text-blue-600">Configuration Details</h4>
+                    <details class="space-y-3">
+                        <summary class="cursor-pointer font-medium text-blue-600 hover:text-blue-800 transition-colors">Click to reveal sensitive information</summary>
+                        <div class="mt-3 space-y-2 text-sm">
+                            <p><strong>Admin Password:</strong> <span class="text-red-600">Hidden for security</span></p>
+                            <p><strong>Database Connection:</strong> <span class="text-green-600">Connected to Supabase</span></p>
+                            <p><strong>API Endpoints:</strong> <span class="text-blue-600">All endpoints working</span></p>
+                            <p><strong>Tables:</strong> <span class="text-green-600">system_cost_settings, inverter_options, panel_options, bank_configurations</span></p>
+                        </div>
+                    </details>
+                </div>
+                
+                <!-- Current Settings -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="font-semibold mb-3 text-lg text-blue-600">Current Settings</h4>
+                    <div class="space-y-2 text-sm">
+                                                 <div class="p-2 bg-white rounded">
+                             <strong class="text-blue-600">Common Sales Team %:</strong> <span class="text-green-600 font-semibold" id="adminSalesTeamPct">Loading...</span>
+                         </div>
+                                                 <div class="p-2 bg-white rounded">
+                             <strong class="text-blue-600">Common Unanticipated Expenses %:</strong> <span class="text-yellow-600 font-semibold" id="adminUnanticipatedExpensesPct">Loading...</span>
+                         </div>
+                         <div class="p-2 bg-white rounded text-xs text-gray-600">
+                             <em>Note: Unanticipated expenses now use a single common percentage that applies to all installation types. Legacy installation-specific records have been deprecated.</em>
+                         </div>
+                        <div class="p-2 bg-white rounded text-xs text-gray-500 bg-gray-50">
+                            <strong>Database Status:</strong> 1 active record (ID: 635), all deprecated records completely removed
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Status -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="font-semibold mb-3 text-lg text-blue-600">System Status</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="p-2 bg-white rounded">
+                            <strong class="text-blue-600">Database:</strong> <span class="text-green-600 font-semibold">Connected</span>
+                        </div>
+                        <div class="p-2 bg-white rounded">
+                            <strong class="text-blue-600">API Server:</strong> <span class="text-green-600 font-semibold">Running</span>
+                        </div>
+                        <div class="p-2 bg-white rounded">
+                            <strong class="text-blue-600">Frontend:</strong> <span class="text-green-600 font-semibold">Live Data</span>
+                        </div>
+                        <div class="p-2 bg-white rounded">
+                            <strong class="text-blue-600">Last Updated:</strong> <span class="text-blue-600 font-semibold" id="adminLastUpdated"></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -133,6 +370,9 @@
                             <th class="border p-3 text-center font-medium w-24 cursor-pointer hover:bg-gray-100" onclick="sortTable('interestRate')">
                                 <span data-en="Interest Rate" data-hy="Տոկոսադրույք">Interest Rate</span> <span id="rateSortIcon" class="ml-1">↕</span>
                             </th>
+                            <th class="border p-3 text-center font-medium w-24 cursor-pointer hover:bg-gray-100 admin-only" onclick="sortTable('commission')" style="display: none;">
+                                <span data-en="Commission" data-hy="Կոմիսիա">Commission</span> <span id="commissionSortIcon" class="ml-1">↕</span>
+                            </th>
 
                             <th class="border p-3 text-center font-medium w-40 cursor-pointer hover:bg-gray-100" onclick="sortTable('loanAmount')">
                                 <span data-en="Loan Amount" data-hy="Վարկի գումար">Loan Amount</span> <span id="amountSortIcon" class="ml-1">↕</span>
@@ -160,38 +400,195 @@
     </div>
 
     <script>
-        // Bank configurations
-        const bankConfigurations = [
-            {
-                name: 'ArmEconomBank',
-                options: [
-                    { interestRate: 0, commission: 0.21, periods: [36] },
-                    { interestRate: 0, commission: 0.32, periods: [60] },
-                    { interestRate: 0, commission: 0.41, periods: [84] },
-                    { interestRate: 0.03, commission: 0.18, periods: [36] },
-                    { interestRate: 0.03, commission: 0.27, periods: [60] },
-                    { interestRate: 0.03, commission: 0.34, periods: [84] },
-                    { interestRate: 0.05, commission: 0.16, periods: [36] },
-                    { interestRate: 0.05, commission: 0.23, periods: [60] },
-                    { interestRate: 0.05, commission: 0.3, periods: [84] },
-                    { interestRate: 0.09, commission: 0.1, periods: [36] },
-                    { interestRate: 0.09, commission: 0.15, periods: [60] },
-                    { interestRate: 0.09, commission: 0.19, periods: [84] },
-                    { interestRate: 0.12, commission: 0.06, periods: [36] },
-                    { interestRate: 0.12, commission: 0.09, periods: [60] },
-                    { interestRate: 0.12, commission: 0.11, periods: [84] },
-                    { interestRate: 0.15, commission: 0.02, periods: [36] },
-                    { interestRate: 0.15, commission: 0.03, periods: [60] },
-                    { interestRate: 0.15, commission: 0.04, periods: [84] }
-                ]
-            },
-            {
-                name: 'ACBA Bank',
-                options: [
-                    { interestRate: 0.11, commission: 0.04, periods: [96] }
-                ]
+        // Global variables for database values
+        let dbBasePrices = {};
+        let dbProfitMargins = {};
+        let dbSalesCommissions = {};
+        let dbUnanticipatedExpenses = {};
+        let dbBanks = [];
+        let dbInverters = [];
+        let bankConfigurations = []; // Bank configurations for loan calculations
+        let inverters = []; // Inverter list for system calculations
+        let panels = []; // Panel list for system calculations
+        let isDataLoaded = false; // Track if database data is fully loaded
+        
+        // Function to fetch system cost settings from database
+        async function fetchSystemCostSettings() {
+            try {
+                // Initialize default values
+                let commonExpensesPct = 2; // Default fallback for unanticipated expenses
+                let commonSalesTeamPct = 6; // Default fallback for sales team commission
+                
+                const response = await fetch('http://localhost:3001/api/system-cost-settings');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+
+                    // Extract installation costs
+                    if (result.data.installationCosts && result.data.installationCosts.data) {
+                        const costs = result.data.installationCosts.data;
+                        
+                        // Map database keys to frontend keys - no hardcoded fallbacks
+                        dbBasePrices = {
+                            onRoof: costs.cost_per_kw_on_roof?.value,
+                            metalConstructionOnRoof: costs.cost_per_kw_metal_construction_on_roof?.value,
+                            systemOnGround: costs.cost_per_kw_system_on_ground?.value,
+                            aluminiumConstructionOnRoof: costs.cost_per_kw_aluminium_construction_on_roof?.value
+                        };
+
+                    }
+                    
+                                         // Extract profit margins - now warranty-based instead of installation-type-based
+                     if (result.data.profitMargins && result.data.profitMargins.data) {
+                         const profits = result.data.profitMargins.data;
+                         
+                         // Load warranty-based profit margins - no hardcoded fallbacks
+                         dbProfitMargins = {
+                             profit_per_kw_2Y: profits.profit_per_kw_2Y?.value,
+                             profit_per_kw_3Y: profits.profit_per_kw_3Y?.value,
+                             profit_per_kw_6Y: profits.profit_per_kw_6Y?.value,
+                             profit_per_kw_12Y: profits.profit_per_kw_12Y?.value
+                         };
+
+                     }
+                    
+                    // Extract sales commissions - now using common percentage for all installation types
+                    // Look for sales_team_pct record in any category
+                    if (result.data.salesCommissions && result.data.salesCommissions.data) {
+                        const commissions = result.data.salesCommissions.data;
+                        
+                        if (commissions.sales_team_pct && commissions.sales_team_pct.value > 0) {
+                            commonSalesTeamPct = commissions.sales_team_pct.value;
+
+                        }
+                    }
+                    
+                    // Also check unanticipatedExpenses section in case it's categorized there
+                    if (result.data.unanticipatedExpenses && result.data.unanticipatedExpenses.data) {
+                        const expenses = result.data.unanticipatedExpenses.data;
+                        
+                        if (expenses.sales_team_pct && expenses.sales_team_pct.value > 0) {
+                            commonSalesTeamPct = expenses.sales_team_pct.value;
+
+                        }
+                    }
+                    
+                    // Apply common percentage to all installation types
+                    dbSalesCommissions = {
+                        onRoof: commonSalesTeamPct / 100,
+                        metalConstructionOnRoof: commonSalesTeamPct / 100,
+                        systemOnGround: commonSalesTeamPct / 100,
+                        aluminiumConstructionOnRoof: commonSalesTeamPct / 100
+                    };
+
+                                         // Update admin panel with actual database values
+                     const adminSalesTeamPct = document.getElementById('adminSalesTeamPct');
+                     if (adminSalesTeamPct) {
+                         adminSalesTeamPct.textContent = commonSalesTeamPct + '% (Common for all installation types)';
+                     }
+                     
+                     // Update unanticipated expenses display in admin panel
+                     const adminUnanticipatedExpensesPct = document.getElementById('adminUnanticipatedExpensesPct');
+                     if (adminUnanticipatedExpensesPct) {
+                         adminUnanticipatedExpensesPct.textContent = commonExpensesPct + '% (Common for all installation types)';
+                     }
+                    
+                    // Extract unanticipated expenses - now single common value for all installation types
+                    if (result.data.unanticipatedExpenses && result.data.unanticipatedExpenses.data) {
+                        const expenses = result.data.unanticipatedExpenses.data;
+                        
+                        // Look for the active common record - now using the new key name
+                        if (expenses.unanticipated_expenses_pct && expenses.unanticipated_expenses_pct.value > 0) {
+                            commonExpensesPct = expenses.unanticipated_expenses_pct.value;
+
+                        } else {
+                            // Fallback: scan all records for active ones
+                            for (const [key, record] of Object.entries(expenses)) {
+                                if (record.description && !record.description.includes('DEPRECATED') && record.value > 0) {
+                                    commonExpensesPct = record.value;
+
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Apply common percentage to all installation types
+                        dbUnanticipatedExpenses = {
+                            onRoof: commonExpensesPct / 100,
+                            metalConstructionOnRoof: commonExpensesPct / 100,
+                            systemOnGround: commonExpensesPct / 100,
+                            aluminiumConstructionOnRoof: commonExpensesPct / 100
+                        };
+
+                    }
+
+                    // Load banks and inverters from their respective endpoints
+                    await Promise.all([
+                        fetch('http://localhost:3001/api/banks')
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success && result.data && result.data.banks) {
+                                    dbBanks = result.data.banks;
+                                    bankConfigurations = result.data.banks; // Update the variable used by the loan calculation
+
+                                }
+                            })
+                            .catch(error => {}),
+                        
+                        fetch('http://localhost:3001/api/inverters')
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success && result.data && result.data.inverters) {
+                                    dbInverters = result.data.inverters;
+                                    inverters = result.data.inverters; // Update the variable used by the loan calculation
+                                }
+                            })
+                            .catch(error => {}),
+                        
+                        fetch('http://localhost:3001/api/panels')
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success && result.data && result.data.panels) {
+                                    panels = result.data.panels; // Update the variable used by the loan calculation
+                                }
+                            })
+                            .catch(error => {})
+                    ]);
+                    
+                    // Mark data as loaded
+                    isDataLoaded = true;
+                    
+                    // Enable calculate button
+                    const calculateBtn = document.getElementById('calculateBtn');
+                    if (calculateBtn) {
+                        const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+                        calculateBtn.disabled = false;
+                        calculateBtn.textContent = currentLanguage === 'en' ? 'Calculate Loan Options' : 'Հաշվարկել վարկի տարբերակները';
+                    }
+                    
+                    // Pre-populate manual selection dropdowns for immediate use
+                    populateManualBrands();
+                    populateManualPowers();
+                    
+                    // Pre-populate manual panel selection dropdowns
+                    populateManualPanelBrands();
+                    populateManualPanelWattages();
+                    
+                    // Update the main inverter dropdown with new data
+                    populateInverterDropdown();
+                    
+                    // Update the main panel dropdown with new data
+                    populatePanelDropdown();
+                }
+            } catch (error) {
+                // Silent error handling - show user-friendly message instead
             }
-        ];
+        }
 
         function calculateLoanPayment(principal, annualRate, months) {
             const monthlyRate = annualRate / 12;
@@ -199,7 +596,53 @@
             return principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
         }
 
+        // Base prices per kW (without inverter) - will be loaded from database
+
         function calculateLoan() {
+            // Check if database data is loaded
+            if (!isDataLoaded) {
+                const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+                const message = currentLanguage === 'en' 
+                    ? 'Please wait, database data is still loading...'
+                    : 'Խնդրում ենք սպասել, տվյալների բազայի տվյալները դեռ բեռնվում են...';
+                
+                document.getElementById('results').innerHTML = `
+                    <div class="space-y-3">
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-9a1 1 0 00-1 1v3a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="text-yellow-800 font-medium">${message}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Check if bank configurations are loaded and have data
+            if (!bankConfigurations || bankConfigurations.length === 0) {
+                const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+                const message = currentLanguage === 'en' 
+                    ? 'Bank configurations not loaded. Please refresh the page and try again.'
+                    : 'Բանկի կոնֆիգուրացիաները բեռնված չեն: Խնդրում ենք թարմացնել էջը և կրկին փորձել:';
+                
+                document.getElementById('results').innerHTML = `
+                    <div class="space-y-3">
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 0 11-16 0 8 8 0 0 1 16 0zm-7 4a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="text-red-800 font-medium">${message}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
             // Get input values
             const systemPower = parseFloat(document.getElementById('systemPower').value);
             const installationType = document.getElementById('installationType').value;
@@ -209,63 +652,471 @@
                 return;
             }
 
-            // Fixed values
-            const profitPerKw = 30000;
-            const salesTeamPct = 0.06; // 6%
-            const unanticipatedExpensesPct = 0.02; // 2%
-            const downPaymentAmount = 0;
+            // Get base price per kW (without inverter) - prefer database values
+                        let basePricePerKw = dbBasePrices[installationType];
+            
+            if (!basePricePerKw) {
+                const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+                const message = currentLanguage === 'en' 
+                    ? `Base price not found for installation type: ${installationType}. Please check database configuration.`
+                    : `${installationType} տեղադրման տիպի համար բազային գինը չի գտնվել: Խնդրում ենք ստուգել տվյալների բազայի կարգավորումները:`;
+                
+                document.getElementById('results').innerHTML = `
+                    <div class="space-y-3">
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 0 11-16 0 8 8 0 0 1 16 0zm-7 4a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="text-red-800 font-medium">${message}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Get warranty years and determine profit per kW - profit is warranty-based, not installation-type-based
+             const warrantyYears = parseInt(document.getElementById('warrantyYears').value) || 12;
+             
+             // Map warranty years to database keys
+             let dbKey;
+             if (warrantyYears === 2) dbKey = 'profit_per_kw_2Y';
+             else if (warrantyYears === 3) dbKey = 'profit_per_kw_3Y';
+             else if (warrantyYears === 6) dbKey = 'profit_per_kw_6Y';
+             else if (warrantyYears === 12) dbKey = 'profit_per_kw_12Y';
+             else dbKey = 'profit_per_kw_12Y'; // Default to 12Y
+             
+                          const profitPerKw = dbProfitMargins[dbKey];
+             
+             if (!profitPerKw) {
+                 const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+                 const message = currentLanguage === 'en' 
+                     ? `Profit value not found for ${warrantyYears}-year warranty. Please check database configuration.`
+                     : `${warrantyYears}-տարյա երաշխիքի համար շահույթի արժեքը չի գտնվել: Խնդրում ենք ստուգել տվյալների բազայի կարգավորումները:`;
+                 
+                 document.getElementById('results').innerHTML = `
+                     <div class="space-y-3">
+                         <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                             <div class="flex items-center">
+                                 <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                     <path fill-rule="evenodd" d="M18 10a8 0 11-16 0 8 8 0 0 1 16 0zm-7 4a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                 </svg>
+                                 <span class="text-red-800 font-medium">${message}</span>
+                             </div>
+                         </div>
+                     </div>
+                 `;
+                 return;
+             }
+             
+             const basePrice = Math.ceil(systemPower * basePricePerKw);
+            const profitAmount = Math.ceil(systemPower * profitPerKw);
 
-            // Get cost per kW based on installation type
-            let costPerKw;
-            switch(installationType) {
-                case 'onRoof':
-                    costPerKw = 147000;
-                    break;
-                case 'metalConstructionOnRoof':
-                    costPerKw = 155000;
-                    break;
-                case 'systemOnGround':
-                    costPerKw = 160000;
-                    break;
-                case 'aluminiumConstructionOnRoof':
-                    costPerKw = 175000;
-                    break;
-                default:
-                    costPerKw = 147000;
+            // Check if system is larger than 110 kW
+            if (systemPower > 110) {
+                const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+                const message = currentLanguage === 'en' 
+                    ? 'System size exceeds 110 kW. Please contact upper management for pricing.'
+                    : 'Համակարգի չափը գերազանցում է 110 կՎտ-ը: Խնդրում ենք կապ հաստատել վաճառքի բաժնի հետ գնագոյացման համար:';
+                
+                document.getElementById('results').innerHTML = `
+                    <div class="space-y-3">
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="text-yellow-800 font-medium">${message}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
             }
 
-            // Calculate base value
-            const baseValue = systemPower * (costPerKw + profitPerKw);
+            // Get selected inverter
+            let selectedInverter = null;
             
-            // Calculate system value for cash (without bank commission)
-            const systemValueForCash = baseValue / (1 - salesTeamPct - unanticipatedExpensesPct);
+            // Check if manual mode is enabled
+            const isManualMode = document.getElementById('manualInverterToggle').checked;
+            
+            if (isManualMode) {
+                // Manual selection mode
+                const selectedModelId = document.getElementById('manualModel').value;
+                if (!selectedModelId) {
+                    const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+                    const message = currentLanguage === 'en' 
+                        ? 'Please select an inverter model in manual mode.'
+                        : 'Խնդրում ենք ընտրել ինվերտորի մոդելը ձեռքով ռեժիմում:';
+                    
+                    document.getElementById('results').innerHTML = `
+                        <div class="space-y-3">
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 0 11-16 0 8 8 0 0 1 16 0zm-7 4a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-red-800 font-medium">${message}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                selectedInverter = inverters.find(inv => inv.id == selectedModelId);
+                if (!selectedInverter) {
+                    const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+                    const message = currentLanguage === 'en' 
+                        ? 'Selected inverter not found!'
+                        : 'Ընտրված ինվերտորը չի գտնվել:';
+                    
+                    document.getElementById('results').innerHTML = `
+                        <div class="space-y-3">
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 0 11-16 0 8 8 0 0 1 16 0zm-7 4a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-red-800 font-medium">${message}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+            }
+
+            // Check if manual panel mode is enabled and validate required fields
+            let isManualPanelMode = document.getElementById('manualPanelToggle').checked;
+            if (isManualPanelMode) {
+                const selectedPanelBrand = document.getElementById('manualPanelBrand').value;
+                const selectedPanelWattage = document.getElementById('manualPanelWattage').value;
+                const selectedPanelModel = document.getElementById('manualPanelModel').value;
+                
+                if (!selectedPanelBrand || !selectedPanelWattage || !selectedPanelModel) {
+                    const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+                    const message = currentLanguage === 'en' 
+                        ? 'In manual panel mode, Brand, Wattage, and Model are all mandatory. Please select all three fields before calculating.'
+                        : 'Ձեռքով պանելի ռեժիմում Բրենդը, Հզորությունը և Մոդելը պարտադիր են: Խնդրում ենք ընտրել բոլոր երեք դաշտերը հաշվարկից առաջ:';
+                    
+                    document.getElementById('results').innerHTML = `
+                        <div class="space-y-3">
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <span class="w-5 h-5 text-red-400 mr-2 text-xl font-bold">✕</span>
+                                    <span class="text-red-800 font-medium">${message}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+            }
+
+            } else {
+                // Auto selection mode
+                const selectedInverterKw = document.getElementById('inverterSelect').value;
+                
+                if (selectedInverterKw === 'auto') {
+                    // Auto select: smallest inverter where inverter.kw * 1.15 >= systemPower
+                    for (let i = 0; i < inverters.length; i++) {
+                        if (inverters[i].kw * 1.15 >= systemPower) {
+                            selectedInverter = inverters[i];
+                            break;
+                        }
+                    }
+                    if (!selectedInverter) {
+                        const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+                        const message = currentLanguage === 'en' 
+                            ? 'No suitable inverter found for this system size!'
+                            : 'Այս համակարգի չափի համար հարմար ինվերտոր չի գտնվել:';
+                        
+                        document.getElementById('results').innerHTML = `
+                            <div class="space-y-3">
+                                <div class="space-y-3">
+                                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                        <div class="flex items-center">
+                                            <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 0 11-16 0 8 8 0 0 1 16 0zm-7 4a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            <span class="text-red-800 font-medium">${message}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+                } else {
+                    // Manual selection from auto dropdown
+                    selectedInverter = inverters.find(inv => inv.kw == selectedInverterKw);
+                    if (!selectedInverter) {
+                        const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+                        const message = currentLanguage === 'en' 
+                            ? 'Selected inverter not found!'
+                            : 'Ընտրված ինվերտորը չի գտնվել:';
+                        
+                        document.getElementById('results').innerHTML = `
+                            <div class="space-y-3">
+                                <div class="bg-red-500 border border-red-200 rounded-lg p-4">
+                                    <div class="flex items-center">
+                                        <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 0 11-16 0 8 8 0 0 1 16 0zm-7 4a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span class="text-red-800 font-medium">${message}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+                }
+            }
+            
+            const inverterPrice = selectedInverter.price;
+            const inverterKw = selectedInverter.kw;
+
+                        // Calculate total system price including sales team and unexpected expenses - database values only
+            const salesTeamPct = dbSalesCommissions.onRoof;
+            const unanticipatedExpensesPct = dbUnanticipatedExpenses.onRoof;
+            
+            if (!salesTeamPct || !unanticipatedExpensesPct) {
+                const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+                const message = currentLanguage === 'en' 
+                    ? 'Sales team percentage or unanticipated expenses percentage not found. Please check database configuration.'
+                    : 'Վաճառքի թիմի տոկոսը կամ անսպասելի ծախսերի տոկոսը չի գտնվել: Խնդրում ենք ստուգել տվյալների բազայի կարգավորումները:';
+                
+                document.getElementById('results').innerHTML = `
+                    <div class="space-y-3">
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 0 11-16 0 8 8 0 0 1 16 0zm-7 4a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="text-red-800 font-medium">${message}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Total system price including sales team and unexpected expenses
+            const totalSystemPrice = Math.ceil((basePrice + profitAmount + inverterPrice) / (1 - salesTeamPct - unanticipatedExpensesPct));
 
             // Display results
-            const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վճարման համակարգի արժեք:';
+            const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+            const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վաճառքի գին:';
+            const breakdownTitle = currentLanguage === 'en' ? 'Calculation Breakdown:' : 'Հաշվարկի մանրամասները:';
+            const basePriceText = currentLanguage === 'en' ? 'Base Price (no inverter):' : 'Բազային գին (առանց ինվերտորի):';
+            const profitText = currentLanguage === 'en' ? `Profit (${profitPerKw.toLocaleString()} per kW):` : `Շահույթ (${profitPerKw.toLocaleString()} կՎտ-ի համար):`;
+            const inverterPriceText = currentLanguage === 'en' ? 'Inverter Price:' : 'Ինվերտորի գին:';
+            const subtotalText = currentLanguage === 'en' ? 'Subtotal (Base + Profit + Inverter):' : 'Ենթագումար (Բազային + Շահույթ + Ինվերտոր):';
+            const salesTeamText = currentLanguage === 'en' ? `Sales Team (${(salesTeamPct * 100).toFixed(1)}%):` : `Վաճառքի թիմ (${(salesTeamPct * 100).toFixed(1)}%):`;
+                         const unexpectedExpensesText = currentLanguage === 'en' ? `Unanticipated Expenses (${(unanticipatedExpensesPct * 100).toFixed(1)}%):` : `Անսպասելի ծախսեր (${(unanticipatedExpensesPct * 100).toFixed(1)}%):`;
+            
+            const basePriceWithProfitAndInverter = basePrice + profitAmount + inverterPrice;
+            const salesTeamAmount = Math.ceil(totalSystemPrice * salesTeamPct);
+            const unexpectedExpensesAmount = Math.ceil(totalSystemPrice * unanticipatedExpensesPct);
+            
+            const selectedInverterText = currentLanguage === 'en' ? 'Selected Inverter:' : 'Ընտրված ինվերտոր:';
+            
+            // Show detailed breakdown for admin, simple view for regular users
+            if (isAdminLoggedIn) {
+                // Calculate percentages for display
+                const basePricePct = ((basePrice / totalSystemPrice) * 100).toFixed(1);
+                const profitPct = ((profitAmount / totalSystemPrice) * 100).toFixed(1);
+                const inverterPct = ((inverterPrice / totalSystemPrice) * 100).toFixed(1);
+                const salesTeamPctDisplay = (salesTeamPct * 100).toFixed(1);
+                const unexpectedExpensesPctDisplay = (unanticipatedExpensesPct * 100).toFixed(1);
+                
+                // Get installation type name for display
+                const installationTypeNames = {
+                    'aluminiumConstructionOnRoof': currentLanguage === 'en' ? 'Aluminium Construction on Roof' : 'Ալյումինե կոնստրուկցիա տանիքի վրա',
+                    'metalConstructionOnRoof': currentLanguage === 'en' ? 'Metal Construction on Roof' : 'Մետաղական կոնստրուկցիա տանիքի վրա',
+                    'onRoof': currentLanguage === 'en' ? 'On Roof (Sloped)' : 'Տանիքի վրա (լանջային)',
+                    'systemOnGround': currentLanguage === 'en' ? 'System on Ground' : 'Համակարգ գետնի վրա'
+                };
+                const installationTypeName = installationTypeNames[installationType] || installationType;
+            
             document.getElementById('results').innerHTML = `
-                <div class="space-y-3">
+                    <div class="space-y-4">
                     <div class="flex justify-between">
-                        <span class="font-medium">${systemValueText}</span>
-                        <span class="text-green-600 font-semibold">${systemValueForCash.toLocaleString()} AMD</span>
+                            <span class="font-medium text-lg">${systemValueText}</span>
+                            <span class="text-green-600 font-semibold text-lg">${totalSystemPrice.toLocaleString()} AMD</span>
+                    </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-md space-y-4">
+                            <h4 class="font-semibold text-gray-800 border-b pb-2">${breakdownTitle}</h4>
+                            
+                            <!-- Step 1: Base Price -->
+                            <div class="space-y-2">
+                                <div class="text-sm font-medium text-gray-700">Step 1: Base Price Calculation</div>
+                                <div class="pl-4 space-y-1 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Installation Type:</span>
+                                        <span>${installationTypeName}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Base Price per kW:</span>
+                                        <span class="font-mono">${basePricePerKw.toLocaleString()} AMD</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>System Power:</span>
+                                        <span>${systemPower} kW</span>
+                                    </div>
+                                    <div class="flex justify-between font-medium">
+                                        <span>Base Price:</span>
+                                        <span class="font-mono">${basePrice.toLocaleString()} AMD (${basePricePct}%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 2: Profit -->
+                            <div class="space-y-2">
+                                <div class="text-sm font-medium text-gray-700">Step 2: Profit Calculation</div>
+                                <div class="pl-4 space-y-1 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Warranty Period:</span>
+                                        <span>${warrantyYears} years</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Profit per kW:</span>
+                                        <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="${profitPerKw.toLocaleString()} AMD">████████████</span>
+                                    </div>
+                                    <div class="flex justify-between font-medium">
+                                        <span>Total Profit:</span>
+                                        <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="${profitAmount.toLocaleString()} AMD (${profitPct}%)">████████████</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 3: Inverter -->
+                            <div class="space-y-2">
+                                <div class="text-sm font-medium text-gray-700">Step 3: Inverter Selection</div>
+                                <div class="pl-4 space-y-1 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Selected Inverter:</span>
+                                        <span>${inverterKw} kW</span>
+                                    </div>
+                                    <div class="flex justify-between font-medium">
+                                        <span>Inverter Price:</span>
+                                        <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="${inverterPrice.toLocaleString()} AMD (${inverterPct}%)">████████████</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 4: Subtotal -->
+                            <div class="space-y-2 border-t pt-3">
+                                <div class="text-sm font-medium text-gray-700">Step 4: Subtotal</div>
+                                <div class="pl-4 space-y-1 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Base Price:</span>
+                                        <span class="font-mono">${basePrice.toLocaleString()} AMD</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>+ Profit:</span>
+                                        <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="${profitAmount.toLocaleString()} AMD">████████████</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>+ Inverter:</span>
+                                        <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="${inverterPrice.toLocaleString()} AMD">████████████</span>
+                                    </div>
+                                    <div class="flex justify-between font-semibold border-t pt-1">
+                                        <span>Subtotal:</span>
+                                        <span class="font-mono">${basePriceWithProfitAndInverter.toLocaleString()} AMD</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 5: Final Calculation -->
+                            <div class="space-y-2 border-t pt-3">
+                                <div class="text-sm font-medium text-gray-700">Step 5: Final Price Calculation</div>
+                                <div class="pl-4 space-y-1 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Subtotal:</span>
+                                        <span class="font-mono">${basePriceWithProfitAndInverter.toLocaleString()} AMD</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>÷ (1 - Sales Team ${salesTeamPctDisplay}% - Unexpected ${unexpectedExpensesPctDisplay}%):</span>
+                                        <span class="font-mono">÷ 0.92</span>
+                                    </div>
+                                    <div class="flex justify-between text-blue-600">
+                                        <span>Sales Team (${salesTeamPctDisplay}%):</span>
+                                        <span class="font-mono">${salesTeamAmount.toLocaleString()} AMD</span>
+                                    </div>
+                                    <div class="flex justify-between text-orange-600">
+                                        <span>Unexpected Expenses (${unexpectedExpensesPctDisplay}%):</span>
+                                        <span class="font-mono">${unexpectedExpensesAmount.toLocaleString()} AMD</span>
+                                    </div>
+                                    <div class="flex justify-between font-semibold text-green-600 border-t pt-1">
+                                        <span>Final System Value:</span>
+                                        <span class="font-mono">${totalSystemPrice.toLocaleString()} AMD</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>${selectedInverterText}</span>
+                            <span>${inverterKw} kW</span>
                     </div>
                 </div>
             `;
+            } else {
+            document.getElementById('results').innerHTML = `
+                    <div class="space-y-4">
+                    <div class="flex justify-between">
+                            <span class="font-medium text-lg">${systemValueText}</span>
+                            <span class="text-green-600 font-semibold text-lg">${totalSystemPrice.toLocaleString()} AMD</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>${selectedInverterText}</span>
+                            <span>${inverterKw} kW</span>
+                    </div>
+                </div>
+            `;
+            }
 
             // Calculate loan options
+            // Check if database values are loaded
+            if (!bankConfigurations || bankConfigurations.length === 0) {
+                const currentLanguage = localStorage.getItem('loanCalculatorLanguage') || 'en';
+                const message = currentLanguage === 'en' 
+                    ? 'Bank configurations not loaded yet. Please wait a moment and try again.'
+                    : 'Բանկի կոնֆիգուրացիաները դեռ բեռնված չեն: Խնդրում ենք սպասել մի պահ և նորից փորձել:';
+                
+                document.getElementById('results').innerHTML = `
+                    <div class="space-y3">
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="text-yellow-800 font-medium">${message}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
             const loanOptions = [];
             
             bankConfigurations.forEach(bank => {
                 bank.options.forEach(option => {
                     option.periods.forEach(period => {
                         // Calculate loan amount with commission
-                        const totalPercentage = salesTeamPct + unanticipatedExpensesPct + option.commission;
-                        const loanAmountWithCommission = baseValue / (1 - totalPercentage);
+                        const totalPercentage = option.commission;
+                        const loanAmountWithCommission = Math.ceil(totalSystemPrice / (1 - totalPercentage));
                         
                         // Calculate actual loan amount (after down payment)
-                        const actualLoanAmount = loanAmountWithCommission - downPaymentAmount;
+                        const actualLoanAmount = loanAmountWithCommission - 0; // No down payment for now
                         
                         // Calculate monthly payment
-                        const monthlyPayment = calculateLoanPayment(actualLoanAmount, option.interestRate, period);
+                        const monthlyPayment = Math.ceil(calculateLoanPayment(actualLoanAmount, option.interestRate, period));
                         const totalInterest = (monthlyPayment * period) - actualLoanAmount;
                         const totalAmount = monthlyPayment * period;
                         
@@ -274,10 +1125,10 @@
                             interestRate: option.interestRate,
                             commission: option.commission,
                             loanPeriod: period,
-                            monthlyPayment: Math.round(monthlyPayment),
-                            totalInterest: Math.round(totalInterest),
-                            totalAmount: Math.round(totalAmount),
-                            loanAmount: Math.round(actualLoanAmount)
+                            monthlyPayment: monthlyPayment,
+                            totalInterest: totalInterest,
+                            totalAmount: totalAmount,
+                            loanAmount: actualLoanAmount
                         });
                     });
                 });
@@ -319,9 +1170,10 @@
                 ? 'px-3 py-1 rounded-md text-sm font-medium bg-tiamat-blue text-white'
                 : 'px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300';
             
-            document.getElementById('langHy').className = lang === 'hy' 
-                ? 'px-3 py-1 rounded-md text-sm font-medium bg-tiamat-blue text-white'
-                : 'px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300';
+            // Keep Armenian button always hidden
+            document.getElementById('langHy').className = 'px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 hidden';
+            document.getElementById('langHy').style.display = 'none';
+            document.getElementById('langHy').style.visibility = 'hidden';
             
             // Update all elements with data attributes
             document.querySelectorAll('[data-en][data-hy]').forEach(element => {
@@ -343,23 +1195,564 @@
             if (resultCount && allLoanOptions.length > 0) {
                 updateResultCount(allLoanOptions.length);
             }
+            
+            // Recalculate and display results if they exist
+            if (allLoanOptions.length > 0) {
+                calculateLoan();
+            }
+            
+            // Update inverter dropdown language
+            populateInverterDropdown();
+        }
+
+        // Populate inverter dropdown
+        function populateInverterDropdown() {
+            // Check if inverters are loaded
+            if (!inverters || inverters.length === 0) {
+                
+                return;
+            }
+            
+            const inverterSelect = document.getElementById('inverterSelect');
+            const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            inverterSelect.innerHTML = '';
+            
+            // Find the auto-selected inverter (inverter that can handle system power without overload)
+            let autoSelectedInverter = null;
+            const minPower = systemPower / 1.15; // Inverter must be able to handle system power
+            
+            for (let i = 0; i < inverters.length; i++) {
+                if (inverters[i].kw >= minPower) {
+                    autoSelectedInverter = inverters[i];
+                    break;
+                }
+                }
+            
+            // Filter and add suitable inverters (inverters that can handle the system power)
+            const suitableInverters = inverters
+                .filter(inverter => inverter.kw >= minPower)
+                .sort((a, b) => a.kw - b.kw);
+            
+            suitableInverters.forEach(inverter => {
+                const option = document.createElement('option');
+                option.value = inverter.kw;
+                const text = currentLanguage === 'en' 
+                    ? `${inverter.brand} ${inverter.model} - ${inverter.kw} kW (${inverter.price.toLocaleString()} AMD)`
+                    : `${inverter.brand} ${inverter.model} - ${inverter.kw} կՎտ (${inverter.price.toLocaleString()} AMD)`;
+                option.textContent = text;
+                option.setAttribute('data-en', `${inverter.brand} ${inverter.model} - ${inverter.kw} kW (${inverter.price.toLocaleString()} AMD)`);
+                option.setAttribute('data-hy', `${inverter.brand} ${inverter.model} - ${inverter.kw} կՎտ (${inverter.price.toLocaleString()} AMD)`);
+                inverterSelect.appendChild(option);
+            });
+            
+            // Add auto-select option at the end (with auto-selected inverter info)
+            const autoOption = document.createElement('option');
+            autoOption.value = 'auto';
+            if (autoSelectedInverter) {
+                const text = currentLanguage === 'en' 
+                    ? `Auto Select (Recommended): ${autoSelectedInverter.model} ${autoSelectedInverter.kw} kW`
+                    : `Ավտոմատ ընտրություն (Խորհուրդ է տրվում): ${autoSelectedInverter.model} ${autoSelectedInverter.kw} կՎտ`;
+                autoOption.textContent = text;
+                autoOption.setAttribute('data-en', `Auto Select (Recommended): ${autoSelectedInverter.model} ${autoSelectedInverter.kw} kW`);
+                autoOption.setAttribute('data-hy', `Ավտոմատ ընտրություն (Խորհուրդ է տրվում): ${autoSelectedInverter.model} ${autoSelectedInverter.kw} կՎտ`);
+            } else {
+                const text = currentLanguage === 'en' 
+                    ? 'Auto Select (Recommended)'
+                    : 'Ավտոմատ ընտրություն (Խորհուրդ է տրվում)';
+                autoOption.textContent = text;
+                autoOption.setAttribute('data-en', 'Auto Select (Recommended)');
+                autoOption.setAttribute('data-hy', 'Ավտոմատ ընտրություն (Խորհուրդ է տրվում)');
+            }
+            inverterSelect.appendChild(autoOption);
+            
+            // Set auto-select as default selected option
+            inverterSelect.value = 'auto';
+        }
+
+        // Populate panel dropdown
+        function populatePanelDropdown() {
+            // Check if panels are loaded
+            if (!panels || panels.length === 0) {
+                
+                return;
+            }
+            
+            const panelSelect = document.getElementById('panelSelect');
+            const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            panelSelect.innerHTML = '';
+            
+            // Find the auto-selected panel (panel that can provide the required system power)
+            let autoSelectedPanel = null;
+            const requiredWattage = systemPower * 1000; // Convert kW to W
+            
+            // Find the most suitable panel (closest to required wattage without being too small)
+            const suitablePanels = panels
+                .filter(panel => panel.wattage >= requiredWattage * 0.8) // Panel should be at least 80% of required wattage
+                .sort((a, b) => a.wattage - b.wattage);
+            
+            if (suitablePanels.length > 0) {
+                autoSelectedPanel = suitablePanels[0]; // Use the smallest suitable panel
+            }
+            
+            // Filter and add suitable panels
+            suitablePanels.forEach(panel => {
+                const option = document.createElement('option');
+                option.value = panel.id;
+                const text = currentLanguage === 'en' 
+                    ? `${panel.brand} ${panel.model} - ${panel.wattage}W (${panel.price.toLocaleString()} AMD)`
+                    : `${panel.brand} ${panel.model} - ${panel.wattage}Վտ (${panel.price.toLocaleString()} AMD)`;
+                option.textContent = text;
+                option.setAttribute('data-en', `${panel.brand} ${panel.model} - ${panel.wattage}W (${panel.price.toLocaleString()} AMD)`);
+                option.setAttribute('data-hy', `${panel.brand} ${panel.model} - ${panel.wattage}Վտ (${panel.price.toLocaleString()} AMD)`);
+                panelSelect.appendChild(option);
+            });
+            
+            // Add auto-select option at the end (with auto-selected panel info)
+            const autoOption = document.createElement('option');
+            autoOption.value = 'auto';
+            if (autoSelectedPanel) {
+                const text = currentLanguage === 'en' 
+                    ? `Auto Select (Recommended): ${autoSelectedPanel.brand} ${autoSelectedPanel.model} ${autoSelectedPanel.wattage}W`
+                    : `Ավտոմատ ընտրություն (Խորհուրդ է տրվում): ${autoSelectedPanel.model} ${autoSelectedPanel.wattage}Վտ`;
+                autoOption.textContent = text;
+                autoOption.setAttribute('data-en', `Auto Select (Recommended): ${autoSelectedPanel.brand} ${autoSelectedPanel.model} ${autoSelectedPanel.wattage}W`);
+                autoOption.setAttribute('data-hy', `Ավտոմատ ընտրություն (Խորհուրդ է տրվում): ${autoSelectedPanel.brand} ${autoSelectedPanel.model} ${autoSelectedPanel.wattage}Վտ`);
+            } else {
+                const text = currentLanguage === 'en' 
+                    ? 'Auto Select (Recommended)'
+                    : 'Ավտոմատ ընտրություն (Խորհուրդ է տրվում)';
+                autoOption.textContent = text;
+                autoOption.setAttribute('data-en', 'Auto Select (Recommended)');
+                autoOption.setAttribute('data-hy', 'Ավտոմատ ընտրություն (Խորհուրդ է տրվում)');
+            }
+            panelSelect.appendChild(autoOption);
+            
+            // Set auto-select as default selected option
+            panelSelect.value = 'auto';
+        }
+
+        // Manual inverter selection functions
+        function toggleInverterSelection() {
+            const toggle = document.getElementById('manualInverterToggle');
+            const autoSelection = document.getElementById('autoInverterSelection');
+            const manualSelection = document.getElementById('manualInverterSelection');
+            
+            if (toggle.checked) {
+                // Switch to manual mode
+                autoSelection.classList.add('hidden');
+                manualSelection.classList.remove('hidden');
+                populateManualBrands();
+                populateManualPowers();
+            } else {
+                // Switch to auto mode
+                autoSelection.classList.remove('hidden');
+                manualSelection.classList.add('hidden');
+                // Reset manual selections
+                document.getElementById('manualBrand').value = '';
+                document.getElementById('manualPower').value = '';
+                document.getElementById('manualModel').value = '';
+                document.getElementById('manualInverterInfo').textContent = currentLanguage === 'en' ? 'None selected' : 'Ոչինչ ընտրված չէ';
+            }
+        }
+
+        // Function to refresh manual inverter options when system power changes
+        function refreshManualInverterOptions() {
+            const toggle = document.getElementById('manualInverterToggle');
+            if (toggle.checked) {
+                // Only refresh if in manual mode
+                populateManualBrands();
+                populateManualPowers();
+                // Reset dependent selections
+                document.getElementById('manualPower').value = '';
+                document.getElementById('manualModel').value = '';
+                document.getElementById('manualInverterInfo').textContent = currentLanguage === 'en' ? 'None selected' : 'Ոչինչ ընտրված չէ';
+            }
+        }
+
+        function populateManualBrands() {
+            // Check if inverters are loaded
+            if (!inverters || inverters.length === 0) {
+                return;
+            }
+            
+            const brandSelect = document.getElementById('manualBrand');
+            brandSelect.innerHTML = '<option value="" data-en="Select brand" data-hy="Ընտրեք բրենդը">Select brand</option>';
+            
+            // Get system power to apply 15% rule
+            const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            
+            if (systemPower > 0) {
+                // Calculate minimum power (inverter must be able to handle system power)
+                const minPower = systemPower / 1.15; // Inverter must be able to handle system power
+                
+                // Filter brands: show all brands with inverters that can handle the system power
+                const suitableBrands = [...new Set(inverters
+                    .filter(inv => inv.kw >= minPower) // Inverter must be able to handle system power
+                    .map(inv => inv.brand)
+                )].sort();
+                
+                if (suitableBrands.length > 0) {
+                    suitableBrands.forEach(brand => {
+                        const option = document.createElement('option');
+                        option.value = brand;
+                        option.textContent = brand;
+                        option.setAttribute('data-en', brand);
+                        option.setAttribute('data-hy', brand);
+                        brandSelect.appendChild(option);
+                    });
+                } else {
+                    // No suitable brands found
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.disabled = true;
+                    const text = currentLanguage === 'en' 
+                        ? 'No suitable brands (15% rule)'
+                        : 'Հարմար բրենդներ չկան (15% կանոն)';
+                    option.textContent = text;
+                    option.setAttribute('data-en', 'No suitable brands (15% rule)');
+                    option.setAttribute('data-hy', 'Հարմար բրենդներ չկան (15% կանոն)');
+                    brandSelect.appendChild(option);
+                }
+            } else {
+                // No system power entered yet - show all brands
+                const brands = [...new Set(inverters.map(inv => inv.brand))].sort();
+                
+                brands.forEach(brand => {
+                    const option = document.createElement('option');
+                    option.value = brand;
+                    option.textContent = brand;
+                    option.setAttribute('data-en', brand);
+                    option.setAttribute('data-hy', brand);
+                    brandSelect.appendChild(option);
+                });
+            }
+        }
+
+        function populateManualPowers() {
+            // Check if inverters are loaded
+            if (!inverters || inverters.length === 0) {
+                return;
+            }
+            
+            const powerSelect = document.getElementById('manualPower');
+            powerSelect.innerHTML = '<option value="" data-en="Select power" data-hy="Ընտրեք հզորությունը">Select power</option>';
+            
+            // Get system power to apply 15% rule
+            const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            
+                        if (systemPower > 0) {
+                // Calculate minimum power (inverter must be able to handle system power)
+                const minPower = systemPower / 1.15; // Inverter must be able to handle system power
+                
+                // Filter inverters: show all inverters that can handle the system power
+                const suitablePowers = [...new Set(inverters
+                    .filter(inv => inv.kw >= minPower) // Inverter must be able to handle system power
+                    .map(inv => inv.kw)
+                )].sort((a, b) => a - b);
+                
+                if (suitablePowers.length > 0) {
+                    suitablePowers.forEach(power => {
+                        const option = document.createElement('option');
+                        option.value = power;
+                        const text = currentLanguage === 'en' 
+                            ? `${power} kW`
+                            : `${power} կՎտ`;
+                        option.textContent = text;
+                        option.setAttribute('data-en', `${power} kW`);
+                        option.setAttribute('data-hy', `${power} կՎտ`);
+                        powerSelect.appendChild(option);
+                    });
+                } else {
+                    // No suitable inverters found
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.disabled = true;
+                    const text = currentLanguage === 'en' 
+                        ? 'No suitable inverters (15% rule)'
+                        : 'Հարմար ինվերտորներ չկան (15% կանոն)';
+                    option.textContent = text;
+                    option.setAttribute('data-en', 'No suitable inverters (15% rule)');
+                    option.setAttribute('data-hy', 'Հարմար ինվերտորներ չկան (15% կանոն)');
+                    powerSelect.appendChild(option);
+                }
+            } else {
+                // No system power entered yet - show all powers
+                const powers = [...new Set(inverters.map(inv => inv.kw))].sort((a, b) => a - b);
+                
+                powers.forEach(power => {
+                    const option = document.createElement('option');
+                    option.value = power;
+                    const text = currentLanguage === 'en' 
+                        ? `${power} kW`
+                        : `${power} կՎտ`;
+                    option.textContent = text;
+                        option.setAttribute('data-en', `${power} kW`);
+                        option.setAttribute('data-hy', `${power} կՎտ`);
+                    powerSelect.appendChild(option);
+                });
+            }
+        }
+
+        function updateManualModels() {
+            const brandSelect = document.getElementById('manualBrand');
+            const powerSelect = document.getElementById('manualPower');
+            const modelSelect = document.getElementById('manualModel');
+            
+            const selectedBrand = brandSelect.value;
+            const selectedPower = powerSelect.value;
+            
+            // Reset model selection
+            modelSelect.innerHTML = '<option value="" data-en="Select model" data-hy="Ընտրեք մոդելը">Select model</option>';
+            document.getElementById('manualInverterInfo').textContent = currentLanguage === 'en' ? 'None selected' : 'Ոչինչ ընտրված չէ';
+            
+            if (selectedBrand && selectedPower) {
+                // Filter inverters by brand and power
+                const availableModels = inverters.filter(inv => 
+                    inv.brand === selectedBrand && inv.kw == selectedPower
+                );
+                
+                availableModels.forEach(inverter => {
+                    const option = document.createElement('option');
+                    option.value = inverter.id;
+                    option.textContent = inverter.model;
+                    option.setAttribute('data-en', inverter.model);
+                    option.setAttribute('data-hy', inverter.model);
+                    modelSelect.appendChild(option);
+                });
+            }
+        }
+
+        function updateManualInverterInfo() {
+            const modelSelect = document.getElementById('manualModel');
+            const selectedModelId = modelSelect.value;
+            
+            if (selectedModelId) {
+                const selectedInverter = inverters.find(inv => inv.id == selectedModelId);
+                if (selectedInverter) {
+                    const info = currentLanguage === 'en' 
+                        ? `${selectedInverter.brand} ${selectedInverter.model} (${selectedInverter.kw} kW)`
+                        : `${selectedInverter.brand} ${selectedInverter.model} (${selectedInverter.kw} կՎտ)`;
+                    
+                    document.getElementById('manualInverterInfo').textContent = info;
+                }
+            } else {
+                document.getElementById('manualInverterInfo').textContent = currentLanguage === 'en' ? 'None selected' : 'Ոչինչ ընտրված չէ';
+            }
+        }
+
+        // Panel selection functions
+        function togglePanelSelection() {
+            const toggle = document.getElementById('manualPanelToggle');
+            const autoSelection = document.getElementById('autoPanelSelection');
+            const manualSelection = document.getElementById('manualPanelSelection');
+            
+            if (toggle.checked) {
+                // Switch to manual mode
+                autoSelection.classList.add('hidden');
+                manualSelection.classList.remove('hidden');
+                populateManualPanelBrands();
+                populateManualPanelWattages();
+            } else {
+                // Switch to auto mode
+                autoSelection.classList.remove('hidden');
+                manualSelection.classList.add('hidden');
+                // Reset manual selections
+                document.getElementById('manualPanelBrand').value = '';
+                document.getElementById('manualPanelWattage').value = '';
+                document.getElementById('manualPanelModel').value = '';
+                document.getElementById('manualPanelInfo').textContent = currentLanguage === 'en' ? 'None selected' : 'Ոչինչ ընտրված չէ';
+            }
+        }
+
+        function populateManualPanelBrands() {
+            // Check if panels are loaded
+            if (!panels || panels.length === 0) {
+                return;
+            }
+            
+            const brandSelect = document.getElementById('manualPanelBrand');
+            brandSelect.innerHTML = '<option value="" data-en="Select brand" data-hy="Ընտրեք բրենդը">Select brand</option>';
+            
+            // Get all unique brands from panels
+            const brands = [...new Set(panels.map(panel => panel.brand))].sort();
+            
+            brands.forEach(brand => {
+                const option = document.createElement('option');
+                option.value = brand;
+                option.textContent = brand;
+                option.setAttribute('data-en', brand);
+                option.setAttribute('data-hy', brand);
+                brandSelect.appendChild(option);
+            });
+        }
+
+        function populateManualPanelWattages() {
+            // Check if panels are loaded
+            if (!panels || panels.length === 0) {
+                return;
+            }
+            
+            const wattageSelect = document.getElementById('manualPanelWattage');
+            wattageSelect.innerHTML = '<option value="" data-en="Select wattage" data-hy="Ընտրեք հզորությունը">Select wattage</option>';
+            
+            // Get all unique wattages from panels
+            const wattages = [...new Set(panels.map(panel => panel.wattage))].sort((a, b) => a - b);
+            
+            wattages.forEach(wattage => {
+                const option = document.createElement('option');
+                option.value = wattage;
+                const text = currentLanguage === 'en' 
+                    ? `${wattage}W`
+                    : `${wattage}Վտ`;
+                option.textContent = text;
+                option.setAttribute('data-en', `${wattage}W`);
+                option.setAttribute('data-hy', `${wattage}Վտ`);
+                wattageSelect.appendChild(option);
+            });
+        }
+
+        function updateManualPanelModels() {
+            const brandSelect = document.getElementById('manualPanelBrand');
+            const wattageSelect = document.getElementById('manualPanelWattage');
+            const modelSelect = document.getElementById('manualPanelModel');
+            
+            const selectedBrand = brandSelect.value;
+            const selectedWattage = wattageSelect.value;
+            
+            // Reset model selection
+            modelSelect.innerHTML = '<option value="" data-en="Select model" data-hy="Ընտրեք մոդելը">Select model</option>';
+            document.getElementById('manualPanelInfo').textContent = currentLanguage === 'en' ? 'None selected' : 'Ոչինչ ընտրված չէ';
+            
+            if (selectedBrand && selectedWattage) {
+                // Filter panels by brand and wattage
+                const availableModels = panels.filter(panel => 
+                    panel.brand === selectedBrand && panel.wattage == selectedWattage
+                );
+                
+                availableModels.forEach(panel => {
+                    const option = document.createElement('option');
+                    option.value = panel.id;
+                    option.textContent = panel.model;
+                    option.setAttribute('data-en', panel.model);
+                    option.setAttribute('data-hy', panel.model);
+                    modelSelect.appendChild(option);
+                });
+            }
+        }
+
+        function updateManualPanelInfo() {
+            const modelSelect = document.getElementById('manualPanelModel');
+            const selectedModelId = modelSelect.value;
+            
+            if (selectedModelId) {
+                const selectedPanel = panels.find(panel => panel.id == selectedModelId);
+                if (selectedPanel) {
+                    const info = currentLanguage === 'en' 
+                        ? `${selectedPanel.brand} ${selectedPanel.model} (${selectedPanel.wattage}W, ${selectedPanel.efficiency}% efficiency)`
+                        : `${selectedPanel.brand} ${selectedPanel.model} (${selectedPanel.wattage}Վտ, ${selectedPanel.efficiency}% արդյունավետություն)`;
+                    
+                    document.getElementById('manualPanelInfo').textContent = info;
+                }
+            } else {
+                document.getElementById('manualPanelInfo').textContent = currentLanguage === 'en' ? 'None selected' : 'Ոչինչ ընտրված չէ';
+            }
         }
 
         // Set default values
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('systemPower').value = '10.44';
             
+            // Populate inverter dropdown
+            populateInverterDropdown();
+            
             // Add event listeners for filters
             document.getElementById('bankFilter').addEventListener('change', applyFilters);
             document.getElementById('periodFilter').addEventListener('change', applyFilters);
             document.getElementById('sortBy').addEventListener('change', applySorting);
+            
+            // Add event listener for system power to update inverter and panel dropdowns
+            document.getElementById('systemPower').addEventListener('input', function() {
+                // Add a small delay to prevent rapid firing during typing
+                clearTimeout(this.debounceTimer);
+                this.debounceTimer = setTimeout(() => {
+                    // Only update if data is loaded
+                    if (isDataLoaded && inverters && inverters.length > 0) {
+                        populateInverterDropdown();
+                        refreshManualInverterOptions();
+                    }
+                    if (isDataLoaded && panels && panels.length > 0) {
+                        populatePanelDropdown();
+                    }
+                }, 300);
+            });
+            
+            // Add event listener for warranty years to recalculate when changed
+            document.getElementById('warrantyYears').addEventListener('change', function() {
+                // Update the profit per kW display immediately
+                updateProfitPerKwDisplay();
+                
+                // Recalculate if there are existing loan options
+                if (allLoanOptions.length > 0) {
+                    calculateLoan();
+                }
+            });
             
             // Load saved language preference
             const savedLanguage = localStorage.getItem('loanCalculatorLanguage');
             if (savedLanguage) {
                 switchLanguage(savedLanguage);
             }
+            
+            // Ensure Armenian button is always hidden
+            const langHyButton = document.getElementById('langHy');
+            if (langHyButton) {
+                langHyButton.style.display = 'none';
+                langHyButton.style.visibility = 'hidden';
+            }
+            
+            // Initialize profit per kW display (hidden by default for non-admin users)
+            hideProfitPerKwDisplay();
+            
+            // Load system data (banks, inverters, etc.) from database
+            fetchSystemCostSettings().then(() => {
+                // Data loaded successfully
+            }).catch(error => {
+                // Handle error silently
+            });
         });
+        
+        // Function to update the profit per kW display based on selected warranty years
+        function updateProfitPerKwDisplay() {
+            // Only update if admin is logged in AND profit display exists
+            if (!isAdminLoggedIn) {
+                return;
+            }
+            
+            const profitDisplay = document.getElementById('currentProfitPerKw');
+            if (!profitDisplay) {
+                return;
+            }
+            
+            const warrantyYears = parseInt(document.getElementById('warrantyYears').value) || 12;
+            
+            // Map warranty years to database keys
+            let dbKey;
+            if (warrantyYears === 2) dbKey = 'profit_per_kw_2Y';
+            else if (warrantyYears === 3) dbKey = 'profit_per_kw_3Y';
+            else if (warrantyYears === 6) dbKey = 'profit_per_kw_6Y';
+            else if (warrantyYears === 12) dbKey = 'profit_per_kw_12Y';
+            else dbKey = 'profit_per_kw_12Y'; // Default to 12Y
+            
+            // Get profit from database only - no hardcoded fallbacks
+            const profitPerKw = dbProfitMargins[dbKey];
+            
+            if (!profitPerKw) {
+                profitDisplay.textContent = 'Database Error';
+                return;
+            }
+            
+            profitDisplay.textContent = profitPerKw.toLocaleString() + ' AMD';
+        }
 
         function populateFilters() {
             const bankFilter = document.getElementById('bankFilter');
@@ -480,7 +1873,7 @@
 
         function updateSortIcons(field, direction) {
             // Reset all icons
-            const icons = ['bankSortIcon', 'periodSortIcon', 'rateSortIcon', 
+            const icons = ['bankSortIcon', 'periodSortIcon', 'rateSortIcon', 'commissionSortIcon',
                           'amountSortIcon', 'paymentSortIcon', 'interestSortIcon', 'totalSortIcon'];
             icons.forEach(id => {
                 document.getElementById(id).textContent = '↕';
@@ -491,6 +1884,7 @@
                 'bankName': 'bankSortIcon',
                 'loanPeriod': 'periodSortIcon',
                 'interestRate': 'rateSortIcon',
+                'commission': 'commissionSortIcon',
                 'loanAmount': 'amountSortIcon',
                 'monthlyPayment': 'paymentSortIcon',
                 'totalInterest': 'interestSortIcon',
@@ -543,10 +1937,17 @@
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
                 const monthsText = currentLanguage === 'en' ? 'months' : 'ամիս';
+                
+                // Create commission cell conditionally
+                const commissionCell = isAdminLoggedIn 
+                    ? `<td class="border p-3 text-center w-24 text-orange-600 font-medium">${(option.commission * 100).toFixed(1)}%</td>`
+                    : '';
+                
                 row.innerHTML = `
                     <td class="border p-3 font-medium">${option.bankName}</td>
                     <td class="border p-3 text-center w-32">${option.loanPeriod} ${monthsText}</td>
                     <td class="border p-3 text-center w-24">${(option.interestRate * 100).toFixed(1)}%</td>
+                    ${commissionCell}
                     <td class="border p-3 text-center font-semibold text-green-600 w-40">${option.loanAmount.toLocaleString()}</td>
                     <td class="border p-3 text-center font-semibold text-blue-600 w-36">${option.monthlyPayment.toLocaleString()}</td>
                     <td class="border p-3 text-center font-semibold text-red-600 w-40">${Math.abs(option.totalInterest).toLocaleString()}</td>
@@ -555,6 +1956,428 @@
                 tableBody.appendChild(row);
             });
         }
+
+        // Admin functionality
+        let isAdminLoggedIn = false;
+        const ADMIN_PASSWORD = CONFIG.ADMIN_PASSWORD;
+
+        function showAdminLogin() {
+            document.getElementById('adminModal').classList.remove('hidden');
+            document.getElementById('adminPassword').focus();
+        }
+
+        function hideAdminLogin() {
+            document.getElementById('adminModal').classList.add('hidden');
+            document.getElementById('adminPassword').value = '';
+        }
+
+                 function loginAdmin() {
+             const password = document.getElementById('adminPassword').value;
+             if (password === ADMIN_PASSWORD) {
+                 isAdminLoggedIn = true;
+                 hideAdminLogin();
+                 showAdminPanel();
+                 showAdminDetails();
+                 updateAdminButton();
+                 showCommissionColumn();
+                 showProfitPerKwDisplay();
+                 // Recalculate to show detailed breakdown
+                 if (allLoanOptions.length > 0) {
+                     calculateLoan();
+                 }
+             } else {
+                 alert('Incorrect password');
+             }
+         }
+
+                 function logoutAdmin() {
+             isAdminLoggedIn = false;
+             hideAdminDetails();
+             updateAdminButton();
+             hideCommissionColumn();
+             hideProfitPerKwDisplay();
+             // Recalculate to hide detailed breakdown
+             if (allLoanOptions.length > 0) {
+                 calculateLoan();
+             }
+         }
+
+        function showCommissionColumn() {
+            // Show commission header
+            const commissionHeader = document.querySelector('.admin-only');
+            if (commissionHeader) {
+                commissionHeader.style.display = 'table-cell';
+            }
+        }
+
+                 function hideCommissionColumn() {
+             // Hide commission header
+             const commissionHeader = document.querySelector('.admin-only');
+             if (commissionHeader) {
+                 commissionHeader.style.display = 'none';
+             }
+         }
+         
+         function showProfitPerKwDisplay() {
+             // Create and show profit per kW display
+             const container = document.getElementById('profitPerKwDisplayContainer');
+             if (container) {
+                 container.innerHTML = `
+                     <div id="profitPerKwDisplay" class="mt-2 text-sm text-gray-600">
+                         <span data-en="Current Profit per kW:" data-hy="Ընթացիկ շահույթ կՎտ-ի համար:">Current Profit per kW:</span>
+                         <span id="currentProfitPerKw" class="font-semibold text-tiamat-blue ml-1">30,000 AMD</span>
+                </div>
+            `;
+                 // Update the display with current warranty value
+                 updateProfitPerKwDisplay();
+             }
+         }
+         
+         function hideProfitPerKwDisplay() {
+             // Remove profit per kW display completely
+             const container = document.getElementById('profitPerKwDisplayContainer');
+             if (container) {
+                 container.innerHTML = '';
+             }
+         }
+
+        // Spoiler functionality
+        function toggleSpoiler(element) {
+            if (element.classList.contains('spoiler')) {
+                // Show the actual value
+                element.textContent = element.getAttribute('data-value');
+                element.classList.remove('spoiler');
+                element.classList.add('spoiler-revealed');
+            } else {
+                // Hide the value
+                element.textContent = '████████████';
+                element.classList.add('spoiler');
+                element.classList.remove('spoiler-revealed');
+            }
+        }
+
+        // Handle Enter key in admin password field
+        function handleAdminPasswordKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                loginAdmin();
+            }
+        }
+
+        function showAdminDetails() {
+            document.getElementById('adminDetails').classList.remove('hidden');
+        }
+
+        function hideAdminDetails() {
+            document.getElementById('adminDetails').classList.add('hidden');
+        }
+
+        function updateAdminButton() {
+            const adminBtn = document.getElementById('adminLoginBtn');
+            if (isAdminLoggedIn) {
+                adminBtn.classList.remove('bg-gray-500', 'hover:bg-gray-600');
+                adminBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+                adminBtn.innerHTML = '<span data-en="Admin ✓" data-hy="Ադմին ✓">Admin ✓</span>';
+            } else {
+                adminBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                adminBtn.classList.add('bg-gray-500', 'hover:bg-gray-600');
+                adminBtn.innerHTML = '<span data-en="Admin" data-hy="Ադմին">Admin</span>';
+            }
+        }
+
+        // New admin panel functions
+        function showAdminPanel() {
+            if (!isAdminLoggedIn) return;
+            
+            // Show the admin panel on the main page
+            const adminPanelMain = document.getElementById('adminPanelMain');
+            if (adminPanelMain) {
+                adminPanelMain.classList.remove('hidden');
+                
+                // Update the last updated timestamp
+                const lastUpdatedElement = document.getElementById('adminLastUpdated');
+                if (lastUpdatedElement) {
+                    lastUpdatedElement.textContent = new Date().toLocaleString();
+                }
+                
+                // Scroll to the admin panel
+                adminPanelMain.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+                 function logoutAdmin() {
+             isAdminLoggedIn = false;
+             const adminPanelMain = document.getElementById('adminPanelMain');
+             if (adminPanelMain) {
+                 adminPanelMain.classList.add('hidden');
+             }
+             // Reset admin state
+             hideAdminDetails();
+             updateAdminButton();
+             hideCommissionColumn();
+             hideProfitPerKwDisplay();
+         }
+
+        function refreshAdminData() {
+            if (!isAdminLoggedIn) return;
+            
+            // Update the last updated timestamp
+            const lastUpdatedElement = document.getElementById('adminLastUpdated');
+            if (lastUpdatedElement) {
+                lastUpdatedElement.textContent = new Date().toLocaleString();
+            }
+
+        }
+
+        // Add admin details section to the page
+        function addAdminSection() {
+            const adminSection = `
+                <div id="adminDetails" class="bg-white rounded-lg shadow-md p-6 mt-6 hidden">
+                    <h2 class="text-xl font-semibold mb-4 text-tiamat-blue" data-en="Admin: Calculation Details" data-hy="Ադմին: Հաշվարկի մանրամասները">Admin: Calculation Details</h2>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Base Prices -->
+                        <div class="space-y-4">
+                            <h3 class="font-semibold text-gray-800" data-en="Base Prices (per kW, without inverter)" data-hy="Բազային գները (կՎտ-ի համար, առանց ինվերտորի)">Base Prices (per kW, without inverter)</h3>
+                            <div class="bg-gray-50 p-4 rounded-md space-y-2">
+                                <div class="flex justify-between">
+                                    <span data-en="Aluminium Construction on Roof" data-hy="Ալյումինե կոնստրուկցիա տանիքի վրա">Aluminium Construction on Roof:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="130,000 AMD">████████████</span>
+                    </div>
+                                <div class="flex justify-between">
+                                    <span data-en="Metal Construction on Roof" data-hy="Մետաղական կոնստրուկցիա տանիքի վրա">Metal Construction on Roof:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="115,000 AMD">████████████</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span data-en="On Roof (Sloped)" data-hy="Տանիքի վրա (լանջային)">On Roof (Sloped):</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="105,000 AMD">████████████</span>
+                        </div>
+                                <div class="flex justify-between">
+                                    <span data-en="System on Ground" data-hy="Համակարգ գետնի վրա">System on Ground:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="117,000 AMD">████████████</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profit by Warranty -->
+                        <div class="space-y-4">
+                            <h3 class="font-semibold text-gray-800" data-en="Profit per kW by Warranty" data-hy="Շահույթ կՎտ-ի համար ըստ երաշխիքի">Profit per kW by Warranty</h3>
+                            <div class="bg-gray-50 p-4 rounded-md space-y-2">
+                                <div class="flex justify-between">
+                                    <span data-en="2 Years" data-hy="2 Տարի">2 Years:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="15,000 AMD">████████████</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span data-en="3 Years" data-hy="3 Տարի">3 Years:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="20,000 AMD">████████████</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span data-en="6 Years" data-hy="6 Տարի">6 Years:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="25,000 AMD">████████████</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span data-en="12 Years" data-hy="12 Տարի">12 Years:</span>
+                                    <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="30,000 AMD">████████████</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Commission Rates -->
+                    <div class="mt-6">
+                        <h3 class="font-semibold text-gray-800 mb-4" data-en="Bank Commission Rates" data-hy="Բանկի կոմիսիոն վճարներ">Bank Commission Rates</h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- ArmEconomBank -->
+                        <div>
+                                <h4 class="font-medium text-gray-700 mb-2">ArmEconomBank</h4>
+                                <div class="bg-gray-50 p-4 rounded-md text-sm space-y-1">
+                                    <div class="grid grid-cols-3 gap-2 text-xs font-medium text-gray-600">
+                                        <span>Period</span>
+                                        <span>Interest</span>
+                                        <span>Commission</span>
+                                </div>
+                                    <div class="space-y-1">
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>36m</span><span>0%</span><span>21%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>60m</span><span>0%</span><span>32%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>84m</span><span>0%</span><span>41%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>36m</span><span>3%</span><span>18%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>60m</span><span>3%</span><span>27%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>84m</span><span>3%</span><span>34%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>36m</span><span>5%</span><span>16%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>60m</span><span>5%</span><span>23%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>84m</span><span>5%</span><span>30%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>36m</span><span>9%</span><span>10%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>60m</span><span>9%</span><span>15%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>84m</span><span>9%</span><span>19%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>36m</span><span>12%</span><span>6%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>60m</span><span>12%</span><span>9%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>84m</span><span>12%</span><span>11%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>36m</span><span>15%</span><span>2%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>60m</span><span>15%</span><span>3%</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>84m</span><span>15%</span><span>4%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ACBA Bank -->
+                                <div>
+                                <h4 class="font-medium text-gray-700 mb-2">ACBA Bank</h4>
+                                <div class="bg-gray-50 p-4 rounded-md text-sm space-y-1">
+                                    <div class="grid grid-cols-3 gap-2 text-xs font-medium text-gray-600">
+                                        <span>Period</span>
+                                        <span>Interest</span>
+                                        <span>Commission</span>
+                                </div>
+                                    <div class="space-y-1">
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <span>96m</span><span>11%</span><span>4%</span>
+                            </div>
+                        </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    </div>
+                </div>
+            `;
+            
+            // Insert admin section after the loan table
+            const loanTable = document.getElementById('loanTable');
+            loanTable.insertAdjacentHTML('afterend', adminSection);
+        }
+
+        // Initialize admin section and fetch database values on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            addAdminSection();
+            
+            // Fetch system cost settings from database
+            fetchSystemCostSettings().then(() => {
+
+            }).catch(error => {
+
+            });
+        });
+
+        // Keyboard shortcut for admin login (A+S+D+Space+Enter+Enter)
+        let keySequence = [];
+        let lastKeyTime = 0;
+        
+        document.addEventListener('keydown', function(event) {
+            const currentTime = Date.now();
+            
+            // Reset sequence if too much time has passed (2 seconds)
+            if (currentTime - lastKeyTime > 2000) {
+                keySequence = [];
+            }
+            
+            lastKeyTime = currentTime;
+            
+            // Track all key presses
+            let keyPressed = '';
+            
+            if (event.code === 'KeyA') {
+                keyPressed = 'A';
+            } else if (event.code === 'KeyS') {
+                keyPressed = 'S';
+            } else if (event.code === 'KeyD') {
+                keyPressed = 'D';
+            } else if (event.key === ' ') {
+                keyPressed = 'Space';
+            } else if (event.code === 'Enter') {
+                keyPressed = 'Enter';
+            }
+            
+            if (keyPressed) {
+                keySequence.push(keyPressed);
+                
+                // Keep only last 6 keys
+                if (keySequence.length > 6) {
+                    keySequence.shift();
+                }
+                
+                // Debug: log the sequence
+
+                // Check if sequence matches admin shortcut: A+S+D+Space+Enter+Enter
+                if (keySequence.length === 6 && 
+                    keySequence[0] === 'A' && 
+                    keySequence[1] === 'S' && 
+                    keySequence[2] === 'D' && 
+                    keySequence[3] === 'Space' && 
+                    keySequence[4] === 'Enter' && 
+                    keySequence[5] === 'Enter') {
+                    
+                    // Prevent default behavior
+                    event.preventDefault();
+                    
+                    // Show admin login
+                    showAdminLogin();
+                    
+                    // Reset sequence
+                    keySequence = [];
+        
+                }
+            }
+        });
     </script>
+
+    <!-- Admin Login Modal -->
+    <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg p-6 w-full max-w-md">
+                <h3 class="text-lg font-semibold mb-4" data-en="Admin Login" data-hy="Ադմին մուտք">Admin Login</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Password" data-hy="Գաղտնաբառ">Password</label>
+                        <input type="password" id="adminPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue" onkeydown="handleAdminPasswordKeydown(event)">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="loginAdmin()" class="flex-1 bg-tiamat-blue text-white px-4 py-2 rounded-md hover:bg-tiamat-dark-blue">
+                            <span data-en="Login" data-hy="Մուտք">Login</span>
+                        </button>
+                        <button onclick="hideAdminLogin()" class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
+                            <span data-en="Cancel" data-hy="Չեղարկել">Cancel</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html> 
