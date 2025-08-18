@@ -119,15 +119,36 @@
 
     <!-- Authentication Container (shown when not logged in) -->
     <div id="authContainer" class="min-h-screen flex items-center justify-center p-4" style="display: none;">
-        <div class="text-center">
+        <div class="text-center max-w-md w-full">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-tiamat-blue rounded-full mb-4 shadow-lg">
                 <img src="tIAMAT white blue-06.ico" alt="Tiamat Logo" class="w-12 h-12">
             </div>
             <h1 class="text-3xl font-bold text-tiamat-blue mb-2">Authentication Required</h1>
-            <p class="text-gray-600 mb-4">Please log in to access the Solar Loan Calculator</p>
-            <a href="/login" class="inline-block bg-tiamat-blue text-white px-6 py-3 rounded-lg font-semibold hover:bg-tiamat-dark-blue transition-colors">
-                Go to Login
-            </a>
+            <p class="text-gray-600 mb-6">Please log in to access the Solar Loan Calculator</p>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-4 text-left">
+                <div>
+                    <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="loginEmail" name="email" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue"
+                           placeholder="Enter your email">
+                </div>
+                <div>
+                    <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="loginPassword" name="password" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue"
+                           placeholder="Enter your password">
+                </div>
+                <button type="submit" 
+                        class="w-full bg-tiamat-blue text-white px-6 py-3 rounded-lg font-semibold hover:bg-tiamat-dark-blue transition-colors">
+                    Sign In
+                </button>
+            </form>
+            
+            <div class="mt-4 text-sm text-gray-500">
+                Contact your administrator for login credentials
+            </div>
         </div>
     </div>
 
@@ -3499,6 +3520,39 @@
             }
         }
 
+        // Handle login form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const email = document.getElementById('loginEmail').value;
+                    const password = document.getElementById('loginPassword').value;
+                    
+                    if (!email || !password) {
+                        alert('Please enter both email and password');
+                        return;
+                    }
+                    
+                    try {
+                        // Import auth functions
+                        const { signInWithPassword } = await import('./auth.js');
+                        
+                        const result = await signInWithPassword(email, password);
+                        if (result.success) {
+                            console.log('Login successful!');
+                            // The auth state change will handle the redirect
+                        } else {
+                            alert('Login failed: ' + result.error);
+                        }
+                    } catch (error) {
+                        console.error('Login error:', error);
+                        alert('Login failed: ' + error.message);
+                    }
+                });
+            }
+        });
     </script>
 
     <!-- Authentication Script -->
