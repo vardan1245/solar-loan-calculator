@@ -105,28 +105,27 @@ app.get('/api/system-cost-settings', async (req, res) => {
                     description: row.description,
                     updated_at: row.updated_at
                 };
+            } else if (row.category === 'profit_margin') {
+                // Handle warranty-based profit margins
+                const warrantyYears = row.warranty_years;
+                const profitKey = `profit_per_kw_${warrantyYears}Y`;
+                organizedData.profitMargins.data[profitKey] = {
+                    id: row.id,
+                    key: profitKey,
+                    value: value,
+                    description: row.description,
+                    updated_at: row.updated_at
+                };
             } else if (key.includes('profit_per_kw')) {
-                // Handle both old installation-type-based and new warranty-based profit keys
-                if (key.includes('_2Y') || key.includes('_3Y') || key.includes('_6Y') || key.includes('_12Y')) {
-                    // This is a warranty-based profit key
-                    organizedData.profitMargins.data[key] = {
-                        id: row.id,
-                        key: key,
-                        value: value,
-                        description: row.description,
-                        updated_at: row.updated_at
-                    };
-                } else {
-                    // This is an installation-type-based profit key (legacy)
-                    const installationType = key.replace('_profit_per_kw', '');
-                    organizedData.profitMargins.data[installationType] = {
-                        id: row.id,
-                        key: key,
-                        value: value,
-                        description: row.description,
-                        updated_at: row.updated_at
-                    };
-                }
+                // Handle legacy installation-type-based profit keys (if any exist)
+                const installationType = key.replace('_profit_per_kw', '');
+                organizedData.profitMargins.data[installationType] = {
+                    id: row.id,
+                    key: key,
+                    value: value,
+                    description: row.description,
+                    updated_at: row.updated_at
+                };
             } else if (key.includes('sales_pct') || key.includes('sales_team_pct')) {
                 // Handle both old sales_pct format and new sales_team_pct format
                 if (key === 'sales_team_pct') {
