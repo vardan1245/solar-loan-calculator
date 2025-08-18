@@ -1,30 +1,27 @@
 {
-  "name": "solar-loan-calculator",
+  "name": "tiamat-loan-calculator",
   "version": "1.0.0",
-  "description": "Standalone solar loan calculator for comparing different bank loan options",
-  "main": "index.html",
+  "type": "module",
+  "description": "Solar Loan Calculator with Supabase Authentication",
+  "main": "server.js",
   "scripts": {
-    "start": "live-server --port=3000",
-    "dev": "live-server --port=3000",
-    "build": "mkdir -p public && cp index.html public/ && cp tIAMAT\\ white\\ blue-06.ico public/",
-    "deploy": "echo 'Deploy to your preferred hosting service'"
+    "start": "node server.js",
+    "server": "node start-server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.4",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
   },
   "keywords": [
     "solar",
     "loan",
     "calculator",
-    "armenia",
-    "bank",
-    "financing"
+    "supabase",
+    "authentication"
   ],
-  "author": "Tiamat Solar",
-  "license": "MIT",
-  "devDependencies": {
-    "live-server": "^1.2.2"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/your-username/solar-loan-calculator.git"
-  },
-  "homepage": "https://your-username.github.io/solar-loan-calculator"
-} 
+  "author": "Tiamat",
+  "license": "MIT"
+}

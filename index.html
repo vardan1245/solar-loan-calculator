@@ -81,17 +81,40 @@
 
 </head>
 <body class="bg-gray-50">
-    <div class="container mx-auto p-6 space-y-6">
+    <!-- Authentication Container (shown when not logged in) -->
+    <div id="authContainer" class="min-h-screen flex items-center justify-center p-4" style="display: none;">
+        <div class="text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-tiamat-blue rounded-full mb-4 shadow-lg">
+                <img src="tIAMAT white blue-06.ico" alt="Tiamat Logo" class="w-12 h-12">
+            </div>
+            <h1 class="text-3xl font-bold text-tiamat-blue mb-2">Authentication Required</h1>
+            <p class="text-gray-600 mb-4">Please log in to access the Solar Loan Calculator</p>
+            <a href="/login" class="inline-block bg-tiamat-blue text-white px-6 py-3 rounded-lg font-semibold hover:bg-tiamat-dark-blue transition-colors">
+                Go to Login
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Application Container (shown when logged in) -->
+    <div id="appContainer" class="container mx-auto p-6 space-y-6" style="display: none;">
         <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
                 <img src="tIAMAT white blue-06.ico" alt="Tiamat Logo" class="h-8 w-8">
                 <h1 class="text-3xl font-bold text-tiamat-blue" data-en="Solar Loan Calculator" data-hy="Արևային կայանի վարկի հաշվիչ">Solar Loan Calculator</h1>
             </div>
             
-            <!-- Language Switcher -->
-            <div class="flex items-center gap-2">
-                <button onclick="switchLanguage('en')" id="langEn" class="px-3 py-1 rounded-md text-sm font-medium bg-tiamat-blue text-white">EN</button>
-                <button onclick="switchLanguage('hy')" id="langHy" class="px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300" style="display: inline-block !important; visibility: visible !important;">ՀԱՅ</button>
+            <!-- User Info and Controls -->
+            <div class="flex items-center gap-4">
+                <!-- User Info Display -->
+                <div id="userInfo" class="text-sm text-gray-700">
+                    <!-- Will be populated by auth.js -->
+                </div>
+                
+                <!-- Language Switcher -->
+                <div class="flex items-center gap-2">
+                    <button onclick="switchLanguage('en')" id="langEn" class="px-3 py-1 rounded-md text-sm font-medium bg-tiamat-blue text-white">EN</button>
+                    <button onclick="switchLanguage('hy')" id="langHy" class="px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300" style="display: inline-block !important; visibility: visible !important;">ՀԱՅ</button>
+                </div>
                 
                 <!-- Admin Login Button (Hidden) -->
                 <button id="adminLoginBtn" onclick="showAdminLogin()" 
@@ -3000,6 +3023,24 @@
             }
         });
     </script>
+
+    <!-- Authentication Script -->
+    <script type="module" src="auth.js"></script>
+    <script type="module" src="route-protection.js"></script>
+    <script>
+        // Initialize authentication and route protection when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Import and initialize auth
+            const { initAuth } = await import('./auth.js');
+            await initAuth();
+            
+            // Initialize route protection
+            const { initRouteProtection } = await import('./route-protection.js');
+            initRouteProtection();
+        });
+    </script>
+    
+    </div> <!-- Close appContainer -->
 
     <!-- Admin Login Modal -->
     <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">

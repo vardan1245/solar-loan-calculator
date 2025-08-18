@@ -552,9 +552,13 @@ app.post('/api/admin/login', async (req, res) => {
     }
 });
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+
+
+
+
+// Serve the login page
+app.get('/login', (req, res) => {
+    res.sendFile(__dirname + '/login.html');
 });
 
 // Serve the main app for the price calculation route
@@ -562,13 +566,27 @@ app.get('/price_calculation', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-// Serve the main app for the root route (redirect to price_calculation)
-app.get('/', (req, res) => {
-    res.redirect('/price_calculation');
+// Serve the test route protection page
+app.get('/test', (req, res) => {
+    res.sendFile(__dirname + '/test-route-protection.html');
 });
 
-// Serve static files (CSS, JS, images) from root directory - AFTER API routes
-app.use(express.static(__dirname));
+// Serve the main app for the root route (redirect to login)
+app.get('/', (req, res) => {
+    res.redirect('/login');
+});
+
+// Serve static files (CSS, JS, images) from root directory - AFTER ALL routes
+app.use(express.static(__dirname, {
+    index: false, // Don't serve index.html for directory requests
+    extensions: ['html', 'css', 'js', 'ico', 'png', 'jpg', 'jpeg', 'gif', 'svg'], // Only serve specific file types
+    setHeaders: (res, path) => {
+        // Don't serve files for API routes
+        if (path.startsWith('/api/')) {
+            res.status(404).end();
+        }
+    }
+}));
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
