@@ -116,11 +116,7 @@
                 <button onclick="switchLanguage('hy')" id="langHy" class="px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300" style="display: inline-block !important; visibility: visible !important;">ՀԱՅ</button>
                 </div>
                 
-                <!-- Admin Login Button (Hidden) -->
-                <button id="adminLoginBtn" onclick="showAdminLogin()" 
-                        class="px-3 py-1 rounded-md text-sm font-medium bg-gray-500 text-white hover:bg-gray-600 transition-colors hidden">
-                    <span data-en="Admin" data-hy="Ադմին">Admin</span>
-                </button>
+
             </div>
         </div>
 
@@ -2545,80 +2541,76 @@
         let isAdminLoggedIn = false;
         let currentAdminUser = null;
 
-        function showAdminLogin() {
-            document.getElementById('adminModal').classList.remove('hidden');
-            document.getElementById('adminPassword').focus();
-        }
 
-        function hideAdminLogin() {
-            document.getElementById('adminModal').classList.add('hidden');
-            document.getElementById('adminUsername').value = '';
-            document.getElementById('adminPassword').value = '';
-        }
 
-        async function loginAdmin() {
-            const username = document.getElementById('adminUsername').value;
-            const password = document.getElementById('adminPassword').value;
-            
-            console.log('Login attempt with:', { username, password });
-            
-            if (!username || !password) {
-                alert('Please enter both username and password');
-                return;
-            }
-            
+        // Check if current Supabase user has admin privileges
+        async function checkAdminStatus() {
             try {
-                const requestBody = { username, password };
-                console.log('Sending request body:', requestBody);
+                // Import auth functions
+                const { getCurrentUser, isAuthenticated } = await import('./auth.js');
                 
-                const response = await fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-                
-                const result = await response.json();
-                console.log('Response status:', response.status);
-                console.log('Response body:', result);
-                
-                if (result.success) {
-                isAdminLoggedIn = true;
-                    currentAdminUser = result.user;
-                hideAdminLogin();
-                showAdminPanel();
-                showAdminDetails();
-                updateAdminButton();
-                showCommissionColumn();
-                showProfitPerKwDisplay();
-                    
-                    // Show welcome message
-                    alert(`Welcome, ${currentAdminUser.full_name}!`);
-                    
-                // Recalculate to show detailed breakdown
-                if (allLoanOptions.length > 0) {
-                    calculateLoan();
+                if (!isAuthenticated()) {
+                    isAdminLoggedIn = false;
+                    hideAdminPanel();
+                    return;
                 }
-            } else {
-                    alert(result.error || 'Login failed');
+                
+                const currentUser = getCurrentUser();
+                if (!currentUser) {
+                    isAdminLoggedIn = false;
+                    hideAdminPanel();
+                    return;
                 }
+                
+                // Check if user has admin role in Supabase
+                // For now, we'll check if the user email matches admin patterns
+                // In production, you should have a proper admin role system in Supabase
+                const isAdmin = currentUser.email === 'admin@tiamat.com' || 
+                               currentUser.email === 'admin@gmail.com' ||
+                               currentUser.user_metadata?.role === 'admin';
+                
+                if (isAdmin) {
+                    isAdminLoggedIn = true;
+                    currentAdminUser = {
+                        id: currentUser.id,
+                        username: currentUser.email,
+                        full_name: currentUser.user_metadata?.full_name || currentUser.email,
+                        role: 'admin'
+                    };
+                    
+                    showAdminPanel();
+                    showAdminDetails();
+                    showCommissionColumn();
+                    showProfitPerKwDisplay();
+                    
+                    console.log('Admin access granted for:', currentUser.email);
+                } else {
+                    isAdminLoggedIn = false;
+                    hideAdminPanel();
+                    console.log('User is not admin:', currentUser.email);
+                }
+                
             } catch (error) {
-                console.error('Login error:', error);
-                alert('Login failed. Please try again.');
+                console.error('Error checking admin status:', error);
+                isAdminLoggedIn = false;
+                hideAdminPanel();
             }
         }
 
-        function logoutAdmin() {
+        function hideAdminPanel() {
             isAdminLoggedIn = false;
             hideAdminDetails();
-            updateAdminButton();
             hideCommissionColumn();
             hideProfitPerKwDisplay();
+            
             // Recalculate to hide detailed breakdown
             if (allLoanOptions.length > 0) {
                 calculateLoan();
             }
+        }
+        
+        function logoutAdmin() {
+            hideAdminPanel();
         }
 
         function showCommissionColumn() {
@@ -2731,18 +2723,7 @@
             }
         }
 
-        function updateAdminButton() {
-            const adminBtn = document.getElementById('adminLoginBtn');
-            if (isAdminLoggedIn) {
-                adminBtn.classList.remove('bg-gray-500', 'hover:bg-gray-600');
-                adminBtn.classList.add('bg-green-500', 'hover:bg-green-600');
-                adminBtn.innerHTML = '<span data-en="Admin ✓" data-hy="Ադմին ✓">Admin ✓</span>';
-            } else {
-                adminBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
-                adminBtn.classList.add('bg-gray-500', 'hover:bg-gray-600');
-                adminBtn.innerHTML = '<span data-en="Admin" data-hy="Ադմին">Admin</span>';
-            }
-        }
+
 
         // New admin panel functions - CSS-independent security
         function showAdminPanel() {
@@ -2774,7 +2755,6 @@
             }
             // Reset admin state
             hideAdminDetails();
-            updateAdminButton();
             hideCommissionColumn();
             hideProfitPerKwDisplay();
         }
@@ -2962,20 +2942,7 @@
             });
         });
 
-        // Simple admin access - show admin login button
-        function showAdminAccessButton() {
-            const adminButton = document.createElement('button');
-            adminButton.id = 'adminAccessButton';
-            adminButton.className = 'fixed top-4 right-4 bg-tiamat-blue text-white px-4 py-2 rounded-md hover:bg-tiamat-dark-blue z-40';
-            adminButton.innerHTML = '<span data-en="Admin" data-hy="Ադմին">Admin</span>';
-            adminButton.onclick = showAdminLogin;
-            document.body.appendChild(adminButton);
-        }
-        
-        // Show admin access button when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            showAdminAccessButton();
-        });
+
     </script>
 
     <!-- Authentication Script -->
@@ -2991,36 +2958,16 @@
             // Initialize route protection
             const { initRouteProtection } = await import('./route-protection.js');
             initRouteProtection();
+            
+            // Check admin status after authentication
+            setTimeout(() => {
+                checkAdminStatus();
+            }, 1000);
         });
     </script>
     
     </div> <!-- Close appContainer -->
 
-    <!-- Admin Login Modal -->
-    <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg p-6 w-full max-w-md">
-                <h3 class="text-lg font-semibold mb-4" data-en="Admin Login" data-hy="Ադմին մուտք">Admin Login</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Username" data-hy="Օգտանուն">Username</label>
-                        <input type="text" id="adminUsername" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue" placeholder="Enter username">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Password" data-hy="Գաղտնաբառ">Password</label>
-                        <input type="password" id="adminPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue" placeholder="Enter password" onkeydown="if(event.key === 'Enter') loginAdmin()">
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="loginAdmin()" class="flex-1 bg-tiamat-blue text-white px-4 py-2 rounded-md hover:bg-tiamat-dark-blue">
-                            <span data-en="Login" data-hy="Մուտք">Login</span>
-                        </button>
-                        <button onclick="hideAdminLogin()" class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
-                            <span data-en="Cancel" data-hy="Չեղարկել">Cancel</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
 </body>
 </html> 
