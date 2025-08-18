@@ -2582,6 +2582,7 @@
                     showAdminDetails();
                     showCommissionColumn();
                     showProfitPerKwDisplay();
+                    revealAllSensitiveInfo(); // Automatically show all sensitive information
                     
                     console.log('Admin access granted for:', currentUser.email);
                 } else {
@@ -2602,6 +2603,7 @@
             hideAdminDetails();
             hideCommissionColumn();
             hideProfitPerKwDisplay();
+            hideAllSensitiveInfo(); // Hide all sensitive information
             
             // Recalculate to hide detailed breakdown
             if (allLoanOptions.length > 0) {
@@ -2703,6 +2705,85 @@
             // Reset admin state
             isAdminLoggedIn = false;
             currentAdminUser = null;
+        }
+
+        // ADMIN FUNCTION: Automatically reveal all sensitive information
+        function revealAllSensitiveInfo() {
+            if (!isAdminLoggedIn) return;
+            
+            console.log('Revealing all sensitive information for admin user');
+            
+            // Reveal all spoiler elements
+            const spoilerElements = document.querySelectorAll('[data-value]');
+            spoilerElements.forEach(element => {
+                if (element.classList.contains('spoiler')) {
+                    // Show the actual value
+                    element.textContent = element.getAttribute('data-value');
+                    element.classList.remove('spoiler');
+                    element.classList.add('spoiler-revealed');
+                }
+            });
+            
+            // Show all admin-only elements
+            const adminOnlyElements = document.querySelectorAll('.admin-only');
+            adminOnlyElements.forEach(element => {
+                element.style.display = 'table-cell';
+            });
+            
+            // Force show all admin panels
+            const adminElements = [
+                'adminPanelMain',
+                'adminDetails',
+                'profitPerKwDisplayContainer'
+            ];
+            
+            adminElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.style.display = 'block';
+                    element.style.visibility = 'visible';
+                }
+            });
+            
+            console.log('All sensitive information revealed for admin');
+        }
+
+        // ADMIN FUNCTION: Hide all sensitive information when admin logs out
+        function hideAllSensitiveInfo() {
+            console.log('Hiding all sensitive information');
+            
+            // Hide all spoiler elements
+            const spoilerElements = document.querySelectorAll('[data-value]');
+            spoilerElements.forEach(element => {
+                if (element.classList.contains('spoiler-revealed')) {
+                    element.textContent = '████████████';
+                    element.classList.remove('spoiler-revealed');
+                    element.classList.add('spoiler');
+                }
+            });
+            
+            // Hide all admin-only elements
+            const adminOnlyElements = document.querySelectorAll('.admin-only');
+            adminOnlyElements.forEach(element => {
+                element.style.display = 'none';
+            });
+            
+            // Hide all admin panels
+            const adminElements = [
+                'adminPanelMain',
+                'adminDetails',
+                'profitPerKwDisplayContainer'
+            ];
+            
+            adminElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.style.display = 'none';
+                    element.style.visibility = 'hidden';
+                }
+            });
+            
+            console.log('All sensitive information hidden');
         }
 
 
@@ -2962,6 +3043,10 @@
             // Check admin status after authentication
             setTimeout(() => {
                 checkAdminStatus();
+                // If admin is already logged in, reveal sensitive info immediately
+                if (isAdminLoggedIn) {
+                    revealAllSensitiveInfo();
+                }
             }, 1000);
         });
     </script>
