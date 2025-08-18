@@ -1023,7 +1023,7 @@
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 text-blue-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                 </svg>
                                 <span class="text-blue-800 font-medium">${message}</span>
                             </div>
@@ -1221,7 +1221,7 @@
                         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                 </svg>
                                 <span class="text-yellow-800 font-medium">${message}</span>
                             </div>
@@ -2563,28 +2563,35 @@
                 }
                 
                 // Check if user has admin role in Supabase
-                // For now, we'll check if the user email matches admin patterns
-                // In production, you should have a proper admin role system in Supabase
-                const isAdmin = currentUser.email === 'admin@tiamat.com' || 
-                               currentUser.email === 'admin@gmail.com' ||
-                               currentUser.user_metadata?.role === 'admin';
+                // Prefer role from app_metadata, fallback to user_metadata, or known admin emails
+                const isAdmin = (currentUser.app_metadata && currentUser.app_metadata.role === 'admin') ||
+                               (currentUser.user_metadata && currentUser.user_metadata.role === 'admin') ||
+                               currentUser.email === 'admin@tiamat.com' ||
+                               currentUser.email === 'admin@gmail.com';
                 
                 if (isAdmin) {
                     isAdminLoggedIn = true;
                     currentAdminUser = {
                         id: currentUser.id,
                         username: currentUser.email,
-                        full_name: currentUser.user_metadata?.full_name || currentUser.email,
+                        full_name: (currentUser.user_metadata && (currentUser.user_metadata.name || currentUser.user_metadata.full_name)) || currentUser.email,
                         role: 'admin'
                     };
                     
+                    // Show admin toggle button first
+                    showAdminToggleButton();
+                    
+                    // Show admin panels but keep sensitive info hidden by default
                     showAdminPanel();
                     showAdminDetails();
                     showCommissionColumn();
                     showProfitPerKwDisplay();
-                    revealAllSensitiveInfo(); // Automatically show all sensitive information
+                    
+                    // DO NOT auto-reveal sensitive info - keep it hidden by default
+                    // revealAllSensitiveInfo(); // Commented out - sensitive info stays hidden
                     
                     console.log('Admin access granted for:', currentUser.email);
+                    console.log('Sensitive info is hidden by default - use toggle button to show/hide');
                 } else {
                     isAdminLoggedIn = false;
                     hideAdminPanel();
@@ -2612,7 +2619,15 @@
         }
         
         function logoutAdmin() {
-            hideAdminPanel();
+            isAdminLoggedIn = false;
+            
+            // Hide all sensitive information including toggle button
+            hideAllSensitiveInfo();
+            
+            // Reset admin state
+            hideAdminDetails();
+            hideCommissionColumn();
+            hideProfitPerKwDisplay();
         }
 
         function showCommissionColumn() {
@@ -2671,13 +2686,16 @@
         
         // CRITICAL SECURITY: Ensure all sensitive data is hidden on page load
         function enforceSecurityOnLoad() {
-            // Force hide all admin panels regardless of CSS state
-            const adminElements = [
-                'adminPanelMain',
-                'adminDetails',
-                'profitPerKwDisplayContainer'
-            ];
+            console.log('Enforcing security on page load - hiding all sensitive information');
             
+            // Hide admin toggle button if it exists
+            const toggleBtn = document.getElementById('toggleSensitiveInfoBtn');
+            if (toggleBtn) {
+                toggleBtn.remove();
+            }
+            
+            // Hide all admin panels
+            const adminElements = ['adminPanelMain', 'adminDetails', 'profitPerKwDisplayContainer'];
             adminElements.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
@@ -2686,13 +2704,13 @@
                 }
             });
             
-            // Force hide commission columns
+            // Hide all admin-only table headers
             const commissionHeaders = document.querySelectorAll('.admin-only');
             commissionHeaders.forEach(header => {
                 header.style.display = 'none';
             });
             
-            // Ensure all spoiler elements are hidden
+            // Hide all spoiler elements
             const spoilerElements = document.querySelectorAll('[data-value]');
             spoilerElements.forEach(element => {
                 if (element.classList.contains('spoiler-revealed')) {
@@ -2705,6 +2723,8 @@
             // Reset admin state
             isAdminLoggedIn = false;
             currentAdminUser = null;
+            
+            console.log('Security enforced - all sensitive information hidden');
         }
 
         // ADMIN FUNCTION: Automatically reveal all sensitive information
@@ -2752,6 +2772,12 @@
         function hideAllSensitiveInfo() {
             console.log('Hiding all sensitive information');
             
+            // Hide admin toggle button
+            const toggleBtn = document.getElementById('toggleSensitiveInfoBtn');
+            if (toggleBtn) {
+                toggleBtn.remove();
+            }
+            
             // Hide all spoiler elements
             const spoilerElements = document.querySelectorAll('[data-value]');
             spoilerElements.forEach(element => {
@@ -2784,6 +2810,51 @@
             });
             
             console.log('All sensitive information hidden');
+        }
+
+        // ADMIN FUNCTION: Toggle all sensitive information visibility
+        function toggleAllSensitiveInfo() {
+            if (!isAdminLoggedIn) return;
+            
+            const toggleBtn = document.getElementById('toggleSensitiveInfoBtn');
+            if (!toggleBtn) return;
+            
+            if (toggleBtn.textContent.includes('Show')) {
+                // Currently hidden, so show all
+                revealAllSensitiveInfo();
+                toggleBtn.innerHTML = '<span data-en="Hide All Sensitive Info" data-hy="Թաքցնել բոլոր զգայուն տվյալները">Hide All Sensitive Info</span>';
+                toggleBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                toggleBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+            } else {
+                // Currently shown, so hide all
+                hideAllSensitiveInfo();
+                toggleBtn.innerHTML = '<span data-en="Show All Sensitive Info" data-hy="Ցույց տալ բոլոր զգայուն տվյալները">Show All Sensitive Info</span>';
+                toggleBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+                toggleBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+            }
+        }
+
+        // Create and show admin toggle button
+        function showAdminToggleButton() {
+            if (!isAdminLoggedIn) return;
+            
+            // Remove existing button if it exists
+            const existingBtn = document.getElementById('toggleSensitiveInfoBtn');
+            if (existingBtn) {
+                existingBtn.remove();
+            }
+            
+            // Create toggle button
+            const toggleBtn = document.createElement('button');
+            toggleBtn.id = 'toggleSensitiveInfoBtn';
+            toggleBtn.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 z-40 font-medium shadow-lg';
+            toggleBtn.innerHTML = '<span data-en="Show All Sensitive Info" data-hy="Ցույց տալ բոլոր զգայուն տվյալները">Show All Sensitive Info</span>';
+            toggleBtn.onclick = toggleAllSensitiveInfo;
+            
+            // Add to page
+            document.body.appendChild(toggleBtn);
+            
+            console.log('Admin toggle button created');
         }
 
 
@@ -3023,6 +3094,15 @@
             });
         });
 
+        // Listen for auth changes to update admin UI immediately after login/logout
+        document.addEventListener('authStateChanged', (event) => {
+            const detail = event && event.detail ? event.detail : { isAuthenticated: false, user: null };
+            if (detail.isAuthenticated) {
+                checkAdminStatus();
+            } else {
+                hideAdminPanel();
+            }
+        });
 
     </script>
 
@@ -3040,14 +3120,22 @@
             const { initRouteProtection } = await import('./route-protection.js');
             initRouteProtection();
             
+            // Enforce security immediately on page load
+            enforceSecurityOnLoad();
+            
             // Check admin status after authentication
             setTimeout(() => {
                 checkAdminStatus();
-                // If admin is already logged in, reveal sensitive info immediately
-                if (isAdminLoggedIn) {
-                    revealAllSensitiveInfo();
-                }
+                // DO NOT auto-reveal sensitive info - keep it hidden by default
+                // if (isAdminLoggedIn) {
+                //     revealAllSensitiveInfo();
+                // }
             }, 1000);
+        });
+        
+        // Also enforce security when window loads to catch any late elements
+        window.addEventListener('load', function() {
+            enforceSecurityOnLoad();
         });
     </script>
     
