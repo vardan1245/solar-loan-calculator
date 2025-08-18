@@ -75,45 +75,96 @@
             background: #e5e7eb;
         }
         
-        /* Route-based container visibility using CSS */
+        /* Route-based container visibility using CSS - More aggressive rules */
         body[data-route="/login"] #authContainer {
             display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
         }
         
         body[data-route="/login"] #appContainer {
             display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: absolute !important;
+            left: -9999px !important;
         }
         
         body:not([data-route="/login"]) #authContainer {
             display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: absolute !important;
+            left: -9999px !important;
         }
         
         /* Ensure containers are hidden by default */
         #authContainer, #appContainer {
-            display: none;
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        /* Force login route to show only auth container */
+        body[data-route="/login"] *:not(#authContainer):not(#authContainer *) {
+            display: none !important;
         }
     </style>
 
 </head>
 <body class="bg-gray-50" data-route="">
-    <!-- Immediate route-based container display -->
+    <!-- Immediate route-based container display - Enhanced version -->
     <script>
         // Immediately set the route attribute and show correct container
         (function() {
             const currentPath = window.location.pathname;
-            document.body.setAttribute('data-route', currentPath);
+            console.log('Current path:', currentPath);
             
-            // Also set display directly for immediate effect
+            // Set data-route attribute immediately
+            document.body.setAttribute('data-route', currentPath);
+            console.log('Set data-route to:', currentPath);
+            
+            // Force immediate container visibility
             const authContainer = document.getElementById('authContainer');
             const appContainer = document.getElementById('appContainer');
             
             if (currentPath === '/login') {
-                if (authContainer) authContainer.style.display = 'flex';
-                if (appContainer) appContainer.style.display = 'none';
+                console.log('Login route detected - showing auth container');
+                if (authContainer) {
+                    authContainer.style.display = 'flex';
+                    authContainer.style.visibility = 'visible';
+                    authContainer.style.opacity = '1';
+                    authContainer.style.position = 'relative';
+                }
+                if (appContainer) {
+                    appContainer.style.display = 'none';
+                    appContainer.style.visibility = 'hidden';
+                    appContainer.style.opacity = '0';
+                    appContainer.style.position = 'absolute';
+                    appContainer.style.left = '-9999px';
+                }
             } else {
-                if (authContainer) authContainer.style.display = 'none';
-                if (appContainer) appContainer.style.display = 'none';
+                console.log('Non-login route detected - hiding auth container');
+                if (authContainer) {
+                    authContainer.style.display = 'none';
+                    authContainer.style.visibility = 'hidden';
+                    authContainer.style.opacity = '0';
+                    authContainer.style.position = 'absolute';
+                    authContainer.style.left = '-9999px';
+                }
+                if (appContainer) {
+                    appContainer.style.display = 'none';
+                    appContainer.style.visibility = 'hidden';
+                }
             }
+            
+            // Double-check after a brief delay
+            setTimeout(() => {
+                if (currentPath === '/login') {
+                    if (authContainer) authContainer.style.display = 'flex';
+                    if (appContainer) appContainer.style.display = 'none';
+                }
+            }, 100);
         })();
     </script>
 
