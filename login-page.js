@@ -1,7 +1,6 @@
-import { signIn, signUp, resetPassword, initAuth } from './auth.js';
+import { signIn, resetPassword, initAuth } from './auth.js';
 
 // DOM elements
-let currentForm = 'login'; // 'login' or 'signup'
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', async function() {
@@ -16,11 +15,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 function initializeLoginPage() {
     // Form submissions
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
-    document.getElementById('signUpForm').addEventListener('submit', handleSignUp);
-    
-    // Form switching
-    document.getElementById('showSignUp').addEventListener('click', showSignUpForm);
-    document.getElementById('backToSignIn').addEventListener('click', showLoginForm);
     
     // Forgot password
     document.getElementById('forgotPassword').addEventListener('click', showForgotPasswordModal);
@@ -28,9 +22,6 @@ function initializeLoginPage() {
     // Enter key handlers
     document.getElementById('email').addEventListener('keypress', handleEnterKey);
     document.getElementById('password').addEventListener('keypress', handleEnterKey);
-    document.getElementById('signUpEmail').addEventListener('keypress', handleEnterKey);
-    document.getElementById('signUpPassword').addEventListener('keypress', handleEnterKey);
-    document.getElementById('confirmPassword').addEventListener('keypress', handleEnterKey);
 }
 
 // Handle login form submission
@@ -85,83 +76,9 @@ async function handleLogin(event) {
     }
 }
 
-// Handle sign up form submission
-async function handleSignUp(event) {
-    event.preventDefault();
-    
-    const email = (document.getElementById('signUpEmail')?.value || '').trim().toLowerCase();
-    const password = (document.getElementById('signUpPassword')?.value || '').trim();
-    const confirmPassword = (document.getElementById('confirmPassword')?.value || '').trim();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-    
-    if (!email || !password || !confirmPassword) {
-        showMessage('Please fill in all fields', 'error');
-        return;
-    }
-    if (!emailRegex.test(email)) {
-        showMessage('Please enter a valid email address', 'error');
-        return;
-    }
-    
-    if (password !== confirmPassword) {
-        showMessage('Passwords do not match', 'error');
-        return;
-    }
-    
-    if (password.length < 6) {
-        showMessage('Password must be at least 6 characters long', 'error');
-        return;
-    }
-    
-    // Show loading state
-    setLoadingState('signup', true);
-    
-    try {
-        const result = await signUp(email, password);
-        
-        if (result.success) {
-            showMessage('Account created successfully! Please check your email to verify your account.', 'success');
-            // Switch back to login form
-            setTimeout(() => showLoginForm(), 2000);
-        } else {
-            const message = (result.error || '').toString();
-            if (message.toLowerCase().includes('email address') && message.toLowerCase().includes('invalid')) {
-                showMessage('The email address appears invalid. Please use a valid email.', 'error');
-            } else if (message.toLowerCase().includes('already registered')) {
-                showMessage('An account with this email already exists. Please sign in.', 'error');
-            } else {
-                showMessage(message || 'Sign up failed', 'error');
-            }
-        }
-    } catch (error) {
-        showMessage('An unexpected error occurred', 'error');
-        console.error('Sign up error:', error);
-    } finally {
-        setLoadingState('signup', false);
-    }
-}
 
-// Show sign up form
-function showSignUpForm() {
-    document.getElementById('loginForm').classList.add('hidden');
-    document.getElementById('signUpForm').classList.remove('hidden');
-    currentForm = 'signup';
-    
-    // Update title
-    document.querySelector('h1').textContent = 'Create Account';
-    document.querySelector('p').textContent = 'Sign up to get started';
-}
 
-// Show login form
-function showLoginForm() {
-    document.getElementById('signUpForm').classList.add('hidden');
-    document.getElementById('loginForm').classList.remove('hidden');
-    currentForm = 'login';
-    
-    // Update title
-    document.querySelector('h1').textContent = 'Tiamat Solar CRM';
-    document.querySelector('p').textContent = 'Sign in to access your dashboard';
-}
+
 
 // Show forgot password modal
 function showForgotPasswordModal() {
@@ -203,30 +120,15 @@ async function sendResetEmail() {
 function handleEnterKey(event) {
     if (event.key === 'Enter') {
         event.preventDefault();
-        if (currentForm === 'login') {
-            document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-        } else {
-            document.getElementById('signUpForm').dispatchEvent(new Event('submit'));
-        }
+        document.getElementById('loginForm').dispatchEvent(new Event('submit'));
     }
 }
 
-// Set loading state for forms
+// Set loading state for login form
 function setLoadingState(formType, isLoading) {
     if (formType === 'login') {
         const buttonText = document.getElementById('buttonText');
         const loadingSpinner = document.getElementById('loadingSpinner');
-        
-        if (isLoading) {
-            buttonText.classList.add('hidden');
-            loadingSpinner.classList.remove('hidden');
-        } else {
-            buttonText.classList.remove('hidden');
-            loadingSpinner.classList.add('hidden');
-        }
-    } else if (formType === 'signup') {
-        const buttonText = document.getElementById('signUpButtonText');
-        const loadingSpinner = document.getElementById('signUpLoadingSpinner');
         
         if (isLoading) {
             buttonText.classList.add('hidden');
