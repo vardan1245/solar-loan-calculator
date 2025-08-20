@@ -557,7 +557,7 @@ app.post('/api/admin/login', async (req, res) => {
 
 // Serve the login page
 app.get('/login', (req, res) => {
-    res.sendFile(__dirname + '/login.html');
+    res.sendFile(__dirname + '/public/login.html');
 });
 
 // Serve the main app for the price calculation route

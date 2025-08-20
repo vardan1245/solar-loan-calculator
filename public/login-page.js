@@ -1,4 +1,4 @@
-import { signIn, resetPassword, initAuth } from './auth.js';
+import { signIn, resetPassword, initAuth } from '/public/auth.js';
 
 // DOM elements
 
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     await initAuth();
     
     // Initialize route protection
-    const { initRouteProtection } = await import('./route-protection.js');
+    const { initRouteProtection } = await import('/public/route-protection.js');
     initRouteProtection();
 });
 

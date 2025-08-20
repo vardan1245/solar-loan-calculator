@@ -192,12 +192,12 @@ function updateAuthUI(isAuthenticated, user) {
             window.history.replaceState({}, '', '/price_calculation')
         }
     } else {
-        // User is not logged in - show login
-        if (authContainer) authContainer.style.display = 'block'
-        if (appContainer) appContainer.style.display = 'none'
-        
-        // Redirect to login page if not already there
-        if (window.location.pathname !== '/login') {
+        // User is not logged in - show login ONLY if on login route
+        if (window.location.pathname === '/login') {
+            if (authContainer) authContainer.style.display = 'block'
+            if (appContainer) appContainer.style.display = 'none'
+        } else {
+            // Not on login page and not authenticated - redirect to login
             console.log('Redirecting to /login')
             window.location.href = '/login'
         }

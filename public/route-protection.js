@@ -1,7 +1,7 @@
 // Route Protection Module
 // This module handles authentication checks and route protection
 
-import { isAuthenticated, getCurrentUser } from './auth.js';
+import { isAuthenticated, getCurrentUser } from '/public/auth.js';
 
 // Public routes that don't require authentication
 const PUBLIC_ROUTES = ['/login'];

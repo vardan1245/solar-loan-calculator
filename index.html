@@ -28,7 +28,7 @@
         try {
             // Try to load config.js
             const script = document.createElement('script');
-            script.src = 'config.js';
+            script.src = '/public/config.js';
             script.onload = function() {
                 // If config.js loads successfully, it will override the default CONFIG
             };
@@ -75,131 +75,22 @@
             background: #e5e7eb;
         }
         
-        /* Route-based container visibility using CSS - More aggressive rules */
-        body[data-route="/login"] #authContainer {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            position: relative !important;
-        }
-        
-        body[data-route="/login"] #appContainer {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            position: absolute !important;
-            left: -9999px !important;
-        }
-        
-        body:not([data-route="/login"]) #authContainer {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            position: absolute !important;
-            left: -9999px !important;
-        }
-        
-        /* Ensure containers are hidden by default */
-        #authContainer, #appContainer {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        /* Force login route to show only auth container */
-        body[data-route="/login"] *:not(#authContainer):not(#authContainer *) {
-            display: none !important;
-        }
+
     </style>
 
 </head>
-<body class="bg-gray-50" data-route="">
-    <!-- Immediate route-based container display - Enhanced version -->
-    <script>
-        // Immediately set the route attribute and show correct container
-        (function() {
-            const currentPath = window.location.pathname;
-            console.log('Current path:', currentPath);
-            
-            // Set data-route attribute immediately
-            document.body.setAttribute('data-route', currentPath);
-            console.log('Set data-route to:', currentPath);
-            
-            // Force immediate container visibility
-            const authContainer = document.getElementById('authContainer');
-            const appContainer = document.getElementById('appContainer');
-            
-            if (currentPath === '/login') {
-                console.log('Login route detected - showing auth container');
-                if (authContainer) {
-                    authContainer.style.display = 'flex';
-                    authContainer.style.visibility = 'visible';
-                    authContainer.style.opacity = '1';
-                    authContainer.style.position = 'relative';
-                }
-                if (appContainer) {
-                    appContainer.style.display = 'none';
-                    appContainer.style.visibility = 'hidden';
-                    appContainer.style.opacity = '0';
-                    appContainer.style.position = 'absolute';
-                    appContainer.style.left = '-9999px';
-                }
-            } else {
-                console.log('Non-login route detected - hiding auth container');
-                if (authContainer) {
-                    authContainer.style.display = 'none';
-                    authContainer.style.visibility = 'hidden';
-                    authContainer.style.opacity = '0';
-                    authContainer.style.position = 'absolute';
-                    authContainer.style.left = '-9999px';
-                }
-                if (appContainer) {
-                    appContainer.style.display = 'none';
-                    appContainer.style.visibility = 'hidden';
-                }
-            }
-            
-            // Double-check after a brief delay
-            setTimeout(() => {
-                if (currentPath === '/login') {
-                    if (authContainer) authContainer.style.display = 'flex';
-                    if (appContainer) appContainer.style.display = 'none';
-                }
-            }, 100);
-        })();
-    </script>
-
+<body class="bg-gray-50">
     <!-- Authentication Container (shown when not logged in) -->
     <div id="authContainer" class="min-h-screen flex items-center justify-center p-4" style="display: none;">
-        <div class="text-center max-w-md w-full">
+        <div class="text-center">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-tiamat-blue rounded-full mb-4 shadow-lg">
                 <img src="tIAMAT white blue-06.ico" alt="Tiamat Logo" class="w-12 h-12">
             </div>
             <h1 class="text-3xl font-bold text-tiamat-blue mb-2">Authentication Required</h1>
-            <p class="text-gray-600 mb-6">Please log in to access the Solar Loan Calculator</p>
-            
-            <!-- Login Form -->
-            <form id="loginForm" class="space-y-4 text-left">
-                <div>
-                    <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" id="loginEmail" name="email" required 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue"
-                           placeholder="Enter your email">
-                </div>
-                <div>
-                    <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input type="password" id="loginPassword" name="password" required 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue"
-                           placeholder="Enter your password">
-                </div>
-                <button type="submit" 
-                        class="w-full bg-tiamat-blue text-white px-6 py-3 rounded-lg font-semibold hover:bg-tiamat-dark-blue transition-colors">
-                    Sign In
-                </button>
-            </form>
-            
-            <div class="mt-4 text-sm text-gray-500">
-                Contact your administrator for login credentials
-            </div>
+            <p class="text-gray-600 mb-4">Please log in to access the Solar Loan Calculator</p>
+            <a href="/login" class="inline-block bg-tiamat-blue text-white px-6 py-3 rounded-lg font-semibold hover:bg-tiamat-dark-blue transition-colors">
+                Go to Login
+            </a>
         </div>
     </div>
 
@@ -319,7 +210,7 @@
                 <!-- Panel Selection -->
                 <div class="mb-4">
                     <div class="flex items-center justify-between mb-2">
-                        <label class="block text-sm font-medium text-gray-700" data-en="Panel Selection:" data-hy="Պանելների ընտրություն:">Panel Selection:</label>
+                        <label class="block text-sm font-medium text-gray-700" data-en="Panel Selection:" data-hy="Վահանակների ընտրություն:">Panel Selection:</label>
                         <div class="flex items-center space-x-2">
                             <span class="text-xs text-gray-500" data-en="Auto" data-hy="Ավտո">Auto</span>
                             <label class="relative inline-flex items-center cursor-pointer">
@@ -334,9 +225,9 @@
                     <div id="autoPanelSelection">
                         <!-- Panel Suggestions Display -->
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Panel Suggestions" data-hy="Պանելների առաջարկներ">Panel Suggestions</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Panel Suggestions" data-hy="Վահանակների առաջարկներ">Panel Suggestions</label>
                             <div id="panelSuggestions" class="space-y-2 border border-gray-200 rounded-md p-3 bg-gray-50">
-                                <div class="text-sm text-gray-500 text-center py-4" data-en="Enter System Power above to see panel suggestions" data-hy="Մուտքագրեք համակարգի հզորությունը վերևում՝ պանելների առաջարկները տեսնելու համար">Enter System Power above to see panel suggestions</div>
+                                <div class="text-sm text-gray-500 text-center py-4" data-en="Enter System Power above to see panel suggestions" data-hy="Մուտքագրեք համակարգի հզորությունը վերևում՝ վահանակների առաջարկները տեսնելու համար">Enter System Power above to see panel suggestions</div>
                             </div>
                         </div>
                         
@@ -365,7 +256,7 @@
                         </div>
                         <div class="bg-gray-50 p-3 rounded-md">
                             <div class="flex justify-between items-center">
-                                <span class="text-sm font-medium text-gray-700" data-en="Selected Panel:" data-hy="Ընտրված պանելը:">Selected Panel:</span>
+                                <span class="text-sm font-medium text-gray-700" data-en="Selected Panel:" data-hy="Ընտրված վահանակը:">Selected Panel:</span>
                                 <span id="manualPanelInfo" class="text-sm text-gray-500" data-en="None selected" data-hy="Ոչինչ ընտրված չէ">None selected</span>
                             </div>
                             <div class="mt-2 text-xs text-gray-600" id="panelSystemPowerInfo">
@@ -567,7 +458,7 @@
                 let commonExpensesPct = 2; // Default fallback for unanticipated expenses
                 let commonSalesTeamPct = 6; // Default fallback for sales team commission
                 
-                const response = await fetch('http://localhost:3001/api/system-cost-settings');
+                const response = await fetch('/api/system-cost-settings');
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -606,8 +497,7 @@
                         const profits = result.data.profitMargins.data;
                         
                         // Debug: Log the actual profit margin keys from database
-                        console.log('🔍 Profit margins loaded from database:', profits);
-                        console.log('🔍 Available profit margin keys:', Object.keys(profits));
+                        
                         
                         // Load warranty-based profit margins - no hardcoded fallbacks
                         dbProfitMargins.profitMargins = {
@@ -704,15 +594,15 @@
                     
                     // Load banks, inverters, and panels from their respective endpoints
                     const [banksResult, invertersResult, panelsResult] = await Promise.all([
-                        fetch('http://localhost:3001/api/banks')
+                        fetch('/api/banks')
                             .then(response => response.json())
                             .catch(error => ({ success: false, data: null })),
                         
-                        fetch('http://localhost:3001/api/inverters')
+                        fetch('/api/inverters')
                             .then(response => response.json())
                             .catch(error => ({ success: false, data: null })),
                         
-                        fetch('http://localhost:3001/api/panels')
+                        fetch('/api/panels')
                             .then(response => response.json())
                             .catch(error => ({ success: false, data: null }))
                     ]);
@@ -929,12 +819,9 @@
             
             // Get profit per kW based on warranty years (profit margins are global, not per installation type)
             const profitKey = `profit_per_kw_${warrantyYears}Y`;
-            console.log('🔍 Looking for profit key:', profitKey);
-            console.log('🔍 Available profit keys:', Object.keys(dbProfitMargins.profitMargins?.data || {}));
             
             // Check if profit margins data is loaded
             if (!dbProfitMargins.profitMargins?.data || Object.keys(dbProfitMargins.profitMargins.data).length === 0) {
-                console.log('⏳ Profit margins data not loaded yet, cannot calculate loan');
                 const message = currentLanguage === 'en' 
                     ? 'System data is still loading. Please wait a moment and try again.'
                     : 'Համակարգի տվյալները դեռ բեռնվում են: Խնդրում ենք սպասել մի պահ և կրկին փորձել:';
@@ -1655,7 +1542,6 @@
         function populateManualBrands() {
             // Check if inverters are loaded
             if (!inverters || inverters.length === 0) {
-                console.log('⚠️ populateManualBrands: No inverters loaded');
                 return;
             }
             
@@ -1715,9 +1601,8 @@
         }
 
         function populateManualPowers() {
-            // Check if inverters are loaded
+            // Check if inverters loaded
             if (!inverters || inverters.length === 0) {
-                console.log('⚠️ populateManualPowers: No inverters loaded');
                 return;
             }
             
@@ -1892,11 +1777,9 @@
             
             // Get profit margin based on warranty years (profit margins are global, not per installation type)
             const profitKey = `profit_per_kw_${warrantyYears}Y`;
-            console.log('🔍 Panel calculation looking for profit key:', profitKey);
             
             // Check if profit margins data is loaded
             if (!dbProfitMargins.profitMargins?.data || Object.keys(dbProfitMargins.profitMargins.data).length === 0) {
-                console.log('⏳ Profit margins data not loaded yet, cannot calculate panel cost');
                 return panelOption.totalPrice; // Fallback to panel price only if data not loaded
             }
             
@@ -2251,7 +2134,6 @@
             
             // Check if inverters are loaded
             if (!inverters || inverters.length === 0) {
-                console.log('⚠️ updateInverterAutoSelection: No inverters loaded');
                 return;
             }
             
@@ -2277,13 +2159,8 @@
                     
                     if (targetOption) {
                         inverterSelect.value = targetOption.value;
-
-                    } else {
-                        console.log('⚠️ updateInverterAutoSelection: Target inverter option not found in dropdown');
                     }
                 }
-            } else {
-                console.log('⚠️ updateInverterAutoSelection: No suitable inverter found for system power:', systemPower);
             }
         }
 
@@ -2578,7 +2455,6 @@
             
             // Check if profit margins data is loaded
             if (!dbProfitMargins.profitMargins?.data || Object.keys(dbProfitMargins.profitMargins.data).length === 0) {
-                console.log('⏳ Profit margins data not loaded yet, skipping update');
                 profitDisplay.textContent = 'Loading...';
                 return;
             }
@@ -2586,14 +2462,8 @@
             const installationType = document.getElementById('installationType')?.value || 'onRoof';
             const warrantyYears = parseInt(document.getElementById('warrantyYears')?.value) || 12;
             
-            // Debug: Check the state of dbProfitMargins
-            console.log('🔍 dbProfitMargins state:', dbProfitMargins);
-            console.log('🔍 dbProfitMargins.profitMargins:', dbProfitMargins.profitMargins);
-            console.log('🔍 dbProfitMargins.profitMargins.data:', dbProfitMargins.profitMargins?.data);
-            
             // Get profit from database based on warranty years (profit margins are global, not per installation type)
             const profitKey = `profit_per_kw_${warrantyYears}Y`;
-            console.log('🔍 Profit display looking for profit key:', profitKey);
             
             const profitPerKw = dbProfitMargins.profitMargins?.data?.[profitKey]?.value;
             
@@ -2816,11 +2686,11 @@
 
 
 
-        // Check if current Supabase user has admin privileges
+                // Check if current Supabase user has admin privileges
         async function checkAdminStatus() {
             try {
                 // Import auth functions
-                const { getCurrentUser, isAuthenticated } = await import('./auth.js');
+                const { getCurrentUser, isAuthenticated } = await import('/public/auth.js');
                 
                 if (!isAuthenticated()) {
                     isAdminLoggedIn = false;
@@ -2863,12 +2733,9 @@
                     // DO NOT auto-reveal sensitive info - keep it hidden by default
                     // revealAllSensitiveInfo(); // Commented out - sensitive info stays hidden
                     
-                    console.log('Admin access granted for:', currentUser.email);
-                    console.log('Sensitive info is hidden by default - use toggle button to show/hide');
             } else {
                     isAdminLoggedIn = false;
                     hideAdminPanel();
-                    console.log('User is not admin:', currentUser.email);
                 }
                 
             } catch (error) {
@@ -2977,8 +2844,6 @@
 
         // CRITICAL SECURITY: Ensure all sensitive data is hidden on page load
         function enforceSecurityOnLoad() {
-            console.log('Enforcing security on page load - hiding all sensitive information');
-            
             // Don't remove admin toggle checkbox if user is already admin
             if (!isAdminLoggedIn) {
                 const toggleContainer = document.getElementById('toggleSensitiveInfoContainer');
@@ -3024,8 +2889,6 @@
                 isAdminLoggedIn = false;
                 currentAdminUser = null;
             }
-            
-            console.log('Security enforced - all sensitive information hidden');
         }
 
         // ADMIN FUNCTION: Automatically reveal all sensitive information
@@ -3057,7 +2920,6 @@
             
             // Reveal all spoiler elements - be more aggressive to catch all cases
             const spoilerElements = document.querySelectorAll('[data-value]');
-            console.log(`Found ${spoilerElements.length} spoiler elements to reveal`);
             spoilerElements.forEach(element => {
                 const dataValue = element.getAttribute('data-value');
                 if (dataValue) {
@@ -3065,13 +2927,11 @@
                     element.textContent = dataValue;
                     element.classList.remove('spoiler');
                     element.classList.add('spoiler-revealed');
-                    console.log('Revealed spoiler element:', element.textContent);
                 }
             });
             
             // Also look for any elements with spoiler class that might not have data-value
             const spoilerClassElements = document.querySelectorAll('.spoiler');
-            console.log(`Found ${spoilerClassElements.length} elements with spoiler class`);
             spoilerClassElements.forEach(element => {
                 // Remove spoiler class and show content if possible
                 element.classList.remove('spoiler');
@@ -3081,7 +2941,6 @@
                     if (dataValue) {
                         element.textContent = dataValue;
                         element.classList.add('spoiler-revealed');
-                        console.log('Revealed spoiler class element:', dataValue);
                     }
                 }
             });
@@ -3118,26 +2977,16 @@
             let breakdownFound = false;
             breakdownSelectors.forEach(selector => {
                 const breakdownSections = document.querySelectorAll(selector);
-                console.log(`Selector "${selector}" found ${breakdownSections.length} breakdown sections`);
                 breakdownSections.forEach(section => {
                     section.style.display = 'block';
                     section.style.visibility = 'visible';
                     breakdownFound = true;
-                    console.log('Revealed breakdown section:', section);
                 });
             });
-            
-            if (!breakdownFound) {
-                console.log('No breakdown sections found with any selector - this might be normal if no loan has been calculated yet');
-            }
-            
-            console.log('All sensitive information revealed for admin');
         }
 
         // ADMIN FUNCTION: Hide all sensitive information when admin logs out or toggled off
         function hideAllSensitiveInfo() {
-            console.log('Hiding all sensitive information');
-            
             // Keep admin toggle checkbox visible; just reset its state and visuals
             const toggleCheckbox = document.getElementById('toggleSensitiveInfoCheckbox');
             if (toggleCheckbox) {
@@ -3194,8 +3043,6 @@
             breakdownSections.forEach(section => {
                 section.style.display = 'none';
             });
-            
-            console.log('All sensitive information hidden');
         }
 
         // ADMIN FUNCTION: Toggle all sensitive information visibility
@@ -3207,16 +3054,13 @@
             
             if (toggleCheckbox.checked) {
                 // Currently hidden, so show all
-                console.log('Checkbox checked - revealing sensitive info and admin panel');
                 revealAllSensitiveInfo();
                 showAdminPanel(); // Show admin panel when revealing sensitive info
                 
                 // Always recalculate to show fresh content without spoiler elements
-                console.log('Recalculating loan to show fresh breakdown with sensitive info');
                 calculateLoan();
             } else {
                 // Currently shown, so hide all
-                console.log('Checkbox unchecked - hiding sensitive info and admin panel');
                 hideAllSensitiveInfo();
                 hideAdminPanel(); // Hide admin panel when hiding sensitive info
             }
@@ -3258,8 +3102,6 @@
                 }
             }
             
-            console.log('Simple admin toggle checkbox created near welcome message - sensitive info hidden by default');
-            
             // DO NOT reveal sensitive info by default - keep it hidden
             // revealAllSensitiveInfo();
             
@@ -3270,7 +3112,6 @@
             const checkbox = document.getElementById('toggleSensitiveInfoCheckbox');
             if (checkbox) {
                 checkbox.addEventListener('change', toggleAllSensitiveInfo);
-                console.log('Event listener added to checkbox');
             }
         }
 
@@ -3536,26 +3377,19 @@
 
         // Helper: whether sensitive info should be visible (admin AND checkbox checked)
         function isSensitiveInfoVisible() {
-            console.log('isSensitiveInfoVisible called - isAdminLoggedIn:', isAdminLoggedIn);
-            
             if (!isAdminLoggedIn) {
-                console.log('User is not admin, returning false');
                 return false;
             }
             
             const checkbox = document.getElementById('toggleSensitiveInfoCheckbox');
-            console.log('Checkbox found:', !!checkbox, 'Checkbox checked:', checkbox ? checkbox.checked : 'N/A');
             
             // If checkbox exists, use its checked state
             if (checkbox) {
-                const result = checkbox.checked;
-                console.log('Checkbox exists, returning:', result);
-                return result;
+                return checkbox.checked;
             }
             
             // If checkbox doesn't exist yet, hide sensitive info by default
             // This ensures sensitive info is hidden until user explicitly chooses to show it
-            console.log('Checkbox not found, returning false by default - keeping sensitive info hidden');
             return false;
         }
         
@@ -3571,53 +3405,20 @@
             }
         }
 
-        // Handle login form submission
-        document.addEventListener('DOMContentLoaded', function() {
-            const loginForm = document.getElementById('loginForm');
-            if (loginForm) {
-                loginForm.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    
-                    const email = document.getElementById('loginEmail').value;
-                    const password = document.getElementById('loginPassword').value;
-                    
-                    if (!email || !password) {
-                        alert('Please enter both email and password');
-                        return;
-                    }
-                    
-                    try {
-                        // Import auth functions
-                        const { signInWithPassword } = await import('./auth.js');
-                        
-                        const result = await signInWithPassword(email, password);
-                        if (result.success) {
-                            console.log('Login successful!');
-                            // The auth state change will handle the redirect
-                        } else {
-                            alert('Login failed: ' + result.error);
-                        }
-                    } catch (error) {
-                        console.error('Login error:', error);
-                        alert('Login failed: ' + error.message);
-                    }
-                });
-            }
-        });
     </script>
 
     <!-- Authentication Script -->
-    <script type="module" src="auth.js"></script>
-    <script type="module" src="route-protection.js"></script>
+            <script type="module" src="/public/auth.js"></script>
+        <script type="module" src="/public/route-protection.js"></script>
     <script>
         // Initialize authentication and route protection when page loads
         document.addEventListener('DOMContentLoaded', async function() {
             // Import and initialize auth
-            const { initAuth } = await import('./auth.js');
+            const { initAuth } = await import('/public/auth.js');
             await initAuth();
             
             // Initialize route protection
-            const { initRouteProtection } = await import('./route-protection.js');
+            const { initRouteProtection } = await import('/public/route-protection.js');
             initRouteProtection();
             
             // Enforce security immediately on page load
@@ -3626,7 +3427,6 @@
             // Fetch system cost settings first, then check admin status
             try {
                 await fetchSystemCostSettings();
-                console.log('✅ System cost settings loaded successfully');
                 
                 // Now check admin status after data is loaded
                 setTimeout(() => {

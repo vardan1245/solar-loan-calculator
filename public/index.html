@@ -28,7 +28,7 @@
         try {
             // Try to load config.js
             const script = document.createElement('script');
-            script.src = 'config.js';
+            script.src = '/public/config.js';
             script.onload = function() {
                 // If config.js loads successfully, it will override the default CONFIG
             };
@@ -75,22 +75,131 @@
             background: #e5e7eb;
         }
         
-
+        /* Route-based container visibility using CSS - More aggressive rules */
+        body[data-route="/login"] #authContainer {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+        }
+        
+        body[data-route="/login"] #appContainer {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: absolute !important;
+            left: -9999px !important;
+        }
+        
+        body:not([data-route="/login"]) #authContainer {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: absolute !important;
+            left: -9999px !important;
+        }
+        
+        /* Ensure containers are hidden by default */
+        #authContainer, #appContainer {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        /* Force login route to show only auth container */
+        body[data-route="/login"] *:not(#authContainer):not(#authContainer *) {
+            display: none !important;
+        }
     </style>
 
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50" data-route="">
+    <!-- Immediate route-based container display - Enhanced version -->
+    <script>
+        // Immediately set the route attribute and show correct container
+        (function() {
+            const currentPath = window.location.pathname;
+            console.log('Current path:', currentPath);
+            
+            // Set data-route attribute immediately
+            document.body.setAttribute('data-route', currentPath);
+            console.log('Set data-route to:', currentPath);
+            
+            // Force immediate container visibility
+            const authContainer = document.getElementById('authContainer');
+            const appContainer = document.getElementById('appContainer');
+            
+            if (currentPath === '/login') {
+                console.log('Login route detected - showing auth container');
+                if (authContainer) {
+                    authContainer.style.display = 'flex';
+                    authContainer.style.visibility = 'visible';
+                    authContainer.style.opacity = '1';
+                    authContainer.style.position = 'relative';
+                }
+                if (appContainer) {
+                    appContainer.style.display = 'none';
+                    appContainer.style.visibility = 'hidden';
+                    appContainer.style.opacity = '0';
+                    appContainer.style.position = 'absolute';
+                    appContainer.style.left = '-9999px';
+                }
+            } else {
+                console.log('Non-login route detected - hiding auth container');
+                if (authContainer) {
+                    authContainer.style.display = 'none';
+                    authContainer.style.visibility = 'hidden';
+                    authContainer.style.opacity = '0';
+                    authContainer.style.position = 'absolute';
+                    authContainer.style.left = '-9999px';
+                }
+                if (appContainer) {
+                    appContainer.style.display = 'none';
+                    appContainer.style.visibility = 'hidden';
+                }
+            }
+            
+            // Double-check after a brief delay
+            setTimeout(() => {
+                if (currentPath === '/login') {
+                    if (authContainer) authContainer.style.display = 'flex';
+                    if (appContainer) appContainer.style.display = 'none';
+                }
+            }, 100);
+        })();
+    </script>
+
     <!-- Authentication Container (shown when not logged in) -->
     <div id="authContainer" class="min-h-screen flex items-center justify-center p-4" style="display: none;">
-        <div class="text-center">
+        <div class="text-center max-w-md w-full">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-tiamat-blue rounded-full mb-4 shadow-lg">
                 <img src="tIAMAT white blue-06.ico" alt="Tiamat Logo" class="w-12 h-12">
             </div>
             <h1 class="text-3xl font-bold text-tiamat-blue mb-2">Authentication Required</h1>
-            <p class="text-gray-600 mb-4">Please log in to access the Solar Loan Calculator</p>
-            <a href="/login" class="inline-block bg-tiamat-blue text-white px-6 py-3 rounded-lg font-semibold hover:bg-tiamat-dark-blue transition-colors">
-                Go to Login
-            </a>
+            <p class="text-gray-600 mb-6">Please log in to access the Solar Loan Calculator</p>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-4 text-left">
+                <div>
+                    <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="loginEmail" name="email" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue"
+                           placeholder="Enter your email">
+                </div>
+                <div>
+                    <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="loginPassword" name="password" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue"
+                           placeholder="Enter your password">
+                </div>
+                <button type="submit" 
+                        class="w-full bg-tiamat-blue text-white px-6 py-3 rounded-lg font-semibold hover:bg-tiamat-dark-blue transition-colors">
+                    Sign In
+                </button>
+            </form>
+            
+            <div class="mt-4 text-sm text-gray-500">
+                Contact your administrator for login credentials
+            </div>
         </div>
     </div>
 
@@ -210,7 +319,7 @@
                 <!-- Panel Selection -->
                 <div class="mb-4">
                     <div class="flex items-center justify-between mb-2">
-                        <label class="block text-sm font-medium text-gray-700" data-en="Panel Selection:" data-hy="Պանելների ընտրություն:">Panel Selection:</label>
+                        <label class="block text-sm font-medium text-gray-700" data-en="Panel Selection:" data-hy="Վահանակների ընտրություն:">Panel Selection:</label>
                         <div class="flex items-center space-x-2">
                             <span class="text-xs text-gray-500" data-en="Auto" data-hy="Ավտո">Auto</span>
                             <label class="relative inline-flex items-center cursor-pointer">
@@ -225,9 +334,9 @@
                     <div id="autoPanelSelection">
                         <!-- Panel Suggestions Display -->
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Panel Suggestions" data-hy="Պանելների առաջարկներ">Panel Suggestions</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Panel Suggestions" data-hy="Վահանակների առաջարկներ">Panel Suggestions</label>
                             <div id="panelSuggestions" class="space-y-2 border border-gray-200 rounded-md p-3 bg-gray-50">
-                                <div class="text-sm text-gray-500 text-center py-4" data-en="Enter System Power above to see panel suggestions" data-hy="Մուտքագրեք համակարգի հզորությունը վերևում՝ պանելների առաջարկները տեսնելու համար">Enter System Power above to see panel suggestions</div>
+                                <div class="text-sm text-gray-500 text-center py-4" data-en="Enter System Power above to see panel suggestions" data-hy="Մուտքագրեք համակարգի հզորությունը վերևում՝ վահանակների առաջարկները տեսնելու համար">Enter System Power above to see panel suggestions</div>
                             </div>
                         </div>
                         
@@ -256,7 +365,7 @@
                         </div>
                         <div class="bg-gray-50 p-3 rounded-md">
                             <div class="flex justify-between items-center">
-                                <span class="text-sm font-medium text-gray-700" data-en="Selected Panel:" data-hy="Ընտրված պանելը:">Selected Panel:</span>
+                                <span class="text-sm font-medium text-gray-700" data-en="Selected Panel:" data-hy="Ընտրված վահանակը:">Selected Panel:</span>
                                 <span id="manualPanelInfo" class="text-sm text-gray-500" data-en="None selected" data-hy="Ոչինչ ընտրված չէ">None selected</span>
                             </div>
                             <div class="mt-2 text-xs text-gray-600" id="panelSystemPowerInfo">
@@ -458,7 +567,7 @@
                 let commonExpensesPct = 2; // Default fallback for unanticipated expenses
                 let commonSalesTeamPct = 6; // Default fallback for sales team commission
                 
-                const response = await fetch('http://localhost:3001/api/system-cost-settings');
+                const response = await fetch('/api/system-cost-settings');
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -594,19 +703,19 @@
 
                     
                     // Load banks, inverters, and panels from their respective endpoints
-                    const [banksResult, invertersResult, panelsResult] = await Promise.all([
-                        fetch('http://localhost:3001/api/banks')
-                            .then(response => response.json())
-                            .catch(error => ({ success: false, data: null })),
-                        
-                        fetch('http://localhost:3001/api/inverters')
-                            .then(response => response.json())
-                            .catch(error => ({ success: false, data: null })),
-                        
-                        fetch('http://localhost:3001/api/panels')
-                            .then(response => response.json())
-                            .catch(error => ({ success: false, data: null }))
-                    ]);
+                                const [banksResult, invertersResult, panelsResult] = await Promise.all([
+                fetch('/api/banks')
+                    .then(response => response.json())
+                    .catch(error => ({ success: false, data: null })),
+                
+                fetch('/api/inverters')
+                    .then(response => response.json())
+                    .catch(error => ({ success: false, data: null })),
+                
+                fetch('/api/panels')
+                    .then(response => response.json())
+                    .catch(error => ({ success: false, data: null }))
+            ]);
                     
                     // Process results
                     if (banksResult.success && banksResult.data && banksResult.data.banks) {
@@ -2707,11 +2816,11 @@
 
 
 
-        // Check if current Supabase user has admin privileges
+                // Check if current Supabase user has admin privileges
         async function checkAdminStatus() {
             try {
                 // Import auth functions
-                const { getCurrentUser, isAuthenticated } = await import('./auth.js');
+                const { getCurrentUser, isAuthenticated } = await import('/public/auth.js');
                 
                 if (!isAuthenticated()) {
                     isAdminLoggedIn = false;
@@ -2754,12 +2863,9 @@
                     // DO NOT auto-reveal sensitive info - keep it hidden by default
                     // revealAllSensitiveInfo(); // Commented out - sensitive info stays hidden
                     
-                    console.log('Admin access granted for:', currentUser.email);
-                    console.log('Sensitive info is hidden by default - use toggle button to show/hide');
             } else {
                     isAdminLoggedIn = false;
                     hideAdminPanel();
-                    console.log('User is not admin:', currentUser.email);
                 }
                 
             } catch (error) {
@@ -2868,8 +2974,6 @@
 
         // CRITICAL SECURITY: Ensure all sensitive data is hidden on page load
         function enforceSecurityOnLoad() {
-            console.log('Enforcing security on page load - hiding all sensitive information');
-            
             // Don't remove admin toggle checkbox if user is already admin
             if (!isAdminLoggedIn) {
                 const toggleContainer = document.getElementById('toggleSensitiveInfoContainer');
@@ -2915,8 +3019,6 @@
                 isAdminLoggedIn = false;
                 currentAdminUser = null;
             }
-            
-            console.log('Security enforced - all sensitive information hidden');
         }
 
         // ADMIN FUNCTION: Automatically reveal all sensitive information
@@ -3462,16 +3564,49 @@
             }
         }
 
+        // Handle login form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const email = document.getElementById('loginEmail').value;
+                    const password = document.getElementById('loginPassword').value;
+                    
+                    if (!email || !password) {
+                        alert('Please enter both email and password');
+                        return;
+                    }
+                    
+                    try {
+                        // Import auth functions
+                        const { signInWithPassword } = await import('/public/auth.js');
+                        
+                        const result = await signInWithPassword(email, password);
+                        if (result.success) {
+                            console.log('Login successful!');
+                            // The auth state change will handle the redirect
+                        } else {
+                            alert('Login failed: ' + result.error);
+                        }
+                    } catch (error) {
+                        console.error('Login error:', error);
+                        alert('Login failed: ' + error.message);
+                    }
+                });
+            }
+        });
     </script>
 
     <!-- Authentication Script -->
-    <script type="module" src="auth.js"></script>
-    <script type="module" src="route-protection.js"></script>
+            <script type="module" src="/public/auth.js"></script>
+            <script type="module" src="/public/route-protection.js"></script>
     <script>
         // Initialize authentication and route protection when page loads
         document.addEventListener('DOMContentLoaded', async function() {
             // Import and initialize auth
-            const { initAuth } = await import('./auth.js');
+            const { initAuth } = await import('/public/auth.js');
             await initAuth();
             
             // Initialize route protection
