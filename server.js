@@ -16,9 +16,29 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-    origin: true, // Allow all origins for development
-    credentials: true
+    origin: [
+        'http://localhost:3000',
+        'http://localhost:3001', 
+        'https://tiamat-loan-calculator-project.vercel.app',
+        'https://tiamat-loan-calculator-project-cqdnxodg8.vercel.app',
+        'https://tiamat-loan-calculator-project-3xzq7kpbe.vercel.app',
+        'https://*.vercel.app',
+        'https://loan.tiamat.am'
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Handle preflight requests
+app.options('*', cors());
+
+// Add request logging for debugging
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+    next();
+});
+
 app.use(express.json());
 
 // Database connection - using Supabase
@@ -102,6 +122,17 @@ app.get('/api/health', (req, res) => {
         status: 'ok', 
         timestamp: new Date().toISOString(),
         message: 'Tiamat Solar CRM API is running'
+    });
+});
+
+// Test endpoint for CORS debugging
+app.get('/api/test-cors', (req, res) => {
+    console.log('CORS test request received from:', req.headers.origin);
+    res.json({ 
+        status: 'cors-test-ok', 
+        timestamp: new Date().toISOString(),
+        origin: req.headers.origin,
+        message: 'CORS test successful'
     });
 });
 
@@ -621,8 +652,11 @@ app.post('/api/admin/login', async (req, res) => {
 // Admin management endpoints
 app.get('/api/admin/panel_options', requireAuth, async (req, res) => {
     try {
+        console.log('Admin panel_options request received from:', req.headers.origin);
+        console.log('User authenticated:', req.user.email);
         const query = 'SELECT * FROM panel_options WHERE is_active = true ORDER BY brand, wattage';
         const result = await pool.query(query);
+        console.log(`Found ${result.rows.length} panel options`);
         res.json(result.rows);
     } catch (error) {
         console.error('Error fetching panel options:', error);
