@@ -328,16 +328,24 @@
         // Logout function using Supabase
         async function logout() {
             try {
-                await supabase.auth.signOut();
+                if (supabase) {
+                    const { error } = await supabase.auth.signOut();
+                    if (error) {
+                        console.warn('Supabase signOut error:', error);
+                        // Continue with logout even if Supabase fails
+                    }
+                }
                 isAdminLoggedIn = false;
                 authToken = null;
+                localStorage.removeItem('adminToken');
                 showLoginForm();
-                console.log('Logged out successfully from Supabase');
+                console.log('Logged out successfully');
             } catch (error) {
                 console.error('Logout error:', error);
-                // Still clear local state even if Supabase logout fails
+                // Even if logout fails, clear local state
                 isAdminLoggedIn = false;
                 authToken = null;
+                localStorage.removeItem('adminToken');
                 showLoginForm();
             }
         }

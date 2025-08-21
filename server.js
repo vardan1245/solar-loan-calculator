@@ -77,7 +77,7 @@ async function requireAuth(req, res, next) {
         const { createClient } = await import('@supabase/supabase-js');
         const supabase = createClient(
             process.env.SUPABASE_URL || 'https://ylmcwkabyqvgdrbnunri.supabase.co',
-            process.env.SUPABASE_SERVICE_ROLE_KEY
+            process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsbWN3a2FieXF2Z2RyYm51bnJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NTI3MjMsImV4cCI6MjA2MjUyODcyM30.UrsOv_NmOJilHeQu9-brBI_1N7PYbOCYHsqc4cy6YqY'
         );
         
         const { data: { user }, error } = await supabase.auth.getUser(token);
