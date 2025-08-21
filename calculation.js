@@ -1072,12 +1072,7 @@ function showAdminDetails() {
 
 function updateAdminButton() {
     const adminButton = document.getElementById('adminButton');
-    const adminButtonContainer = document.getElementById('adminButtonContainer');
-    
-    if (adminButton && adminButtonContainer) {
-        // Show the admin button container
-        adminButtonContainer.classList.remove('hidden');
-        
+    if (adminButton) {
         if (isAdminLoggedIn) {
             adminButton.textContent = currentLanguage === 'en' ? 'Logout Admin' : 'Դուրս գալ ադմինից';
             adminButton.onclick = logoutAdmin;
