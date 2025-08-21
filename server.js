@@ -39,9 +39,64 @@ pool.query('SELECT NOW()', (err, res) => {
     }
 });
 
-// API Routes
+// Supabase authentication middleware
+async function requireAuth(req, res, next) {
+    try {
+        const authHeader = req.headers.authorization;
+        
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ 
+                error: 'Authentication required',
+                message: 'Please log in to access this resource'
+            });
+        }
+        
+        const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+        
+        // Verify the Supabase JWT token
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+            process.env.SUPABASE_URL || 'https://ylmcwkabyqvgdrbnunri.supabase.co',
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+        
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        
+        if (error || !user) {
+            return res.status(401).json({ 
+                error: 'Invalid token',
+                message: 'Please log in again'
+            });
+        }
+        
+        // Check if user has admin role
+        const isAdmin = (user.app_metadata && user.app_metadata.role === 'admin') ||
+                       (user.user_metadata && user.user_metadata.role === 'admin') ||
+                       user.email === 'admin@tiamat.com' ||
+                       user.email === 'admin@gmail.com' ||
+                       user.email === 'vardansargsyan97@gmail.com';
+        
+        if (!isAdmin) {
+            return res.status(403).json({ 
+                error: 'Access denied',
+                message: 'Admin role required'
+            });
+        }
+        
+        // User is authenticated and has admin role
+        req.user = user;
+        next();
+        
+    } catch (error) {
+        console.error('Auth middleware error:', error);
+        return res.status(500).json({ 
+            error: 'Authentication error',
+            message: 'Internal server error'
+        });
+    }
+}
 
-// Health check endpoint
+// Public API Routes (no authentication required)
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'ok', 
@@ -495,50 +550,62 @@ app.delete('/api/system-cost-settings/:id', async (req, res) => {
     }
 });
 
-// Admin authentication endpoint
+// Admin authentication endpoint - uses Supabase auth
 app.post('/api/admin/login', async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { email, password } = req.body;
         
-        if (!username || !password) {
+        if (!email || !password) {
             return res.status(400).json({ 
                 success: false, 
-                error: 'Username and password are required' 
+                error: 'Email and password are required' 
             });
         }
         
-        // Query admin users table
-        const query = 'SELECT id, username, password_hash, full_name, role, is_active FROM admin_users WHERE username = $1 AND is_active = true';
-        const result = await pool.query(query, [username]);
+        // Use Supabase authentication
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+            process.env.SUPABASE_URL || 'https://ylmcwkabyqvgdrbnunri.supabase.co',
+            process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsbWN3a2FieXF2Z2RyYm51bnJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NTI3MjMsImV4cCI6MjA2MjUyODcyM30.UrsOv_NmOJilHeQu9-brBI_1N7PYbOCYHsqc4cy6YqY'
+        );
         
-        if (result.rows.length === 0) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
+        
+        if (error) {
             return res.status(401).json({ 
                 success: false, 
-                error: 'Invalid credentials' 
+                error: error.message 
             });
         }
         
-        const user = result.rows[0];
+        const user = data.user;
         
-        // Simple password check (in production, use proper hashing)
-        if (password !== user.password_hash) {
-            return res.status(401).json({ 
+        // Check if user has admin role
+        const isAdmin = (user.app_metadata && user.app_metadata.role === 'admin') ||
+                       (user.user_metadata && user.user_metadata.role === 'admin') ||
+                       user.email === 'admin@tiamat.com' ||
+                       user.email === 'admin@gmail.com' ||
+                       user.email === 'vardansargsyan97@gmail.com';
+        
+        if (!isAdmin) {
+            return res.status(403).json({ 
                 success: false, 
-                error: 'Invalid credentials' 
+                error: 'Access denied. Admin role required.' 
             });
         }
-        
-        // Update last login
-        await pool.query('UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
         
         res.json({
             success: true,
             message: 'Login successful',
+            token: data.session.access_token,
             user: {
                 id: user.id,
-                username: user.username,
-                full_name: user.full_name,
-                role: user.role
+                email: user.email,
+                full_name: (user.user_metadata && (user.user_metadata.name || user.user_metadata.full_name)) || user.email,
+                role: 'admin'
             }
         });
         
@@ -548,6 +615,424 @@ app.post('/api/admin/login', async (req, res) => {
             success: false, 
             error: 'Internal server error during login' 
         });
+    }
+});
+
+// Admin management endpoints
+app.get('/api/admin/panel_options', requireAuth, async (req, res) => {
+    try {
+        const query = 'SELECT * FROM panel_options WHERE is_active = true ORDER BY brand, wattage';
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching panel options:', error);
+        res.status(500).json({ error: 'Failed to fetch panel options' });
+    }
+});
+
+app.get('/api/admin/panel_options/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = 'SELECT * FROM panel_options WHERE id = $1 AND is_active = true';
+        const result = await pool.query(query, [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Panel option not found' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error fetching panel option:', error);
+        res.status(500).json({ error: 'Failed to fetch panel option' });
+    }
+});
+
+app.get('/api/admin/inverter_options', requireAuth, async (req, res) => {
+    try {
+        // Query the dedicated inverter_options table - select all columns to see what's available
+        const query = 'SELECT * FROM inverter_options WHERE is_active = true ORDER BY kw';
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching inverter options:', error);
+        res.status(500).json({ error: 'Failed to fetch inverter options' });
+    }
+});
+
+app.get('/api/admin/inverter_options/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = 'SELECT * FROM inverter_options WHERE id = $1 AND is_active = true';
+        const result = await pool.query(query, [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Inverter option not found' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error fetching inverter option:', error);
+        res.status(500).json({ error: 'Failed to fetch inverter option' });
+    }
+});
+
+app.put('/api/admin/inverter_options/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, brand, model, kw, price, efficiency, warranty_years, description } = req.body;
+        
+        const query = `
+            UPDATE inverter_options 
+            SET name = $1, brand = $2, model = $3, kw = $4, price = $5, efficiency = $6, warranty_years = $7, description = $8, updated_at = CURRENT_TIMESTAMP
+            WHERE id = $9 AND is_active = true
+            RETURNING *
+        `;
+        
+        const values = [name, brand, model, kw, price, efficiency, warranty_years, description, id];
+        const result = await pool.query(query, values);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Inverter option not found' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating inverter option:', error);
+        res.status(500).json({ error: 'Failed to update inverter option' });
+    }
+});
+
+app.post('/api/admin/inverter_options', requireAuth, async (req, res) => {
+    try {
+        const { name, brand, model, kw, price, efficiency, warranty_years, description } = req.body;
+        
+        const query = `
+            INSERT INTO inverter_options (name, brand, model, kw, price, efficiency, warranty_years, description, is_active, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            RETURNING *
+        `;
+        
+        const values = [name, brand, model, kw, price, efficiency, warranty_years, description];
+        const result = await pool.query(query, values);
+        
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error('Error creating inverter option:', error);
+        res.status(500).json({ error: 'Failed to create inverter option' });
+    }
+});
+
+app.delete('/api/admin/inverter_options/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = 'UPDATE inverter_options SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND is_active = true RETURNING *';
+        const result = await pool.query(query, [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Inverter option not found' });
+        }
+        
+        res.json({ message: 'Inverter option deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting inverter option:', error);
+        res.status(500).json({ error: 'Failed to delete inverter option' });
+    }
+});
+
+app.get('/api/admin/bank_configurations', requireAuth, async (req, res) => {
+    try {
+        // Query the dedicated bank_configurations table
+        const query = 'SELECT id, bank_name, interest_rate, commission, loan_period, name, description, created_at, updated_at FROM bank_configurations WHERE is_active = true ORDER BY bank_name, interest_rate, loan_period';
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching bank configurations:', error);
+        res.status(500).json({ error: 'Failed to fetch bank configurations' });
+    }
+});
+
+app.get('/api/admin/bank_configurations/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = 'SELECT id, bank_name, interest_rate, commission, loan_period, name, description, created_at, updated_at FROM bank_configurations WHERE id = $1 AND is_active = true';
+        const result = await pool.query(query, [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Bank configuration not found' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error fetching bank configuration:', error);
+        res.status(500).json({ error: 'Failed to fetch bank configuration' });
+    }
+});
+
+app.put('/api/admin/bank_configurations/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { bank_name, interest_rate, commission, loan_period, name, description } = req.body;
+        
+        // Convert percentage inputs back to decimal
+        const cleanInterestRate = parseFloat(interest_rate) / 100;
+        const cleanCommission = parseFloat(commission) / 100;
+        
+        const query = `
+            UPDATE bank_configurations 
+            SET bank_name = $1, interest_rate = $2, commission = $3, loan_period = $4, name = $5, description = $6, updated_at = CURRENT_TIMESTAMP
+            WHERE id = $7 AND is_active = true
+            RETURNING *
+        `;
+        
+        const values = [bank_name, cleanInterestRate, cleanCommission, loan_period, name, description, id];
+        const result = await pool.query(query, values);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Bank configuration not found' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating bank configuration:', error);
+        res.status(500).json({ error: 'Failed to update bank configuration' });
+    }
+});
+
+app.post('/api/admin/bank_configurations', requireAuth, async (req, res) => {
+    try {
+        const { bank_name, interest_rate, commission, loan_period, name, description } = req.body;
+        
+        // Convert percentage inputs to decimal
+        const cleanInterestRate = parseFloat(interest_rate) / 100;
+        const cleanCommission = parseFloat(commission) / 100;
+        
+        const query = `
+            INSERT INTO bank_configurations (bank_name, interest_rate, commission, loan_period, name, description, is_active, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            RETURNING *
+        `;
+        
+        const values = [bank_name, cleanInterestRate, cleanCommission, loan_period, name, description];
+        const result = await pool.query(query, values);
+        
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error('Error creating bank configuration:', error);
+        res.status(500).json({ error: 'Failed to create bank configuration' });
+    }
+});
+
+app.delete('/api/admin/bank_configurations/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = 'UPDATE bank_configurations SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND is_active = true RETURNING *';
+        const result = await pool.query(query, [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Bank configuration not found' });
+        }
+        
+        res.json({ message: 'Bank configuration deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting bank configuration:', error);
+        res.status(500).json({ error: 'Failed to delete bank configuration' });
+    }
+});
+
+app.get('/api/admin/system_cost_settings', requireAuth, async (req, res) => {
+    try {
+        // Use the same query structure as the working endpoint
+        const query = `
+            SELECT 
+                id,
+                setting_key,
+                setting_value,
+                description,
+                updated_at
+            FROM system_cost_settings 
+            ORDER BY setting_key
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching system cost settings:', error);
+        res.status(500).json({ error: 'Failed to fetch system cost settings' });
+    }
+});
+
+app.get('/api/admin/system_cost_settings/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = 'SELECT * FROM system_cost_settings WHERE id = $1';
+        const result = await pool.query(query, [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'System cost setting not found' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error fetching system cost setting:', error);
+        res.status(500).json({ error: 'Failed to fetch system cost setting' });
+    }
+});
+
+// CRUD operations for panel options
+app.post('/api/admin/panel_options', requireAuth, async (req, res) => {
+    try {
+        const { brand, model, wattage, price_per_watt, efficiency, cell_type, dimensions, weight_kg, warranty_years, description } = req.body;
+        
+        // Handle optional fields - use NULL for numeric fields, empty strings for text fields
+        const cleanEfficiency = efficiency && efficiency !== '' ? parseFloat(efficiency) : null;
+        const cleanCellType = cell_type || '';
+        const cleanDimensions = dimensions || '';
+        const cleanWeightKg = weight_kg && weight_kg !== '' ? parseFloat(weight_kg) : null;
+        const cleanWarrantyYears = warranty_years && warranty_years !== '' ? parseInt(warranty_years) : null;
+        const cleanDescription = description || '';
+        
+        // Create a name field from brand and model
+        const name = `${brand} ${model}`.trim();
+        
+        const query = `
+            INSERT INTO panel_options (name, brand, model, wattage, price, price_per_watt, efficiency, cell_type, dimensions, weight_kg, warranty_years, description)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            RETURNING *
+        `;
+        
+        // Calculate total price from price per watt and wattage
+        const totalPrice = parseFloat(price_per_watt) * parseFloat(wattage);
+        
+        const values = [name, brand, model, wattage, totalPrice, price_per_watt, cleanEfficiency, cleanCellType, cleanDimensions, cleanWeightKg, cleanWarrantyYears, cleanDescription];
+        const result = await pool.query(query, values);
+        
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error('Error creating panel option:', error);
+        res.status(500).json({ error: 'Failed to create panel option' });
+    }
+});
+
+app.put('/api/admin/panel_options/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { brand, model, wattage, price_per_watt, efficiency, cell_type, dimensions, weight_kg, warranty_years, description } = req.body;
+        
+        // Handle optional fields - use NULL for numeric fields, empty strings for text fields
+        const cleanEfficiency = efficiency && efficiency !== '' ? parseFloat(efficiency) : null;
+        const cleanCellType = cell_type || '';
+        const cleanDimensions = dimensions || '';
+        const cleanWeightKg = weight_kg && weight_kg !== '' ? parseFloat(weight_kg) : null;
+        const cleanWarrantyYears = warranty_years && warranty_years !== '' ? parseInt(warranty_years) : null;
+        const cleanDescription = description || '';
+        
+        // Create a name field from brand and model
+        const name = `${brand} ${model}`.trim();
+        
+        const query = `
+            UPDATE panel_options 
+            SET name = $1, brand = $2, model = $3, wattage = $4, price = $5, price_per_watt = $6, efficiency = $7, 
+                cell_type = $8, dimensions = $9, weight_kg = $10, warranty_years = $11, description = $12
+            WHERE id = $13
+            RETURNING *
+        `;
+        
+        // Calculate total price from price per watt and wattage
+        const totalPrice = parseFloat(price_per_watt) * parseFloat(wattage);
+        
+        const values = [name, brand, model, wattage, totalPrice, price_per_watt, cleanEfficiency, cleanCellType, cleanDimensions, cleanWeightKg, cleanWarrantyYears, cleanDescription, id];
+        const result = await pool.query(query, values);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Panel option not found' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating panel option:', error);
+        res.status(500).json({ error: 'Failed to update panel option' });
+    }
+});
+
+app.delete('/api/admin/panel_options/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const query = 'UPDATE panel_options SET is_active = false WHERE id = $1 RETURNING *';
+        const result = await pool.query(query, [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Panel option not found' });
+        }
+        
+        res.json({ message: 'Panel option deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting panel option:', error);
+        res.status(500).json({ error: 'Failed to delete panel option' });
+    }
+});
+
+// CRUD operations for system cost settings (inverters, bank configs, etc.)
+app.post('/api/admin/system_cost_settings', requireAuth, async (req, res) => {
+    try {
+        const { setting_key, setting_value, description } = req.body;
+        
+        const query = `
+            INSERT INTO system_cost_settings (setting_key, setting_value, description)
+            VALUES ($1, $2, $3)
+            RETURNING *
+        `;
+        
+        const values = [setting_key, setting_value, description];
+        const result = await pool.query(query, values);
+        
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error('Error creating system cost setting:', error);
+        res.status(500).json({ error: 'Failed to create system cost setting' });
+    }
+});
+
+app.put('/api/admin/system_cost_settings/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { setting_key, setting_value, description } = req.body;
+        
+        const query = `
+            UPDATE system_cost_settings 
+            SET setting_key = $1, setting_value = $2, description = $3, updated_at = CURRENT_TIMESTAMP
+            WHERE id = $4
+            RETURNING *
+        `;
+        
+        const values = [setting_key, setting_value, description, id];
+        const result = await pool.query(query, values);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'System cost setting not found' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating system cost setting:', error);
+        res.status(500).json({ error: 'Failed to update system cost setting' });
+    }
+});
+
+app.delete('/api/admin/system_cost_settings/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const query = 'DELETE FROM system_cost_settings WHERE id = $1 RETURNING *';
+        const result = await pool.query(query, [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'System cost setting not found' });
+        }
+        
+        res.json({ message: 'System cost setting deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting system cost setting:', error);
+        res.status(500).json({ error: 'Failed to delete system cost setting' });
     }
 });
 
@@ -570,9 +1055,24 @@ app.get('/test', (req, res) => {
     res.sendFile(__dirname + '/test-route-protection.html');
 });
 
+// Serve the authentication test page
+app.get('/test-auth', (req, res) => {
+    res.sendFile(__dirname + '/test-auth.html');
+});
+
+// Serve the admin flow test page
+app.get('/test-admin-flow', (req, res) => {
+    res.sendFile(__dirname + '/test-admin-flow.html');
+});
+
 // Serve the main app for the root route (redirect to login)
 app.get('/', (req, res) => {
     res.redirect('/login');
+});
+
+// Serve the admin management page (unprotected - frontend handles auth)
+app.get('/admin', (req, res) => {
+    res.sendFile(__dirname + '/admin-management.html');
 });
 
 // Serve static files (CSS, JS, images) from root directory - AFTER ALL routes

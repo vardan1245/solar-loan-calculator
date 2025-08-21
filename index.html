@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solar Loan Calculator</title>
-    <link rel="icon" type="image/x-icon" href="tIAMAT white blue-06.ico">
+    <link rel="icon" type="image/x-icon" href="/public/tIAMAT white blue-06.ico">
     <script src="https://cdn.tailwindcss.com?v=3.4.1"></script>
     <script>
         // Tailwind configuration
@@ -84,7 +84,7 @@
     <div id="authContainer" class="min-h-screen flex items-center justify-center p-4" style="display: none;">
         <div class="text-center">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-tiamat-blue rounded-full mb-4 shadow-lg">
-                <img src="tIAMAT white blue-06.ico" alt="Tiamat Logo" class="w-12 h-12">
+                <img src="/public/tIAMAT white blue-06.ico" alt="Tiamat Logo" class="w-12 h-12">
             </div>
             <h1 class="text-3xl font-bold text-tiamat-blue mb-2">Authentication Required</h1>
             <p class="text-gray-600 mb-4">Please log in to access the Solar Loan Calculator</p>
@@ -98,7 +98,7 @@
     <div id="appContainer" class="container mx-auto p-6 space-y-6" style="display: none;">
         <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
-                <img src="tIAMAT white blue-06.ico" alt="Tiamat Logo" class="h-8 w-8">
+                <img src="/public/tIAMAT white blue-06.ico" alt="Tiamat Logo" class="h-8 w-8">
                 <h1 class="text-3xl font-bold text-tiamat-blue" data-en="Solar Loan Calculator" data-hy="Արևային կայանի վարկի հաշվիչ">Solar Loan Calculator</h1>
             </div>
             
@@ -2240,8 +2240,10 @@
             const selectedCard = Array.from(document.querySelectorAll('#panelSuggestions .bg-white')).find(card => {
                 const cardText = card.textContent;
                 const { brand, wattage, quantity, actualPower } = panelOption;
-                const expectedText = `${quantity} × ${brand} ${wattage}W = ${actualPower} kW`;
-                return cardText.includes(expectedText);
+                // Check for both English and Armenian text formats
+                const expectedTextEn = `${quantity} × ${brand} ${wattage}W = ${actualPower} kW`;
+                const expectedTextHy = `${quantity} × ${brand} ${wattage}Վտ = ${actualPower} կՎտ`;
+                return cardText.includes(expectedTextEn) || cardText.includes(expectedTextHy);
             });
             
             if (selectedCard) {
