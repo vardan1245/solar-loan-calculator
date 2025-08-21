@@ -74,11 +74,20 @@ async function requireAuth(req, res, next) {
         const token = authHeader.substring(7); // Remove 'Bearer ' prefix
         
         // Verify the Supabase JWT token
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabase = createClient(
-            process.env.SUPABASE_URL || 'https://ylmcwkabyqvgdrbnunri.supabase.co',
-            process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsbWN3a2FieXF2Z2RyYm51bnJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NTI3MjMsImV4cCI6MjA2MjUyODcyM30.UrsOv_NmOJilHeQu9-brBI_1N7PYbOCYHsqc4cy6YqY'
-        );
+        let supabase;
+        try {
+            const { createClient } = await import('@supabase/supabase-js');
+            supabase = createClient(
+                process.env.SUPABASE_URL || 'https://ylmcwkabyqvgdrbnunri.supabase.co',
+                process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsbWN3a2FieXF2Z2RyYm51bnJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NTI3MjMsImV4cCI6MjA2MjUyODcyM30.UrsOv_NmOJilHeQu9-brBI_1N7PYbOCYHsqc4cy6YqY'
+            );
+        } catch (importError) {
+            console.error('Failed to import Supabase client:', importError);
+            return res.status(500).json({ 
+                error: 'Server configuration error',
+                message: 'Authentication service unavailable'
+            });
+        }
         
         const { data: { user }, error } = await supabase.auth.getUser(token);
         
@@ -133,6 +142,18 @@ app.get('/api/test-cors', (req, res) => {
         timestamp: new Date().toISOString(),
         origin: req.headers.origin,
         message: 'CORS test successful'
+    });
+});
+
+// Test endpoint for authentication debugging
+app.get('/api/test-auth', requireAuth, (req, res) => {
+    console.log('Auth test request received from:', req.headers.origin);
+    res.json({ 
+        status: 'auth-test-ok', 
+        timestamp: new Date().toISOString(),
+        origin: req.headers.origin,
+        user: req.user.email,
+        message: 'Authentication test successful'
     });
 });
 
@@ -775,9 +796,16 @@ app.delete('/api/admin/inverter_options/:id', requireAuth, async (req, res) => {
 
 app.get('/api/admin/bank_configurations', requireAuth, async (req, res) => {
     try {
+        console.log('Bank configurations request received from:', req.headers.origin);
+        console.log('User authenticated:', req.user.email);
+        
         // Query the dedicated bank_configurations table
         const query = 'SELECT id, bank_name, interest_rate, commission, loan_period, name, description, created_at, updated_at FROM bank_configurations WHERE is_active = true ORDER BY bank_name, interest_rate, loan_period';
+        console.log('Executing query:', query);
+        
         const result = await pool.query(query);
+        console.log(`Found ${result.rows.length} bank configurations`);
+        
         res.json(result.rows);
     } catch (error) {
         console.error('Error fetching bank configurations:', error);
