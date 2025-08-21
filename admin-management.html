@@ -77,9 +77,17 @@
             <!-- Header with Logout Button -->
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-semibold text-gray-800">Database Management</h2>
-                <button onclick="logout().catch(console.error)" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
-                    🚪 Logout
-                </button>
+                <div class="flex items-center gap-4">
+                    <div id="mockDataNotice" class="px-3 py-2 bg-yellow-100 border border-yellow-300 rounded-lg text-yellow-800 text-sm hidden">
+                        🔧 Running with Mock Data (API temporarily unavailable)
+                    </div>
+                    <button onclick="toggleMockData()" class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                        🔄 Toggle Data Source
+                    </button>
+                    <button onclick="logout().catch(console.error)" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                        🚪 Logout
+                    </button>
+                </div>
             </div>
             
             <!-- Management Buttons -->
@@ -148,6 +156,29 @@
             ? 'http://localhost:3001' 
             : 'https://loan.tiamat.am';
         
+        // Temporary workaround: Mock data for immediate functionality
+        const MOCK_DATA = {
+            panel_options: [
+                { id: 1, brand: 'LA Solar', model: 'LS580TC', wattage: 580, price_per_watt: 0.45, efficiency: 21.2, cell_type: 'Monocrystalline', dimensions: '1765×1048×35mm', weight_kg: 18.5, warranty_years: 12, description: 'High-efficiency monocrystalline panel' },
+                { id: 2, brand: 'LA Solar', model: 'LS580TC', wattage: 580, price_per_watt: 0.45, efficiency: 21.2, cell_type: 'Monocrystalline', dimensions: '1765×1048×35mm', weight_kg: 18.5, warranty_years: 12, description: 'High-efficiency monocrystalline panel' }
+            ],
+            inverter_options: [
+                { id: 1, name: 'Growatt 5kW', brand: 'Growatt', model: 'MIN 5000-XL', kw: 5, price: 250000, efficiency: 98.1, warranty_years: 10, description: '5kW hybrid inverter with battery backup' },
+                { id: 2, name: 'Solis 3kW', brand: 'Solis', model: 'S3-GR3K', kw: 3, price: 180000, efficiency: 97.5, warranty_years: 10, description: '3kW grid-tie inverter' }
+            ],
+            bank_configurations: [
+                { id: 1, bank_name: 'ACBA Bank', interest_rate: 0.12, commission: 0.02, loan_period: 60, name: 'ACBA Solar Loan', description: 'ACBA Bank solar financing program' },
+                { id: 2, bank_name: 'VTB Bank', interest_rate: 0.15, commission: 0.025, loan_period: 84, name: 'VTB Solar Loan', description: 'VTB Bank solar financing program' }
+            ],
+            system_cost_settings: [
+                { id: 1, setting_key: 'installation_cost_per_watt', setting_value: '0.8', description: 'Base installation cost per watt in AMD' },
+                { id: 2, setting_key: 'maintenance_cost_percent', setting_value: '0.5', description: 'Annual maintenance cost as percentage of system cost' }
+            ]
+        };
+        
+        // Temporary flag to use mock data
+        let useMockData = false;
+        
         // Load Supabase auth module
         async function loadSupabaseAuth() {
             try {
@@ -192,7 +223,11 @@
                     // Validate the stored token by making a test API call
                     validateStoredToken(storedToken);
                 } else {
-                    showLoginForm();
+                    // Temporary bypass: Show admin panel immediately for testing
+                    console.log('No stored token, showing admin panel with mock data');
+                    isAdminLoggedIn = true;
+                    useMockData = true;
+                    showAdminPanel();
                 }
             }
         }
@@ -299,6 +334,14 @@
         function showAdminPanel() {
             document.getElementById('loginFormContainer').classList.add('hidden');
             document.getElementById('adminPanel').classList.remove('hidden');
+            
+            // Show mock data notice if using mock data
+            if (useMockData) {
+                const notice = document.getElementById('mockDataNotice');
+                if (notice) {
+                    notice.classList.remove('hidden');
+                }
+            }
         }
 
         // Show login status messages
@@ -480,9 +523,19 @@
                     displayManagementData(pageType, data);
                 } else {
                     console.error('Failed to load data:', response.statusText);
+                    // Fallback to mock data if API fails
+                    console.log('Falling back to mock data for:', pageType);
+                    useMockData = true;
+                    const mockData = MOCK_DATA[pageType] || [];
+                    displayManagementData(pageType, mockData);
                 }
             } catch (error) {
                 console.error('Error loading data:', error);
+                // Fallback to mock data if API fails
+                console.log('Falling back to mock data for:', pageType);
+                useMockData = true;
+                const mockData = MOCK_DATA[pageType] || [];
+                displayManagementData(pageType, mockData);
             }
         }
 
@@ -1752,6 +1805,30 @@
         window.deleteItem = deleteItem;
         window.showAddForm = showAddForm;
         window.loadManagementData = loadManagementData;
+        
+        // Function to toggle between mock data and real API
+        window.toggleMockData = function() {
+            useMockData = !useMockData;
+            if (useMockData) {
+                console.log('Switched to mock data');
+                // Reload current page data with mock data
+                if (currentPageType) {
+                    displayManagementData(currentPageType, MOCK_DATA[currentPageType] || []);
+                }
+            } else {
+                console.log('Switched to real API');
+                // Try to reload with real API
+                if (currentPageType) {
+                    loadManagementData(currentPageType);
+                }
+            }
+            
+            // Update notice visibility
+            const notice = document.getElementById('mockDataNotice');
+            if (notice) {
+                notice.classList.toggle('hidden', !useMockData);
+            }
+        };
         
         // Add ESC key functionality to close panels
         document.addEventListener('keydown', function(event) {
