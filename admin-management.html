@@ -143,6 +143,11 @@
         let isAuthenticated = null;
         let getCurrentUser = null;
         
+        // API Configuration
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:3001' 
+            : 'https://loan.tiamat.am';
+        
         // Load Supabase auth module
         async function loadSupabaseAuth() {
             try {
@@ -195,7 +200,7 @@
         // Validate stored token
         async function validateStoredToken(token) {
             try {
-                const response = await fetch('/api/admin/panel_options', {
+                const response = await fetch(`${API_BASE_URL}/api/admin/panel_options`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
@@ -446,7 +451,7 @@
             }
             
             try {
-                const response = await fetch(`/api/admin/${pageType}`, {
+                const response = await fetch(`${API_BASE_URL}/api/admin/${pageType}`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`
                     }
@@ -849,19 +854,19 @@
             try {
                 let response;
                 if (pageType === 'panel_options') {
-                    response = await fetch(`/api/admin/${pageType}/${id}`, {
+                    response = await fetch(`${API_BASE_URL}/api/admin/${pageType}/${id}`, {
                         headers: { 'Authorization': `Bearer ${authToken}` }
                     });
                 } else if (pageType === 'inverter_options') {
-                    response = await fetch(`/api/admin/${pageType}/${id}`, {
+                    response = await fetch(`${API_BASE_URL}/api/admin/${pageType}/${id}`, {
                         headers: { 'Authorization': `Bearer ${authToken}` }
                     });
                 } else if (pageType === 'bank_configurations') {
-                    response = await fetch(`/api/admin/${pageType}/${id}`, {
+                    response = await fetch(`${API_BASE_URL}/api/admin/${pageType}/${id}`, {
                         headers: { 'Authorization': `Bearer ${authToken}` }
                     });
                 } else {
-                    response = await fetch(`/api/admin/system_cost_settings/${id}`, {
+                    response = await fetch(`${API_BASE_URL}/api/admin/system_cost_settings/${id}`, {
                         headers: { 'Authorization': `Bearer ${authToken}` }
                     });
                 }
@@ -895,22 +900,22 @@
                 try {
                     let response;
                     if (pageType === 'panel_options') {
-                        response = await fetch(`/api/admin/${pageType}/${id}`, { 
+                        response = await fetch(`${API_BASE_URL}/api/admin/${pageType}/${id}`, { 
                             method: 'DELETE',
                             headers: { 'Authorization': `Bearer ${authToken}` }
                         });
                     } else if (pageType === 'inverter_options') {
-                        response = await fetch(`/api/admin/${pageType}/${id}`, { 
+                        response = await fetch(`${API_BASE_URL}/api/admin/${pageType}/${id}`, { 
                             method: 'DELETE',
                             headers: { 'Authorization': `Bearer ${authToken}` }
                         });
                     } else if (pageType === 'bank_configurations') {
-                        response = await fetch(`/api/admin/${pageType}/${id}`, { 
+                        response = await fetch(`${API_BASE_URL}/api/admin/${pageType}/${id}`, { 
                             method: 'DELETE',
                             headers: { 'Authorization': `Bearer ${authToken}` }
                         });
                     } else {
-                        response = await fetch(`/api/admin/system_cost_settings/${id}`, { 
+                        response = await fetch(`${API_BASE_URL}/api/admin/system_cost_settings/${id}`, { 
                             method: 'DELETE',
                             headers: { 'Authorization': `Bearer ${authToken}` }
                         });
@@ -1201,7 +1206,7 @@
             delete data.total_price;
             
             try {
-                const response = await fetch('/api/admin/panel_options', {
+                const response = await fetch(`${API_BASE_URL}/api/admin/panel_options`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -1239,7 +1244,7 @@
             const data = Object.fromEntries(formData.entries());
             
             try {
-                const response = await fetch('/api/admin/inverter_options', {
+                const response = await fetch(`${API_BASE_URL}/api/admin/inverter_options`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -1281,7 +1286,7 @@
             data.commission = parseFloat(data.commission) / 100;
             
             try {
-                const response = await fetch('/api/admin/bank_configurations', {
+                const response = await fetch(`${API_BASE_URL}/api/admin/bank_configurations`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -1319,7 +1324,7 @@
             const data = Object.fromEntries(formData.entries());
             
             try {
-                const response = await fetch('/api/admin/system_cost_settings', {
+                const response = await fetch(`${API_BASE_URL}/api/admin/system_cost_settings`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -1561,7 +1566,7 @@
             delete data.total_price;
             
             try {
-                const response = await fetch(`/api/admin/panel_options/${id}`, {
+                const response = await fetch(`${API_BASE_URL}/api/admin/panel_options/${id}`, {
                     method: 'PUT',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -1599,7 +1604,7 @@
             const data = Object.fromEntries(formData.entries());
             
             try {
-                const response = await fetch(`/api/admin/inverter_options/${id}`, {
+                const response = await fetch(`${API_BASE_URL}/api/admin/inverter_options/${id}`, {
                     method: 'PUT',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -1637,7 +1642,7 @@
             const data = Object.fromEntries(formData.entries());
             
             try {
-                const response = await fetch(`/api/admin/bank_configurations/${id}`, {
+                const response = await fetch(`${API_BASE_URL}/api/admin/bank_configurations/${id}`, {
                     method: 'PUT',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -1675,7 +1680,7 @@
             const data = Object.fromEntries(formData.entries());
             
             try {
-                const response = await fetch(`/api/admin/system_cost_settings/${id}`, {
+                const response = await fetch(`${API_BASE_URL}/api/admin/system_cost_settings/${id}`, {
                     method: 'PUT',
                     headers: { 
                         'Content-Type': 'application/json',
