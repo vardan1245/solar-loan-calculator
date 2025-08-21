@@ -6,6 +6,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "admin-management.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "public/**/*",
       "use": "@vercel/static"
     },
@@ -18,6 +22,10 @@
     {
       "source": "/api/(.*)",
       "destination": "/server.js"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin-management.html"
     },
     {
       "source": "/login",
