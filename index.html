@@ -244,6 +244,8 @@
                         </div>
                     </div>
                     
+
+                    
                     <!-- Auto Selection (Default) -->
                     <div id="autoBatterySelection">
                         <select id="batterySelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-tiamat-blue">
@@ -1158,18 +1160,29 @@
             let accumulatorPrice = 0;
             let selectedAccumulatorInfo = '';
             const selectedInverterType = document.getElementById('inverterType').value;
-                    if (selectedInverterType === 'hybrid' && batteries && batteries.length > 0) {
-            const batterySelect = document.getElementById('batterySelect');
-            if (batterySelect && batterySelect.value) {
-                const selectedBattery = batteries.find(bat => bat.id == batterySelect.value);
-                if (selectedBattery) {
-                    accumulatorPrice = selectedBattery.price;
-                    selectedAccumulatorInfo = currentLanguage === 'en'
-                        ? `${selectedBattery.brand} ${selectedBattery.model} ${selectedBattery.capacity_kwh}kWh battery`
-                        : `${selectedBattery.brand} ${selectedBattery.model} ${selectedBattery.capacity_kwh}կՎտժ մարտկոց`;
+            
+            if (selectedInverterType === 'hybrid' && batteries && batteries.length > 0) {
+                // Check battery selection
+                const batterySelect = document.getElementById('batterySelect');
+                if (batterySelect && batterySelect.value) {
+                    if (batterySelect.value === 'no_battery') {
+                        // No battery selected for hybrid system
+                        accumulatorPrice = 0;
+                        selectedAccumulatorInfo = currentLanguage === 'en'
+                            ? 'Grid-tied hybrid system (no battery)'
+                            : 'Ցանցին միացված հիբրիդ համակարգ (առանց մարտկոցի)';
+                    } else {
+                        // Battery is selected, calculate price
+                        const selectedBattery = batteries.find(bat => bat.id == batterySelect.value);
+                        if (selectedBattery) {
+                            accumulatorPrice = selectedBattery.price;
+                            selectedAccumulatorInfo = currentLanguage === 'en'
+                                ? `${selectedBattery.brand} ${selectedBattery.model} ${selectedBattery.capacity_kwh}kWh battery`
+                                : `${selectedBattery.brand} ${selectedBattery.model} ${selectedBattery.capacity_kwh}կՎտժ մարտկոց`;
+                        }
+                    }
                 }
             }
-        }
             
                         // Calculate subtotal first (including battery for hybrid)
             const subtotal = basePrice + profitAmount + inverterPrice + panelPrice + accumulatorPrice;
@@ -1360,10 +1373,10 @@
                                         <span>+ Panels:</span>
                                         ${renderSensitiveValue(panelPrice.toLocaleString(), ` AMD (${panelPct}%)`)}
                                     </div>
-                                    ${selectedInverterType === 'hybrid' && accumulatorPrice > 0 ? `
+                                    ${selectedInverterType === 'hybrid' ? `
                                     <div class="flex justify-between">
                                         <span>+ Battery:</span>
-                                        ${renderSensitiveValue(accumulatorPrice.toLocaleString(), ' AMD')}
+                                        ${accumulatorPrice > 0 ? renderSensitiveValue(accumulatorPrice.toLocaleString(), ' AMD') : 'No battery selected'}
                                     </div>
                                     ` : ''}
                                     <div class="flex justify-between font-semibold border-t pt-1">
@@ -1992,9 +2005,9 @@
                 // Switch to manual mode
                 autoSelection.classList.add('hidden');
                 manualSelection.classList.remove('hidden');
-                            populateManualBatteryBrands();
-            populateManualBatteryCapacities();
-            populateManualBatteryChemistries();
+                populateManualBatteryBrands();
+                populateManualBatteryCapacities();
+                populateManualBatteryChemistries();
             } else {
                 // Switch to auto mode
                 autoSelection.classList.remove('hidden');
@@ -2008,6 +2021,8 @@
             // Force recalculation when battery selection mode changes
             forceRecalculate();
         }
+
+
 
         function populateBatteryDropdown() {
             const batterySelect = document.getElementById('batterySelect');
@@ -2028,6 +2043,17 @@
             
             // Debug: Show all batteries for troubleshooting
             debugShowAllBatteries();
+            
+            // Add "No Battery" option at the top
+            const noBatteryOption = document.createElement('option');
+            noBatteryOption.value = 'no_battery';
+            const noBatteryText = currentLanguage === 'en' 
+                ? 'No Battery (Grid-tied hybrid system)'
+                : 'Առանց մարտկոցի (ցանցին միացված հիբրիդ համակարգ)';
+            noBatteryOption.textContent = noBatteryText;
+            noBatteryOption.setAttribute('data-en', 'No Battery (Grid-tied hybrid system)');
+            noBatteryOption.setAttribute('data-hy', 'Առանց մարտկոցի (ցանցին միացված հիբրիդ համակարգ)');
+            batterySelect.appendChild(noBatteryOption);
             
             // More inclusive filtering: show batteries from 0.5x to 5x system power
             // This ensures small systems can see larger batteries and large systems can see smaller batteries
@@ -2064,7 +2090,7 @@
                 // Find the battery closest to recommended capacity
                 const recommendedCapacity = systemPower * 1.5; // 1.5 days of storage
                 const bestBattery = suitableBatteries.reduce((prev, curr) => 
-                    Math.abs(curr.capacity_kwh - recommendedCapacity) < Math.abs(prev.capacity_kwh - recommendedCapacity) ? curr : prev
+                    Math.abs(curr.capacity_kwh - recommendedCapacity) < Math.abs(prev.capacity_kwh - recommendedCapacity) ? prev : curr
                 );
                 batterySelect.value = bestBattery.id;
                 console.log('🔍 Best battery selected:', bestBattery.id, bestBattery.capacity_kwh, 'kWh');
@@ -2073,6 +2099,18 @@
                 
                 // Fallback: show all batteries with a note
                 batterySelect.innerHTML = '<option value="" disabled>No batteries match system power - showing all options</option>';
+                
+                // Re-add "No Battery" option
+                const noBatteryOptionFallback = document.createElement('option');
+                noBatteryOptionFallback.value = 'no_battery';
+                const noBatteryTextFallback = currentLanguage === 'en' 
+                    ? 'No Battery (Grid-tied hybrid system)'
+                    : 'Առանց մարտկոցի (ցանցին միացված հիբրիդ համակարգ)';
+                noBatteryOptionFallback.textContent = noBatteryTextFallback;
+                noBatteryOptionFallback.setAttribute('data-en', 'No Battery (Grid-tied hybrid system)');
+                noBatteryOptionFallback.setAttribute('data-hy', 'Առանց մարտկոցի (ցանցին միացված հիբրիդ համակարգ)');
+                batterySelect.appendChild(noBatteryOptionFallback);
+                
                 batteries.forEach(battery => {
                     const option = document.createElement('option');
                     option.value = battery.id;
@@ -2302,13 +2340,16 @@
             let accumulatorPrice = 0;
             const selectedInverterType = document.getElementById('inverterType').value;
             if (selectedInverterType === 'hybrid' && batteries && batteries.length > 0) {
+                // Check battery selection
                 const batterySelect = document.getElementById('batterySelect');
-                if (batterySelect && batterySelect.value) {
+                if (batterySelect && batterySelect.value && batterySelect.value !== 'no_battery') {
+                    // Battery is selected, calculate price
                     const selectedBattery = batteries.find(bat => bat.id == batterySelect.value);
                     if (selectedBattery) {
                         accumulatorPrice = selectedBattery.price;
                     }
                 }
+                // If 'no_battery' is selected, accumulatorPrice remains 0
             }
             
             // Get sales team and unanticipated expenses percentages - use same logic as main function
@@ -3079,19 +3120,28 @@
             
             // Add event listener for auto battery selection changes
             document.getElementById('batterySelect').addEventListener('change', function() {
+                // Update panel suggestions with new battery selection
+                calculatePanelRequirements();
+                // Update main calculation display
                 forceRecalculate();
             });
             
             // Add event listeners for manual battery selection changes
             document.getElementById('manualBatteryBrand').addEventListener('change', function() {
+                // Update panel suggestions with new battery selection
+                calculatePanelRequirements();
                 forceRecalculate();
             });
             
             document.getElementById('manualBatteryCapacity').addEventListener('change', function() {
+                // Update panel suggestions with new battery selection
+                calculatePanelRequirements();
                 forceRecalculate();
             });
             
             document.getElementById('manualBatteryChemistry').addEventListener('change', function() {
+                // Update panel suggestions with new battery selection
+                calculatePanelRequirements();
                 forceRecalculate();
             });
             
