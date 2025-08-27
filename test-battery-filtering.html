@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battery Filtering Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .battery-item { margin: 5px 0; padding: 5px; background: #f5f5f5; border-radius: 3px; }
+        .suitable { background: #d4edda; border-left: 4px solid #28a745; }
+        .unsuitable { background: #f8d7da; border-left: 4px solid #dc3545; }
+        input, select { margin: 5px; padding: 5px; }
+        button { margin: 5px; padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .debug { background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 10px 0; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🔋 Battery Filtering Test</h1>
+    
+    <div class="test-section">
+        <h3>System Power Input</h3>
+        <label>System Power (kW): <input type="number" id="systemPower" value="10" step="0.1" min="0.1"></label>
+        <button onclick="testBatteryFiltering()">Test Battery Filtering</button>
+        <button onclick="showAllBatteries()">Show All Batteries</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Current Filtering Criteria</h3>
+        <div id="filterCriteria"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Battery Results</h3>
+        <div id="batteryResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Debug Information</h3>
+        <div id="debugInfo"></div>
+    </div>
+
+    <script>
+        let batteries = [];
+        
+        // Load batteries from API
+        async function loadBatteries() {
+            try {
+                const response = await fetch('/api/batteries');
+                const data = await response.json();
+                if (data.success) {
+                    batteries = data.data.batteries;
+                    console.log('✅ Batteries loaded:', batteries.length);
+                    showAllBatteries();
+                } else {
+                    console.error('❌ Failed to load batteries:', data);
+                }
+            } catch (error) {
+                console.error('❌ Error loading batteries:', error);
+            }
+        }
+        
+        // Test the battery filtering logic
+        function testBatteryFiltering() {
+            const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            
+            // Show filtering criteria
+            const minCapacity = Math.max(0.5, systemPower * 0.3);
+            const maxCapacity = Math.max(5, systemPower * 5);
+            
+            document.getElementById('filterCriteria').innerHTML = `
+                <div class="debug">
+                    <strong>System Power:</strong> ${systemPower} kW<br>
+                    <strong>Min Capacity:</strong> ${minCapacity} kWh (${systemPower * 0.3} kWh or 0.5 kWh, whichever is higher)<br>
+                    <strong>Max Capacity:</strong> ${maxCapacity} kWh (${systemPower * 5} kWh or 5 kWh, whichever is higher)
+                </div>
+            `;
+            
+            // Apply filtering
+            const suitableBatteries = batteries.filter(battery => {
+                const isSuitable = battery.capacity_kwh >= minCapacity && battery.capacity_kwh <= maxCapacity;
+                return isSuitable;
+            });
+            
+            // Display results
+            let resultsHTML = `<h4>Suitable Batteries (${suitableBatteries.length}/${batteries.length})</h4>`;
+            
+            batteries.forEach(battery => {
+                const isSuitable = battery.capacity_kwh >= minCapacity && battery.capacity_kwh <= maxCapacity;
+                const statusClass = isSuitable ? 'suitable' : 'unsuitable';
+                const statusIcon = isSuitable ? '✅' : '❌';
+                
+                resultsHTML += `
+                    <div class="battery-item ${statusClass}">
+                        ${statusIcon} <strong>ID ${battery.id}</strong>: ${battery.brand} ${battery.model} - 
+                        <strong>${battery.capacity_kwh} kWh</strong> - ${battery.price.toLocaleString()} AMD
+                        ${isSuitable ? '' : ` (Outside range: ${minCapacity}-${maxCapacity} kWh)`}
+                    </div>
+                `;
+            });
+            
+            document.getElementById('batteryResults').innerHTML = resultsHTML;
+            
+            // Show debug info
+            document.getElementById('debugInfo').innerHTML = `
+                <div class="debug">
+                    <strong>Total Batteries:</strong> ${batteries.length}<br>
+                    <strong>Suitable Batteries:</strong> ${suitableBatteries.length}<br>
+                    <strong>Filtering Range:</strong> ${minCapacity} - ${maxCapacity} kWh<br>
+                    <strong>System Power:</strong> ${systemPower} kW
+                </div>
+            `;
+        }
+        
+        // Show all batteries without filtering
+        function showAllBatteries() {
+            let resultsHTML = `<h4>All Available Batteries (${batteries.length})</h4>`;
+            
+            batteries.forEach(battery => {
+                resultsHTML += `
+                    <div class="battery-item">
+                        <strong>ID ${battery.id}</strong>: ${battery.brand} ${battery.model} - 
+                        <strong>${battery.capacity_kwh} kWh</strong> - ${battery.price.toLocaleString()} AMD
+                    </div>
+                `;
+            });
+            
+            document.getElementById('batteryResults').innerHTML = resultsHTML;
+            document.getElementById('filterCriteria').innerHTML = '<em>No filtering applied</em>';
+            document.getElementById('debugInfo').innerHTML = '<em>Click "Test Battery Filtering" to see debug info</em>';
+        }
+        
+        // Load batteries when page loads
+        window.addEventListener('load', loadBatteries);
+    </script>
+</body>
+</html>

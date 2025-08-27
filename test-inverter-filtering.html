@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inverter Type Filtering Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        select, input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-width: 200px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🔌 Inverter Type Filtering Test</h1>
+    
+    <div class="test-section info">
+        <h2>Test Instructions</h2>
+        <p>This page tests the inverter type filtering functionality:</p>
+        <ol>
+            <li>Test the inverters API endpoint</li>
+            <li>Test inverter filtering by type</li>
+            <li>Verify default "on_grid" selection works</li>
+            <li>Test switching between inverter types</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>1. Test Inverters API</h2>
+        <button onclick="testInvertersAPI()">Test /api/inverters</button>
+        <div id="invertersResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Test Inverter Type Filtering</h2>
+        <div>
+            <label for="inverterType">Inverter Type:</label>
+            <select id="inverterType" onchange="testInverterFiltering()">
+                <option value="on_grid" selected>On Grid</option>
+                <option value="off_grid">Off Grid</option>
+                <option value="hybrid">Hybrid</option>
+            </select>
+        </div>
+        
+        <div>
+            <label for="systemPower">System Power (kW):</label>
+            <input type="number" id="systemPower" value="5" step="0.1" onchange="testInverterFiltering()">
+        </div>
+        
+        <div id="filteringResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Test Manual Inverter Selection</h2>
+        <div>
+            <label for="manualBrand">Brand:</label>
+            <select id="manualBrand" onchange="updateManualPower()">
+                <option value="">Select brand</option>
+            </select>
+        </div>
+        
+        <div>
+            <label for="manualPower">Power (kW):</label>
+            <select id="manualPower" onchange="showSelectedInverter()">
+                <option value="">Select power</option>
+            </select>
+        </div>
+        
+        <div id="manualResult" class="result"></div>
+    </div>
+
+    <script>
+        let inverters = [];
+
+        // Test 1: Inverters API
+        async function testInvertersAPI() {
+            try {
+                const response = await fetch('/api/inverters');
+                const data = await response.json();
+                
+                if (data.success) {
+                    inverters = data.data.inverters;
+                    document.getElementById('invertersResult').innerHTML = `
+                        <div class="success">
+                            ✅ API working! Found ${inverters.length} inverters
+                        </div>
+                        <strong>Inverter Types Found:</strong>
+                        ${[...new Set(inverters.map(inv => inv.type || 'on_grid'))].join(', ')}
+                        <br><br>
+                        <strong>Sample Inverters:</strong>
+                        ${inverters.slice(0, 3).map(inv => 
+                            `${inv.brand} ${inv.model} - ${inv.kw}kW (${inv.type || 'on_grid'})`
+                        ).join('<br>')}
+                    `;
+                    
+                    // Test filtering immediately
+                    testInverterFiltering();
+                } else {
+                    document.getElementById('invertersResult').innerHTML = `
+                        <div class="error">❌ API error: ${data.error}</div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('invertersResult').innerHTML = `
+                    <div class="error">❌ Network error: ${error.message}</div>
+                `;
+            }
+        }
+
+        // Test 2: Inverter Filtering
+        function testInverterFiltering() {
+            if (inverters.length === 0) {
+                document.getElementById('filteringResult').innerHTML = 'Please load inverters first';
+                return;
+            }
+            
+            const selectedType = document.getElementById('inverterType').value;
+            const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            
+            // Filter inverters by selected type strictly
+            const typeFilteredInverters = inverters.filter(inverter => {
+                // If inverter has no type specified, treat it as 'on_grid' for backward compatibility
+                const inverterType = inverter.type || 'on_grid';
+                return inverterType === selectedType;
+            });
+            
+            // Filter by system power (15% rule)
+            const minPower = systemPower / 1.15;
+            const suitableInverters = typeFilteredInverters
+                .filter(inverter => inverter.kw >= minPower)
+                .sort((a, b) => a.kw - b.kw);
+            
+            document.getElementById('filteringResult').innerHTML = `
+                <strong>Selected Type:</strong> ${selectedType}
+                <br><strong>System Power:</strong> ${systemPower} kW
+                <br><strong>Min Inverter Power:</strong> ${minPower.toFixed(2)} kW
+                <br><br>
+                <strong>Type Filtered Inverters:</strong> ${typeFilteredInverters.length}
+                <br><strong>Suitable Inverters (15% rule):</strong> ${suitableInverters.length}
+                <br><br>
+                <strong>Type Filtered Results:</strong>
+                ${typeFilteredInverters.map(inv => 
+                    `${inv.brand} ${inv.model} - ${inv.kw}kW (${inv.type || 'on_grid'})`
+                ).join('<br>')}
+                <br><br>
+                <strong>Suitable Results (15% rule):</strong>
+                ${suitableInverters.map(inv => 
+                    `${inv.brand} ${inv.model} - ${inv.kw}kW (${inv.type || 'on_grid'})`
+                ).join('<br>')}
+            `;
+            
+            // Update manual selection dropdowns
+            updateManualBrands();
+        }
+
+        // Update manual brand selection
+        function updateManualBrands() {
+            if (inverters.length === 0) return;
+            
+            const selectedType = document.getElementById('inverterType').value;
+            const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            
+            // Filter inverters by type strictly
+            const typeFilteredInverters = inverters.filter(inverter => {
+                const inverterType = inverter.type || 'on_grid';
+                return inverterType === selectedType;
+            });
+            
+            const brandSelect = document.getElementById('manualBrand');
+            brandSelect.innerHTML = '<option value="">Select brand</option>';
+            
+            if (systemPower > 0) {
+                const minPower = systemPower / 1.15;
+                const suitableBrands = [...new Set(typeFilteredInverters
+                    .filter(inv => inv.kw >= minPower)
+                    .map(inv => inv.brand)
+                )].sort();
+                
+                suitableBrands.forEach(brand => {
+                    const option = document.createElement('option');
+                    option.value = brand;
+                    option.textContent = brand;
+                    brandSelect.appendChild(option);
+                });
+            } else {
+                const brands = [...new Set(typeFilteredInverters.map(inv => inv.brand))].sort();
+                brands.forEach(brand => {
+                    const option = document.createElement('option');
+                    option.value = brand;
+                    option.textContent = brand;
+                    brandSelect.appendChild(option);
+                });
+            }
+            
+            // Reset power selection
+            document.getElementById('manualPower').innerHTML = '<option value="">Select power</option>';
+        }
+
+        // Update manual power selection
+        function updateManualPower() {
+            if (inverters.length === 0) return;
+            
+            const selectedType = document.getElementById('inverterType').value;
+            const selectedBrand = document.getElementById('manualBrand').value;
+            const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            
+            if (!selectedBrand) return;
+            
+            // Filter inverters by type and brand
+            const typeFilteredInverters = inverters.filter(inverter => {
+                const inverterType = inverter.type || 'on_grid';
+                return inverterType === selectedType && inverter.brand === selectedBrand;
+            });
+            
+            const powerSelect = document.getElementById('manualPower');
+            powerSelect.innerHTML = '<option value="">Select power</option>';
+            
+            if (systemPower > 0) {
+                const minPower = systemPower / 1.15;
+                const suitablePowers = [...new Set(typeFilteredInverters
+                    .filter(inv => inv.kw >= minPower)
+                    .map(inv => inv.kw)
+                )].sort((a, b) => a - b);
+                
+                suitablePowers.forEach(power => {
+                    const option = document.createElement('option');
+                    option.value = power;
+                    option.textContent = `${power} kW`;
+                    powerSelect.appendChild(option);
+                });
+            } else {
+                const powers = [...new Set(typeFilteredInverters.map(inv => inv.kw))].sort((a, b) => a - b);
+                powers.forEach(power => {
+                    const option = document.createElement('option');
+                    option.value = power;
+                    option.textContent = `${power} kW`;
+                    powerSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Show selected inverter details
+        function showSelectedInverter() {
+            const selectedType = document.getElementById('inverterType').value;
+            const selectedBrand = document.getElementById('manualBrand').value;
+            const selectedPower = document.getElementById('manualPower').value;
+            
+            if (!selectedBrand || !selectedPower) {
+                document.getElementById('manualResult').innerHTML = 'Please select both brand and power';
+                return;
+            }
+            
+            const selectedInverter = inverters.find(inv => 
+                (inv.type || 'on_grid') === selectedType && 
+                inv.brand === selectedBrand && 
+                inv.kw == selectedPower
+            );
+            
+            if (selectedInverter) {
+                document.getElementById('manualResult').innerHTML = `
+                    <strong>Selected Inverter:</strong>
+                    <br>Brand: ${selectedInverter.brand}
+                    <br>Model: ${selectedInverter.model}
+                    <br>Power: ${selectedInverter.kw} kW
+                    <br>Type: ${selectedInverter.type || 'on_grid'}
+                    <br>Price: ${selectedInverter.price.toLocaleString()} AMD
+                `;
+            } else {
+                document.getElementById('manualResult').innerHTML = 'No inverter found with selected criteria';
+            }
+        }
+
+        // Initialize page
+        window.onload = function() {
+            testInvertersAPI();
+        };
+    </script>
+</body>
+</html>

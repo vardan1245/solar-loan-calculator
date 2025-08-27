@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accumulator Feature Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        select, input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔋 Accumulator Feature Test</h1>
+    
+    <div class="test-section info">
+        <h2>Test Instructions</h2>
+        <p>This page tests the accumulator feature implementation:</p>
+        <ol>
+            <li>Test the accumulators API endpoint</li>
+            <li>Test the comprehensive pricing API</li>
+            <li>Test accumulator selection UI</li>
+            <li>Test cost calculations with accumulators</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>1. Test Accumulators API</h2>
+        <button onclick="testAccumulatorsAPI()">Test /api/accumulators</button>
+        <div id="accumulatorsResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Test Comprehensive Pricing API</h2>
+        <button onclick="testPricingAPI()">Test /api/pricing-complete</button>
+        <div id="pricingResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Test Accumulator Selection UI</h2>
+        <div>
+            <label for="inverterType">Inverter Type:</label>
+            <select id="inverterType" onchange="toggleAccumulatorUI()">
+                <option value="on_grid">On Grid</option>
+                <option value="off_grid">Off Grid</option>
+                <option value="hybrid">Hybrid</option>
+            </select>
+        </div>
+        
+        <div id="accumulatorSelectionContainer" style="display: none; margin-top: 20px;">
+            <h3>Accumulator Selection</h3>
+            <div>
+                <label for="accumulatorSelect">Auto Selection:</label>
+                <select id="accumulatorSelect" onchange="updateAccumulatorInfo()">
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+            <div id="accumulatorInfo" class="result"></div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Test Cost Calculation</h2>
+        <div>
+            <label for="systemPower">System Power (kW):</label>
+            <input type="number" id="systemPower" value="5" step="0.1" onchange="calculateCosts()">
+        </div>
+        <div>
+            <label for="selectedAccumulator">Selected Accumulator:</label>
+            <select id="selectedAccumulator" onchange="calculateCosts()">
+                <option value="">None</option>
+            </select>
+        </div>
+        <div id="costResult" class="result"></div>
+    </div>
+
+    <script>
+        let accumulators = [];
+        let selectedAccumulator = null;
+
+        // Test 1: Accumulators API
+        async function testAccumulatorsAPI() {
+            try {
+                const response = await fetch('/api/accumulators');
+                const data = await response.json();
+                
+                if (data.success) {
+                    accumulators = data.data.accumulators;
+                    document.getElementById('accumulatorsResult').innerHTML = `
+                        <div class="success">
+                            ✅ API working! Found ${accumulators.length} accumulators<br>
+                            Sample: ${accumulators[0].brand} ${accumulators[0].model} - ${accumulators[0].capacity_kwh}kWh
+                        </div>
+                    `;
+                    
+                    // Populate accumulator dropdowns
+                    populateAccumulatorDropdowns();
+                } else {
+                    document.getElementById('accumulatorsResult').innerHTML = `
+                        <div class="error">❌ API error: ${data.error}</div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('accumulatorsResult').innerHTML = `
+                    <div class="error">❌ Network error: ${error.message}</div>
+                `;
+            }
+        }
+
+        // Test 2: Comprehensive Pricing API
+        async function testPricingAPI() {
+            try {
+                const response = await fetch('/api/pricing-complete');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const accumulatorCount = data.data.accumulators ? data.data.accumulators.length : 0;
+                    document.getElementById('pricingResult').innerHTML = `
+                        <div class="success">
+                            ✅ API working! Found ${accumulatorCount} accumulators in comprehensive pricing<br>
+                            Total components: ${data.summary.totalCostSettings + data.summary.totalInverters + data.summary.totalPanels + accumulatorCount}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('pricingResult').innerHTML = `
+                        <div class="error">❌ API error: ${data.error}</div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('pricingResult').innerHTML = `
+                    <div class="error">❌ Network error: ${error.message}</div>
+                `;
+            }
+        }
+
+        // Test 3: Accumulator UI Toggle
+        function toggleAccumulatorUI() {
+            const inverterType = document.getElementById('inverterType').value;
+            const container = document.getElementById('accumulatorSelectionContainer');
+            
+            if (inverterType === 'hybrid') {
+                container.style.display = 'block';
+                populateAccumulatorDropdown();
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        // Populate accumulator dropdowns
+        function populateAccumulatorDropdowns() {
+            // Main accumulator select
+            const accumulatorSelect = document.getElementById('accumulatorSelect');
+            accumulatorSelect.innerHTML = '<option value="">Select accumulator</option>';
+            
+            // Cost calculation accumulator select
+            const costAccumulatorSelect = document.getElementById('selectedAccumulator');
+            costAccumulatorSelect.innerHTML = '<option value="">None</option>';
+            
+            accumulators.forEach(acc => {
+                const option = document.createElement('option');
+                option.value = acc.id;
+                option.textContent = `${acc.brand} ${acc.model} - ${acc.capacity_kwh}kWh (${acc.price.toLocaleString()} AMD)`;
+                accumulatorSelect.appendChild(option);
+                
+                const costOption = document.createElement('option');
+                costOption.value = acc.id;
+                costOption.textContent = `${acc.brand} ${acc.model} - ${acc.capacity_kwh}kWh`;
+                costAccumulatorSelect.appendChild(costOption);
+            });
+        }
+
+        // Populate accumulator dropdown for hybrid systems
+        function populateAccumulatorDropdown() {
+            if (accumulators.length === 0) return;
+            
+            const accumulatorSelect = document.getElementById('accumulatorSelect');
+            const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            
+            accumulatorSelect.innerHTML = '<option value="">Select accumulator</option>';
+            
+            // Filter suitable accumulators (0.5x to 3x system power)
+            const suitableAccumulators = accumulators
+                .filter(acc => acc.capacity_kwh >= systemPower * 0.5 && acc.capacity_kwh <= systemPower * 3)
+                .sort((a, b) => a.capacity_kwh - b.capacity_kwh);
+            
+            suitableAccumulators.forEach(acc => {
+                const option = document.createElement('option');
+                option.value = acc.id;
+                option.textContent = `${acc.brand} ${acc.model} - ${acc.capacity_kwh}kWh (${acc.chemistry})`;
+                accumulatorSelect.appendChild(option);
+            });
+        }
+
+        // Update accumulator info display
+        function updateAccumulatorInfo() {
+            const accumulatorId = document.getElementById('accumulatorSelect').value;
+            if (!accumulatorId) {
+                document.getElementById('accumulatorInfo').innerHTML = '';
+                return;
+            }
+            
+            const accumulator = accumulators.find(acc => acc.id == accumulatorId);
+            if (accumulator) {
+                document.getElementById('accumulatorInfo').innerHTML = `
+                    <strong>Selected:</strong> ${accumulator.brand} ${accumulator.model}<br>
+                    <strong>Capacity:</strong> ${accumulator.capacity_kwh} kWh<br>
+                    <strong>Voltage:</strong> ${accumulator.voltage}V<br>
+                    <strong>Price:</strong> ${accumulator.price.toLocaleString()} AMD<br>
+                    <strong>Chemistry:</strong> ${accumulator.chemistry}<br>
+                    <strong>Warranty:</strong> ${accumulator.warranty_years} years
+                `;
+            }
+        }
+
+        // Test 4: Cost Calculation
+        function calculateCosts() {
+            const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            const accumulatorId = document.getElementById('selectedAccumulator').value;
+            
+            if (systemPower <= 0) {
+                document.getElementById('costResult').innerHTML = 'Please enter a valid system power';
+                return;
+            }
+            
+            let baseCost = systemPower * 36000; // Example base cost per kW
+            let inverterCost = systemPower * 150000; // Example inverter cost per kW
+            let panelCost = systemPower * 80000; // Example panel cost per kW
+            let accumulatorCost = 0;
+            let accumulatorInfo = '';
+            
+            if (accumulatorId) {
+                const accumulator = accumulators.find(acc => acc.id == accumulatorId);
+                if (accumulator) {
+                    accumulatorCost = accumulator.price;
+                    accumulatorInfo = `<br><strong>Accumulator:</strong> ${accumulator.brand} ${accumulator.model} - ${accumulator.capacity_kwh}kWh`;
+                }
+            }
+            
+            const totalCost = baseCost + inverterCost + panelCost + accumulatorCost;
+            
+            document.getElementById('costResult').innerHTML = `
+                <strong>Cost Breakdown:</strong><br>
+                <strong>Base Cost:</strong> ${baseCost.toLocaleString()} AMD<br>
+                <strong>Inverter Cost:</strong> ${inverterCost.toLocaleString()} AMD<br>
+                <strong>Panel Cost:</strong> ${panelCost.toLocaleString()} AMD<br>
+                <strong>Accumulator Cost:</strong> ${accumulatorCost.toLocaleString()} AMD${accumulatorInfo}<br>
+                <hr>
+                <strong>Total System Cost:</strong> ${totalCost.toLocaleString()} AMD
+            `;
+        }
+
+        // Initialize page
+        window.onload = function() {
+            testAccumulatorsAPI();
+            testPricingAPI();
+        };
+    </script>
+</body>
+</html>

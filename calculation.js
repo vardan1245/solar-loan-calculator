@@ -12,7 +12,7 @@ let selectedPanelInfo = '';
 let currentLanguage = 'en';
 let currentSortField = 'monthlyPayment';
 let currentSortDirection = 'asc';
-let isAdminLoggedIn = false;
+
 
 // Database data storage
 let dbInstallationCosts = {};
@@ -22,7 +22,7 @@ let dbUnanticipatedExpenses = {};
 
 // Configuration
 const CONFIG = {
-    ADMIN_PASSWORD: 'Gordzara!12',
+
     BANK_CONFIGURATIONS: [
         {
             name: 'ArmEconomBank',
@@ -856,77 +856,7 @@ function generateLoanOptions(loanAmount) {
 function displayResults(data) {
     const resultsContainer = document.getElementById('results');
     
-    const adminBreakdown = isAdminLoggedIn ? `
-        <div class="bg-gray-50 p-4 rounded-md space-y-3 text-sm">
-            <h4 class="font-semibold text-gray-800" data-en="Admin: Detailed Breakdown" data-hy="Ադմին: Մանրամասն բաժանում">Admin: Detailed Breakdown</h4>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-2">
-                    <div class="flex justify-between">
-                        <span data-en="Step 1: Base Installation" data-hy="Քայլ 1: Բազային տեղադրում">Step 1: Base Installation</span>
-                        <span class="font-mono">${data.baseInstallationCost.toLocaleString()} AMD</span>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-600">
-                        <span>(${data.installationCostPerKw.toLocaleString()} AMD/kW × ${data.systemPower} kW)</span>
-                    </div>
-                    
-                    <div class="flex justify-between">
-                        <span data-en="Step 2: Profit Margin" data-hy="Քայլ 2: Շահույթի մարժա">Step 2: Profit Margin</span>
-                        <span class="font-mono">${data.profitAmount.toLocaleString()} AMD</span>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-600">
-                        <span>(${data.profitPerKw.toLocaleString()} AMD/kW × ${data.systemPower} kW)</span>
-                    </div>
-                    
-                    <div class="flex justify-between">
-                        <span data-en="Step 3: Inverter Selection" data-hy="Քայլ 3: Փոխակերպիչի ընտրություն">Step 3: Inverter Selection</span>
-                        <span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="${data.inverterCost.toLocaleString()} AMD">████████████</span>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-600">
-                        <span>${data.selectedInverter.brand} ${data.selectedInverter.model} ${data.selectedInverter.kw} kW</span>
-                    </div>
-                    
-                    <div class="flex justify-between">
-                        <span data-en="Step 4: Panel Selection" data-hy="Քայլ 4: Պանելի ընտրություն">Step 4: Panel Selection</span>
-                        <span class="font-mono">${data.panelCost.toLocaleString()} AMD</span>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-600">
-                        <span>${data.selectedPanelInfo}</span>
-                    </div>
-                </div>
-                
-                <div class="space-y-2">
-                    <div class="flex justify-between">
-                        <span data-en="Subtotal (Base + Profit + Inverter + Panels)" data-hy="Ենթագումար (Բազա + Շահույթ + Փոխակերպիչ + Պանելներ)">Subtotal (Base + Profit + Inverter + Panels):</span>
-                        <span class="font-semibold">${data.totalSystemPrice.toLocaleString()} AMD</span>
-                    </div>
-                    
-                    <div class="flex justify-between">
-                        <span data-en="+ Sales Team Commission" data-hy="+ Վաճառքի թիմի կոմիսիա">+ Sales Team Commission:</span>
-                        <span class="font-mono">${data.salesTeamAmount.toLocaleString()} AMD</span>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-600">
-                        <span>(${data.salesTeamPct}% of total system price)</span>
-                    </div>
-                    
-                    <div class="flex justify-between">
-                        <span data-en="+ Unanticipated Expenses" data-hy="+ Անսպասելի ծախսեր">+ Unanticipated Expenses:</span>
-                        <span class="font-mono">${data.unexpectedExpensesAmount.toLocaleString()} AMD</span>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-600">
-                        <span>(${data.unanticipatedExpensesPct}% of total system price)</span>
-                    </div>
-                    
-                    <div class="border-t pt-2">
-                        <div class="flex justify-between font-semibold text-lg">
-                            <span data-en="Final Total" data-hy="Վերջնական ընդհանուր">Final Total:</span>
-                            <span class="text-tiamat-blue">${data.finalTotal.toLocaleString()} AMD</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    ` : '';
+
     
     resultsContainer.innerHTML = `
         <div class="space-y-4">
@@ -966,7 +896,7 @@ function displayResults(data) {
                     </div>
                 </div>
                 
-                ${adminBreakdown}
+
             </div>
         </div>
     `;
@@ -995,7 +925,7 @@ function displayLoanOptions(loanOptions) {
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortResults('loanPeriod')" data-en="Period" data-hy="Ժամկետ">Period</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortResults('monthlyPayment')" data-en="Monthly Payment" data-hy="Ամսական վճար">Monthly Payment</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortResults('totalAmount')" data-en="Total Amount" data-hy="Ընդհանուր գումար">Total Amount</th>
-                            ${isAdminLoggedIn ? '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-en="Commission" data-hy="Կոմիսիա">Commission</th>' : ''}
+            
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -1006,7 +936,7 @@ function displayLoanOptions(loanOptions) {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${option.loanPeriod} ${currentLanguage === 'en' ? 'months' : 'ամիս'}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">${option.monthlyPayment.toLocaleString()} AMD</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${option.totalAmount.toLocaleString()} AMD</td>
-                                ${isAdminLoggedIn ? `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${(option.commission * 100).toFixed(1)}%</td>` : ''}
+    
                             </tr>
                         `).join('')}
                     </tbody>
@@ -1059,31 +989,7 @@ function sortResults(field) {
     displayLoanOptions(allLoanOptions);
 }
 
-// Admin panel functions
-function showAdminPanel() {
-    // This function can be expanded to show additional admin features
-    console.log('🔍 Admin panel shown');
-}
 
-function showAdminDetails() {
-    // This function can be expanded to show additional admin details
-    console.log('🔍 Admin details shown');
-}
-
-function updateAdminButton() {
-    const adminButton = document.getElementById('adminButton');
-    if (adminButton) {
-        if (isAdminLoggedIn) {
-            adminButton.textContent = currentLanguage === 'en' ? 'Logout Admin' : 'Դուրս գալ ադմինից';
-            adminButton.onclick = logoutAdmin;
-            adminButton.className = 'px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors';
-        } else {
-            adminButton.textContent = currentLanguage === 'en' ? 'Admin Login' : 'Ադմին մուտք';
-            adminButton.onclick = showAdminLogin;
-            adminButton.className = 'px-4 py-2 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors';
-        }
-    }
-}
 
 function showCommissionColumn() {
     // This function can be expanded to show commission column in loan options
@@ -1169,49 +1075,7 @@ function populateManualPanelWattages() {
     });
 }
 
-// Admin functionality
-function showAdminLogin() {
-    document.getElementById('adminModal').classList.remove('hidden');
-    document.getElementById('adminPassword').focus();
-}
 
-function hideAdminLogin() {
-    document.getElementById('adminModal').classList.add('hidden');
-    document.getElementById('adminPassword').value = '';
-}
-
-function loginAdmin() {
-    const password = document.getElementById('adminPassword').value;
-    if (password === CONFIG.ADMIN_PASSWORD) {
-        isAdminLoggedIn = true;
-        hideAdminLogin();
-        showAdminPanel();
-        showAdminDetails();
-        updateAdminButton();
-        showCommissionColumn();
-        showProfitPerKwDisplay();
-        
-        // Recalculate to show detailed breakdown
-        if (allLoanOptions.length > 0) {
-            calculateLoan();
-        }
-    } else {
-        alert('Incorrect password');
-    }
-}
-
-function logoutAdmin() {
-    isAdminLoggedIn = false;
-    hideAdminDetails();
-    updateAdminButton();
-    hideCommissionColumn();
-    hideProfitPerKwDisplay();
-    
-    // Recalculate to hide detailed breakdown
-    if (allLoanOptions.length > 0) {
-        calculateLoan();
-    }
-}
 
 // Utility functions
 function toggleInverterSelection() {
@@ -1265,22 +1129,13 @@ window.switchLanguage = switchLanguage;
 window.toggleInverterSelection = toggleInverterSelection;
 window.togglePanelSelection = togglePanelSelection;
 window.updateManualPanelInfo = updateManualPanelInfo;
-window.showAdminLogin = showAdminLogin;
-window.hideAdminLogin = hideAdminLogin;
-window.loginAdmin = loginAdmin;
-window.logoutAdmin = logoutAdmin;
+
 
 // Export additional functions for use in HTML
 window.displayLoanOptions = displayLoanOptions;
 window.updateResultCount = updateResultCount;
 window.sortResults = sortResults;
-window.showAdminPanel = showAdminPanel;
-window.showAdminDetails = showAdminDetails;
-window.updateAdminButton = updateAdminButton;
-window.showCommissionColumn = showCommissionColumn;
-window.hideCommissionColumn = hideCommissionColumn;
-window.showProfitPerKwDisplay = showProfitPerKwDisplay;
-window.hideProfitPerKwDisplay = hideProfitPerKwDisplay;
+
 window.populatePanelDropdown = populatePanelDropdown;
 window.populateManualPanelBrands = populateManualPanelBrands;
 window.populateManualPanelWattages = populateManualPanelWattages;

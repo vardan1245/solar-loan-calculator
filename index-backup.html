@@ -106,7 +106,7 @@
 
                 
                 <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2" data-en="System Power (kW)" data-hy="Համակարգի հզորություն (կՎտ)">System Power (kW)</label>
                         <input type="number" id="systemPower" data-en-placeholder="Enter system power" data-hy-placeholder="Մուտքագրեք համակարգի հզորությունը" placeholder="Enter system power" 
@@ -120,6 +120,15 @@
                             <option value="metalConstructionOnRoof" data-en="Metal Construction on Roof" data-hy="Մետաղական կոնստրուկցիա տանիքի վրա">Metal Construction on Roof</option>
                             <option value="aluminiumConstructionOnRoof" data-en="Aluminium Construction on Roof" data-hy="Ալյումինե կոնստրուկցիա տանիքի վրա">Aluminium Construction on Roof</option>
                             <option value="systemOnGround" data-en="System on Ground" data-hy="Համակարգ գետնի վրա">System on Ground</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Inverter Type" data-hy="Փոխակերպիչի տեսակը">Inverter Type</label>
+                        <select id="inverterType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                            <option value="on_grid" data-en="On Grid" data-hy="Ցանցային" selected>On Grid</option>
+                            <option value="off_grid" data-en="Off Grid" data-hy="Ավտոնոմ">Off Grid</option>
+                            <option value="hybrid" data-en="Hybrid" data-hy="Հիբրիդ">Hybrid</option>
                         </select>
                     </div>
 
@@ -173,6 +182,52 @@
                             </div>
                             </div>
 
+                    </div>
+                </div>
+                
+                <!-- Accumulator Selection (Only visible for Hybrid systems) -->
+                <div id="accumulatorSelectionContainer" class="mb-4 hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-gray-700" data-en="Accumulator Selection:" data-hy="Ակումուլյատորի ընտրություն:">Accumulator Selection:</label>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500" data-en="Auto" data-hy="Ավտո">Auto</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="manualAccumulatorToggle" class="sr-only peer" onchange="toggleAccumulatorSelection()">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-tiamat-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tiamat-blue"></div>
+                            </label>
+                            <span class="text-xs text-gray-500" data-en="Manual" data-hy="Ձեռքով">Manual</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Auto Selection (Default) -->
+                    <div id="autoAccumulatorSelection">
+                        <select id="accumulatorSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    
+                    <!-- Manual Selection (Hidden by default) -->
+                    <div id="manualAccumulatorSelection" class="hidden space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label for="manualAccumulatorBrand" class="block text-xs font-medium text-gray-600 mb-1" data-en="Brand:" data-hy="Բրենդ:">Brand:</label>
+                                <select id="manualAccumulatorBrand" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                                    <option value="" data-en="Select brand" data-hy="Ընտրեք բրենդը">Select brand</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="manualAccumulatorCapacity" class="block text-xs font-medium text-gray-600 mb-1" data-en="Capacity (kWh):" data-hy="Հզորություն (կՎտժ):">Capacity (kWh):</label>
+                                <select id="manualAccumulatorCapacity" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                                    <option value="" data-en="Select capacity" data-hy="Ընտրեք հզորությունը">Select capacity</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="manualAccumulatorChemistry" class="block text-xs font-medium text-gray-600 mb-1" data-en="Chemistry:" data-hy="Քիմիա:">Chemistry:</label>
+                                <select id="manualAccumulatorCapacity" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                                    <option value="" data-en="Select chemistry" data-hy="Ընտրեք քիմիան">Select chemistry</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -460,9 +515,7 @@
                             data: costs
                         };
 
-                        // Debug: Log the loaded installation costs
-                        console.log('🔍 Loaded installation costs:', dbProfitMargins.installationCosts);
-                        console.log('🔍 Available cost keys:', Object.keys(costs));
+
                     }
                     
                     // Extract profit margins - now warranty-based instead of installation-type-based
@@ -474,9 +527,7 @@
                             data: profits
                         };
                         
-                        // Debug: Log the loaded profit margins
-                        console.log('🔍 Loaded profit margins:', dbProfitMargins.profitMargins);
-                        console.log('🔍 Available profit keys:', Object.keys(profits));
+
                     }
                     
                     // Extract sales commissions - now using common percentage for all installation types
@@ -594,10 +645,7 @@
                         panels = panelsResult.data.panels;
                     }
                     
-                    // Debug: Log the final data structure
-                    console.log('🔍 Final dbProfitMargins structure:', dbProfitMargins);
-                    console.log('🔍 Final dbSalesCommissions structure:', dbSalesCommissions);
-                    console.log('🔍 Final dbUnanticipatedExpenses structure:', dbUnanticipatedExpenses);
+
                     
                     // Mark data as loaded
                     isDataLoaded = true;
@@ -835,13 +883,7 @@
             // Get selected inverter
             let selectedInverter = null;
             
-            // Debug logging for inverter selection
-            console.log('🔍 calculateLoan - Inverter Debug:', {
-                isManualMode,
-                manualBrand: document.getElementById('manualBrand').value,
-                manualPower: document.getElementById('manualPower').value,
-                systemPower
-            });
+
             
             // Check if manual mode is enabled (variable already declared above)
             
@@ -850,11 +892,7 @@
                 const selectedBrand = document.getElementById('manualBrand').value;
                 const selectedPower = document.getElementById('manualPower').value;
                 
-                console.log('🔍 Manual Inverter Mode - Values:', {
-                    selectedBrand,
-                    selectedPower,
-                    invertersAvailable: inverters ? inverters.length : 0
-                });
+
                 
                 if (!selectedBrand || !selectedPower) {
                     const message = currentLanguage === 'en' 
@@ -879,11 +917,7 @@
                     inv.brand === selectedBrand && inv.kw == selectedPower
                 );
                 
-                console.log('🔍 Manual Inverter Found:', {
-                    selectedInverter,
-                    searchCriteria: { brand: selectedBrand, power: selectedPower },
-                    availableInverters: inverters.filter(inv => inv.brand === selectedBrand)
-                });
+
                 
                 if (!selectedInverter) {
                     const message = currentLanguage === 'en' 
@@ -930,24 +964,9 @@
             const inverterPrice = selectedInverter.price;
             const inverterKw = selectedInverter.kw;
             
-            console.log('🔍 Inverter Selection Complete:', {
-                selectedInverter: {
-                    brand: selectedInverter.brand,
-                    model: selectedInverter.model,
-                    kw: selectedInverter.kw,
-                    price: selectedInverter.price
-                },
-                inverterPrice,
-                inverterKw,
-                timestamp: new Date().toISOString()
-            });
+
             
-            // Debug: Log the current system power and installation type
-            console.log('🔍 System Parameters:', {
-                systemPower,
-                installationType,
-                timestamp: new Date().toISOString()
-            });
+
 
             // Calculate panel price
             let panelPrice = 0;
@@ -1009,17 +1028,7 @@
             // Total system price including sales team and unexpected expenses
             const totalSystemPrice = Math.ceil((basePrice + profitAmount + inverterPrice + panelPrice) / (1 - salesTeamPctDecimal - unanticipatedExpensesPctDecimal));
             
-            console.log('🔍 Final System Price Calculation:', {
-                basePrice,
-                profitAmount,
-                inverterPrice,
-                panelPrice,
-                salesTeamPct,
-                unanticipatedExpensesPct,
-                salesTeamPctDecimal,
-                unanticipatedExpensesPctDecimal,
-                totalSystemPrice
-            });
+
 
             // Display results
             const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վաճառքի գին:';
@@ -1721,7 +1730,12 @@
             }
             
             // Calculate base price from installation costs - use same logic as main function
-            const basePricePerKw = dbProfitMargins.installationCosts?.data?.[`cost_per_kw_${installationType}`]?.value || 36000;
+            // Convert camelCase to underscore format to match API response keys
+            const installationTypeKey = installationType
+                .replace(/([A-Z])/g, '_$1')
+                .toLowerCase();
+            const installationCostKey = `cost_per_kw_${installationTypeKey}`;
+            const basePricePerKw = dbProfitMargins.installationCosts?.data?.[installationCostKey]?.value || 36000;
             const basePrice = Math.ceil(systemPower * basePricePerKw);
             
             // Get profit margin based on warranty years and installation type - use same logic as main function
@@ -2330,6 +2344,9 @@
                 // Update the profit per kW display immediately
                 updateProfitPerKwDisplay();
                 
+                // Update panel suggestions immediately when warranty changes
+                calculatePanelRequirements();
+                
                 // Auto-recalculate when warranty changes
                 autoRecalculate();
             });
@@ -2339,6 +2356,9 @@
                 // Update the profit per kW display immediately
                 updateProfitPerKwDisplay();
                 
+                // Update panel suggestions immediately when installation type changes
+                calculatePanelRequirements();
+                
                 // Auto-recalculate when installation type changes
                 autoRecalculate();
             });
@@ -2347,12 +2367,20 @@
             document.getElementById('warrantyYears').addEventListener('input', function() {
                 // Real-time update when warranty changes
                 updateProfitPerKwDisplay();
+                
+                // Update panel suggestions in real-time when warranty changes
+                calculatePanelRequirements();
+                
                 autoRecalculate();
             });
             
             document.getElementById('installationType').addEventListener('input', function() {
                 // Real-time update when installation type changes
                 updateProfitPerKwDisplay();
+                
+                // Update panel suggestions in real-time when installation type changes
+                calculatePanelRequirements();
+                
                 autoRecalculate();
             });
             
