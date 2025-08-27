@@ -266,15 +266,15 @@ app.get('/api/inverters', async (req, res) => {
     }
 });
 
-// Get all accumulator options
-app.get('/api/accumulators', async (req, res) => {
+// Get all battery options
+app.get('/api/batteries', async (req, res) => {
     try {
-        const query = 'SELECT * FROM accumulator_options WHERE is_active = true ORDER BY capacity_kwh';
+        const query = 'SELECT * FROM battery_options WHERE is_active = true ORDER BY capacity_kwh';
         const result = await pool.query(query);
         
         res.json({
             success: true,
-            message: "Accumulator options retrieved successfully",
+            message: "Battery options retrieved successfully",
             data: {
                 description: "Battery storage options for hybrid solar systems",
                 fields: {
@@ -287,7 +287,7 @@ app.get('/api/accumulators', async (req, res) => {
                     warranty_years: "Warranty period in years",
                     chemistry: "Battery chemistry type"
                 },
-                accumulators: result.rows.map(row => ({
+                batteries: result.rows.map(row => ({
                     id: row.id,
                     name: row.name,
                     capacity_kwh: parseFloat(row.capacity_kwh),
@@ -303,14 +303,14 @@ app.get('/api/accumulators', async (req, res) => {
                     description: row.description
                 }))
             },
-            totalAccumulators: result.rows.length,
+            totalBatteries: result.rows.length,
             lastUpdated: new Date().toISOString()
         });
     } catch (error) {
-        console.error('Error fetching accumulator options:', error);
+        console.error('Error fetching battery options:', error);
         res.status(500).json({ 
             success: false,
-            error: 'Failed to fetch accumulator options',
+            error: 'Failed to fetch battery options',
             details: error.message 
         });
     }
@@ -422,12 +422,12 @@ app.get('/api/banks', async (req, res) => {
 app.get('/api/pricing-complete', async (req, res) => {
     try {
         // Get all data from all tables
-        const [costSettings, inverters, panels, banks, accumulators] = await Promise.all([
+        const [costSettings, inverters, panels, banks, batteries] = await Promise.all([
             pool.query('SELECT * FROM system_cost_settings ORDER BY id'),
             pool.query('SELECT * FROM inverter_options WHERE is_active = true ORDER BY kw'),
             pool.query('SELECT * FROM panel_options WHERE is_active = true ORDER BY wattage'),
             pool.query('SELECT * FROM bank_configurations WHERE is_active = true ORDER BY bank_name, interest_rate, loan_period'),
-            pool.query('SELECT * FROM accumulator_options WHERE is_active = true ORDER BY capacity_kwh')
+            pool.query('SELECT * FROM battery_options WHERE is_active = true ORDER BY capacity_kwh')
         ]);
         
         // Organize cost settings
@@ -513,11 +513,14 @@ app.get('/api/pricing-complete', async (req, res) => {
                     price_per_watt: parseFloat(row.price_per_watt),
                     name: row.name
                 })),
-                accumulators: accumulators.rows.map(row => ({
+                batteries: batteries.rows.map(row => ({
+                    id: row.id,
                     capacity_kwh: parseFloat(row.capacity_kwh),
                     voltage: parseFloat(row.voltage),
                     price: parseInt(row.price),
                     name: row.name,
+                    brand: row.brand,
+                    model: row.model,
                     chemistry: row.chemistry
                 })),
                 banks: organizedBanks
@@ -526,7 +529,7 @@ app.get('/api/pricing-complete', async (req, res) => {
                 totalCostSettings: costSettings.rows.length,
                 totalInverters: inverters.rows.length,
                 totalPanels: panels.rows.length,
-                totalAccumulators: accumulators.rows.length,
+                totalBatteries: batteries.rows.length,
                 totalBankOptions: banks.rows.length
             },
             lastUpdated: new Date().toISOString()
@@ -654,6 +657,11 @@ app.get('/', (req, res) => {
 // Serve the main app directly for easier access
 app.get('/app', (req, res) => {
     res.sendFile(__dirname + '/index.html');
+});
+
+// Serve the battery filtering test page
+app.get('/test-battery', (req, res) => {
+    res.sendFile(__dirname + '/test-battery-filtering.html');
 });
 
 // Serve static files (CSS, JS, images) from root directory - AFTER ALL routes

@@ -375,8 +375,7 @@
                     </div>
                 </div>
                     
-                    <!-- Current Profit per kW Display (Admin Only) - Will be created dynamically -->
-                    <div id="profitPerKwDisplayContainer"></div>
+
 
                     <button id="calculateBtn" onclick="calculateLoan()" 
                             class="w-full bg-tiamat-blue hover:bg-tiamat-dark-blue text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -399,67 +398,10 @@
             </div>
         </div>
 
-        <!-- Admin Panel (Hidden by default) -->
-        <div id="adminPanelMain" class="bg-white rounded-lg shadow-md p-6 hidden">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold text-blue-600">🔐 Admin Panel</h2>
-                <button onclick="logoutAdmin()" class="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400">Logout</button>
-            </div>
+
+
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Configuration Details -->
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="font-semibold mb-3 text-lg text-blue-600">Configuration Details</h4>
-                    <details class="space-y-3">
-                        <summary class="cursor-pointer font-medium text-blue-600 hover:text-blue-800 transition-colors">Click to reveal sensitive information</summary>
-                        <div class="mt-3 space-y-2 text-sm">
-                            <p><strong>Authentication:</strong> <span class="text-green-600">Supabase Auth</span></p>
-                            <p><strong>Database Connection:</strong> <span class="text-green-600">Connected to Supabase</span></p>
-                            <p><strong>API Endpoints:</strong> <span class="text-blue-600">All endpoints working</span></p>
-                            <p><strong>Tables:</strong> <span class="text-green-600">system_cost_settings, inverter_options, panel_options, bank_configurations</span></p>
-                        </div>
-                    </details>
-                </div>
-                
-                <!-- Current Settings -->
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="font-semibold mb-3 text-lg text-blue-600">Current Settings</h4>
-                    <div class="space-y-2 text-sm">
-                        <div class="p-2 bg-white rounded">
-                            <strong class="text-blue-600">Common Sales Team %:</strong> <span class="text-green-600 font-semibold" id="adminSalesTeamPct">6% (Common for all installation types)</span>
-                        </div>
-                        <div class="p-2 bg-white rounded">
-                            <strong class="text-blue-600">Common Unanticipated Expenses %:</strong> <span class="text-yellow-600 font-semibold">2% (Common for all installation types)</span>
-                        </div>
-                        <div class="p-2 bg-white rounded text-xs text-gray-600">
-                            <em>Note: Unanticipated expenses now use a single common percentage (2%) that applies to all installation types. Legacy installation-specific records have been deprecated.</em>
-                        </div>
-                        <div class="p-2 bg-white rounded text-xs text-gray-500 bg-gray-50">
-                            <strong>Database Status:</strong> 1 active record (ID: 635), all deprecated records completely removed
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- System Status -->
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="font-semibold mb-3 text-lg text-blue-600">System Status</h4>
-                    <div class="space-y-2 text-sm">
-                        <div class="p-2 bg-white rounded">
-                            <strong class="text-blue-600">Database:</strong> <span class="text-green-600 font-semibold">Connected</span>
-                        </div>
-                        <div class="p-2 bg-white rounded">
-                            <strong class="text-blue-600">API Server:</strong> <span class="text-green-600 font-semibold">Running</span>
-                        </div>
-                        <div class="p-2 bg-white rounded">
-                            <strong class="text-blue-600">Frontend:</strong> <span class="text-green-600 font-semibold">Live Data</span>
-                        </div>
-                        <div class="p-2 bg-white rounded">
-                            <strong class="text-blue-600">Last Updated:</strong> <span class="text-blue-600 font-semibold" id="adminLastUpdated"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Loan Options Table -->
         <div id="loanTable" class="bg-white rounded-lg shadow-md p-6 hidden">
@@ -517,9 +459,7 @@
                             <th class="border p-3 text-center font-medium w-24 cursor-pointer hover:bg-gray-100" onclick="sortTable('interestRate')">
                                 <span data-en="Interest Rate" data-hy="Տոկոսադրույք">Interest Rate</span> <span id="rateSortIcon" class="ml-1">↕</span>
                             </th>
-                            <th class="border p-3 text-center font-medium w-24 cursor-pointer hover:bg-gray-100 admin-only" onclick="sortTable('commission')" style="display: none;">
-                                <span data-en="Commission" data-hy="Կոմիսիա">Commission</span> <span id="commissionSortIcon" class="ml-1">↕</span>
-                            </th>
+
 
                             <th class="border p-3 text-center font-medium w-40 cursor-pointer hover:bg-gray-100" onclick="sortTable('loanAmount')">
                                 <span data-en="Loan Amount" data-hy="Վարկի գումար">Loan Amount</span> <span id="amountSortIcon" class="ml-1">↕</span>
@@ -605,9 +545,7 @@
                     if (result.data.profitMargins && result.data.profitMargins.data) {
                         const profits = result.data.profitMargins.data;
                         
-                        // Debug: Log the actual profit margin keys from database
-                        console.log('🔍 Profit margins loaded from database:', profits);
-                        console.log('🔍 Available profit margin keys:', Object.keys(profits));
+
                         
                         // Load warranty-based profit margins - no hardcoded fallbacks
                         dbProfitMargins.profitMargins = {
@@ -929,8 +867,7 @@
             
             // Get profit per kW based on warranty years (profit margins are global, not per installation type)
             const profitKey = `profit_per_kw_${warrantyYears}Y`;
-            console.log('🔍 Looking for profit key:', profitKey);
-            console.log('🔍 Available profit keys:', Object.keys(dbProfitMargins.profitMargins?.data || {}));
+
             
             // Check if profit margins data is loaded
             if (!dbProfitMargins.profitMargins?.data || Object.keys(dbProfitMargins.profitMargins.data).length === 0) {
@@ -1887,12 +1824,17 @@
             }
             
             // Calculate base price from installation costs - use same logic as main function
-            const basePricePerKw = dbProfitMargins.installationCosts?.data?.[`cost_per_kw_${installationType}`]?.value || 36000;
+            // Convert camelCase to underscore format to match API response keys
+            const installationTypeKey = installationType
+                .replace(/([A-Z])/g, '_$1')
+                .toLowerCase();
+            const installationCostKey = `cost_per_kw_${installationTypeKey}`;
+            const basePricePerKw = dbProfitMargins.installationCosts?.data?.[installationCostKey]?.value || 36000;
             const basePrice = Math.ceil(systemPower * basePricePerKw);
             
             // Get profit margin based on warranty years (profit margins are global, not per installation type)
             const profitKey = `profit_per_kw_${warrantyYears}Y`;
-            console.log('🔍 Panel calculation looking for profit key:', profitKey);
+
             
             // Check if profit margins data is loaded
             if (!dbProfitMargins.profitMargins?.data || Object.keys(dbProfitMargins.profitMargins.data).length === 0) {
@@ -2431,6 +2373,9 @@
                 // Update the profit per kW display immediately
                 updateProfitPerKwDisplay();
                 
+                // Update panel suggestions immediately when warranty changes
+                calculatePanelRequirements();
+                
                 // Auto-recalculate when warranty changes
                 autoRecalculate();
             });
@@ -2448,6 +2393,9 @@
                 // Update the profit per kW display immediately
                 updateProfitPerKwDisplay();
                 
+                // Update panel suggestions immediately when installation type changes
+                calculatePanelRequirements();
+                
                 // Auto-recalculate when installation type changes
                 autoRecalculate();
             });
@@ -2456,12 +2404,20 @@
             document.getElementById('warrantyYears').addEventListener('input', function() {
                 // Real-time update when warranty changes
                 updateProfitPerKwDisplay();
+                
+                // Update panel suggestions in real-time when warranty changes
+                calculatePanelRequirements();
+                
                 autoRecalculate();
             });
             
             document.getElementById('installationType').addEventListener('input', function() {
                 // Real-time update when installation type changes
                 updateProfitPerKwDisplay();
+                
+                // Update panel suggestions in real-time when installation type changes
+                calculatePanelRequirements();
+                
                 autoRecalculate();
             });
             
@@ -2589,13 +2545,11 @@
             const warrantyYears = parseInt(document.getElementById('warrantyYears')?.value) || 12;
             
             // Debug: Check the state of dbProfitMargins
-            console.log('🔍 dbProfitMargins state:', dbProfitMargins);
-            console.log('🔍 dbProfitMargins.profitMargins:', dbProfitMargins.profitMargins);
-            console.log('🔍 dbProfitMargins.profitMargins.data:', dbProfitMargins.profitMargins?.data);
+
             
             // Get profit from database based on warranty years (profit margins are global, not per installation type)
             const profitKey = `profit_per_kw_${warrantyYears}Y`;
-            console.log('🔍 Profit display looking for profit key:', profitKey);
+
             
             const profitPerKw = dbProfitMargins.profitMargins?.data?.[profitKey]?.value;
             
@@ -2812,152 +2766,23 @@
             });
         }
 
-        // Admin functionality - Database-based authentication
-        let isAdminLoggedIn = false;
-        let currentAdminUser = null;
 
 
 
-                // Check if current Supabase user has admin privileges
-        async function checkAdminStatus() {
-            try {
-                // Import auth functions
-                const { getCurrentUser, isAuthenticated } = await import('/public/auth.js');
-                
-                if (!isAuthenticated()) {
-                    isAdminLoggedIn = false;
-                    hideAdminPanel();
-                    return;
-                }
-                
-                const currentUser = getCurrentUser();
-                if (!currentUser) {
-                    isAdminLoggedIn = false;
-                    hideAdminPanel();
-                    return;
-                }
-                
-                // Check if user has admin role in Supabase
-                // Prefer role from app_metadata, fallback to user_metadata, or known admin emails
-                const isAdmin = (currentUser.app_metadata && currentUser.app_metadata.role === 'admin') ||
-                               (currentUser.user_metadata && currentUser.user_metadata.role === 'admin') ||
-                               currentUser.email === 'admin@tiamat.com' ||
-                               currentUser.email === 'admin@gmail.com';
-                
-                if (isAdmin) {
-                isAdminLoggedIn = true;
-                    currentAdminUser = {
-                        id: currentUser.id,
-                        username: currentUser.email,
-                        full_name: (currentUser.user_metadata && (currentUser.user_metadata.name || currentUser.user_metadata.full_name)) || currentUser.email,
-                        role: 'admin'
-                    };
-                    
-                    // Show admin toggle checkbox first
-                    showAdminToggleCheckbox();
-                    
-                    // Keep admin panels hidden by default - admin must use toggle to show them
-                    // showAdminPanel(); // Commented out - admin panel stays hidden by default
-                    showAdminDetails();
-                    showCommissionColumn();
-                    showProfitPerKwDisplay();
-                    
-                    // DO NOT auto-reveal sensitive info - keep it hidden by default
-                    // revealAllSensitiveInfo(); // Commented out - sensitive info stays hidden
-                    
-            } else {
-                    isAdminLoggedIn = false;
-                    hideAdminPanel();
-                }
-                
-            } catch (error) {
-                console.error('Error checking admin status:', error);
-                isAdminLoggedIn = false;
-                hideAdminPanel();
-            }
-        }
 
-        function hideAdminPanel() {
-            isAdminLoggedIn = false;
-            
-            // Hide the main admin panel
-            const adminPanelMain = document.getElementById('adminPanelMain');
-            if (adminPanelMain) {
-                adminPanelMain.style.display = 'none';
-                adminPanelMain.style.visibility = 'hidden';
-            }
-            
-            hideAdminDetails();
-            hideCommissionColumn();
-            hideProfitPerKwDisplay();
-            hideAllSensitiveInfo(); // Hide all sensitive information
-            
-            // Remove the toggle container when admin panel is hidden/logged out
-            const toggleContainer = document.getElementById('toggleSensitiveInfoContainer');
-            if (toggleContainer) {
-                toggleContainer.remove();
-            }
-            
-            // Recalculate to hide detailed breakdown
-            if (allLoanOptions.length > 0) {
-                calculateLoan();
-            }
-        }
+
+
+
         
-        function logoutAdmin() {
-            isAdminLoggedIn = false;
-            
-            // Hide all sensitive information and remove toggle
-            hideAllSensitiveInfo();
-            const toggleContainer = document.getElementById('toggleSensitiveInfoContainer');
-            if (toggleContainer) {
-                toggleContainer.remove();
-            }
-            
-            // Reset admin state
-            hideAdminDetails();
-            hideCommissionColumn();
-            hideProfitPerKwDisplay();
-        }
 
-        function showCommissionColumn() {
-            // Show commission header
-            const commissionHeader = document.querySelector('.admin-only');
-            if (commissionHeader) {
-                commissionHeader.style.display = 'table-cell';
-            }
-        }
 
-        function hideCommissionColumn() {
-            // Hide commission header
-            const commissionHeader = document.querySelector('.admin-only');
-            if (commissionHeader) {
-                commissionHeader.style.display = 'none';
-            }
-        }
+
+
+
         
-        function showProfitPerKwDisplay() {
-            // Create and show profit per kW display
-            const container = document.getElementById('profitPerKwDisplayContainer');
-            if (container) {
-                container.innerHTML = `
-                    <div id="profitPerKwDisplay" class="mt-2 text-sm text-gray-600">
-                        <span data-en="Current Profit per kW:" data-hy="Ընթացիկ շահույթ կՎտ-ի համար:">Current Profit per kW:</span>
-                        <span id="currentProfitPerKw" class="font-semibold text-tiamat-blue ml-1">30,000 AMD</span>
-                    </div>
-                `;
-                // Update the display with current warranty value
-                updateProfitPerKwDisplay();
-            }
-        }
+
         
-        function hideProfitPerKwDisplay() {
-            // Remove profit per kW display completely
-            const container = document.getElementById('profitPerKwDisplayContainer');
-            if (container) {
-                container.innerHTML = '';
-            }
-        }
+
 
         // Spoiler functionality - CSS-independent security
         function toggleSpoiler(element) {
@@ -2974,338 +2799,23 @@
             }
         }
 
-        // CRITICAL SECURITY: Ensure all sensitive data is hidden on page load
-        function enforceSecurityOnLoad() {
-            // Don't remove admin toggle checkbox if user is already admin
-            if (!isAdminLoggedIn) {
-                const toggleContainer = document.getElementById('toggleSensitiveInfoContainer');
-                if (toggleContainer) {
-                    toggleContainer.remove();
-                }
-            }
-            
-            // Hide all admin panels (will be shown again if user is admin)
-            const adminElements = ['adminPanelMain', 'adminDetails', 'profitPerKwDisplayContainer'];
-            adminElements.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.style.display = 'none';
-                    element.style.visibility = 'hidden';
-                }
-            });
-            
-            // Hide all admin-only table headers
-            const commissionHeaders = document.querySelectorAll('.admin-only');
-            commissionHeaders.forEach(header => {
-                header.style.display = 'none';
-            });
-            
-            // Hide all spoiler elements
-            const spoilerElements = document.querySelectorAll('[data-value]');
-            spoilerElements.forEach(element => {
-                if (element.classList.contains('spoiler-revealed')) {
-                    element.textContent = '████████████';
-                    element.classList.remove('spoiler-revealed');
-                    element.classList.add('spoiler');
-                }
-            });
-            
-            // Hide all Calculation Breakdown sections by default
-            const breakdownSections = document.querySelectorAll('.bg-gray-50.p-4.rounded-md.space-y-4');
-            breakdownSections.forEach(section => {
-                section.style.display = 'none';
-            });
-            
-            // Only reset admin state if user is not authenticated as admin
-            if (!isAdminLoggedIn) {
-                isAdminLoggedIn = false;
-                currentAdminUser = null;
-            }
-        }
-
-        // ADMIN FUNCTION: Automatically reveal all sensitive information
-        function revealAllSensitiveInfo() {
-            if (!isAdminLoggedIn) return;
-            
-            console.log('Revealing all sensitive information for admin user');
-            
-            // Ensure toggle checkbox reflects the revealed state
-            const toggleCheckbox = document.getElementById('toggleSensitiveInfoCheckbox');
-            if (toggleCheckbox) {
-                toggleCheckbox.checked = true;
-                const label = toggleCheckbox.closest('label');
-                if (label) {
-                    const labelText = label.querySelector('span');
-                    if (labelText) {
-                        // Use currentLanguage variable if available, otherwise default to English
-                        const currentLang = typeof currentLanguage !== 'undefined' ? currentLanguage : 'en';
-                        if (labelText) {
-                            if (currentLang === 'hy') {
-                                labelText.textContent = 'Թաքցնել զգայուն տվյալները';
-            } else {
-                                labelText.textContent = 'Hide Sensitive Info';
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // Reveal all spoiler elements - be more aggressive to catch all cases
-            const spoilerElements = document.querySelectorAll('[data-value]');
-            console.log(`Found ${spoilerElements.length} spoiler elements to reveal`);
-            spoilerElements.forEach(element => {
-                const dataValue = element.getAttribute('data-value');
-                if (dataValue) {
-                    // Always show the actual value, regardless of current class
-                    element.textContent = dataValue;
-                    element.classList.remove('spoiler');
-                    element.classList.add('spoiler-revealed');
-                    console.log('Revealed spoiler element:', element.textContent);
-                }
-            });
-            
-            // Also look for any elements with spoiler class that might not have data-value
-            const spoilerClassElements = document.querySelectorAll('.spoiler');
-            console.log(`Found ${spoilerClassElements.length} elements with spoiler class`);
-            spoilerClassElements.forEach(element => {
-                // Remove spoiler class and show content if possible
-                element.classList.remove('spoiler');
-                if (element.textContent === '████████████') {
-                    // If it's still showing placeholder, try to find the actual value
-                    const dataValue = element.getAttribute('data-value');
-                    if (dataValue) {
-                        element.textContent = dataValue;
-                        element.classList.add('spoiler-revealed');
-                        console.log('Revealed spoiler class element:', dataValue);
-                    }
-                }
-            });
-            
-            // Show all admin-only elements
-            const adminOnlyElements = document.querySelectorAll('.admin-only');
-            adminOnlyElements.forEach(element => {
-                element.style.display = 'table-cell';
-            });
-            
-            // Force show all admin panels
-            const adminElements = [
-                'adminPanelMain',
-                'adminDetails',
-                'profitPerKwDisplayContainer'
-            ];
-            
-            adminElements.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.style.display = 'block';
-                    element.style.visibility = 'visible';
-                }
-            });
-            
-            // Show the Calculation Breakdown section(s) - use multiple selectors for robustness
-            const breakdownSelectors = [
-                '.bg-gray-50.p-4.rounded-md.space-y-4',
-                '[class*="bg-gray-50"][class*="p-4"][class*="rounded-md"][class*="space-y-4"]',
-                '.bg-gray-50.p-4.rounded-md.space-y-4',
-                'div[class*="bg-gray-50"]'
-            ];
-            
-            let breakdownFound = false;
-            breakdownSelectors.forEach(selector => {
-                const breakdownSections = document.querySelectorAll(selector);
-                console.log(`Selector "${selector}" found ${breakdownSections.length} breakdown sections`);
-                breakdownSections.forEach(section => {
-                    section.style.display = 'block';
-                    section.style.visibility = 'visible';
-                    breakdownFound = true;
-                    console.log('Revealed breakdown section:', section);
-                });
-            });
-            
-            if (!breakdownFound) {
-                console.log('No breakdown sections found with any selector - this might be normal if no loan has been calculated yet');
-            }
-            
-            console.log('All sensitive information revealed for admin');
-        }
-
-        // ADMIN FUNCTION: Hide all sensitive information when admin logs out or toggled off
-        function hideAllSensitiveInfo() {
-            console.log('Hiding all sensitive information');
-            
-            // Keep admin toggle checkbox visible; just reset its state and visuals
-            const toggleCheckbox = document.getElementById('toggleSensitiveInfoCheckbox');
-            if (toggleCheckbox) {
-                toggleCheckbox.checked = false;
-                // Update label texts based on currentLanguage
-                const label = toggleCheckbox.closest('label');
-                if (label) {
-                    const labelText = label.querySelector('span');
-                    if (labelText) {
-                        // Use currentLanguage variable if available, otherwise default to English
-                        const currentLang = typeof currentLanguage !== 'undefined' ? currentLanguage : 'en';
-                        if (currentLang === 'hy') {
-                            labelText.textContent = 'Ցույց տալ զգայուն տվյալները';
-                        } else {
-                            labelText.textContent = 'Show Sensitive Info';
-                        }
-                    }
-                }
-            }
-            
-            // Hide all spoiler elements
-            const spoilerElements = document.querySelectorAll('[data-value]');
-            spoilerElements.forEach(element => {
-                if (element.classList.contains('spoiler-revealed')) {
-                    element.textContent = '████████████';
-                    element.classList.remove('spoiler-revealed');
-                    element.classList.add('spoiler');
-                }
-            });
-            
-            // Hide all admin-only elements
-            const adminOnlyElements = document.querySelectorAll('.admin-only');
-            adminOnlyElements.forEach(element => {
-                element.style.display = 'none';
-            });
-            
-            // Hide all admin panels
-            const adminElements = [
-                'adminPanelMain',
-                'adminDetails',
-                'profitPerKwDisplayContainer'
-            ];
-            
-            adminElements.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.style.display = 'none';
-                    element.style.visibility = 'hidden';
-                }
-            });
-            
-            // Hide all Calculation Breakdown sections
-            const breakdownSections = document.querySelectorAll('.bg-gray-50.p-4.rounded-md.space-y-4');
-            breakdownSections.forEach(section => {
-                section.style.display = 'none';
-            });
-            
-            console.log('All sensitive information hidden');
-        }
-
-        // ADMIN FUNCTION: Toggle all sensitive information visibility
-        function toggleAllSensitiveInfo() {
-            if (!isAdminLoggedIn) return;
-            
-            const toggleCheckbox = document.getElementById('toggleSensitiveInfoCheckbox');
-            if (!toggleCheckbox) return;
-            
-            if (toggleCheckbox.checked) {
-                // Currently hidden, so show all
-                console.log('Checkbox checked - revealing sensitive info and admin panel');
-                revealAllSensitiveInfo();
-                showAdminPanel(); // Show admin panel when revealing sensitive info
-                
-                // Always recalculate to show fresh content without spoiler elements
-                console.log('Recalculating loan to show fresh breakdown with sensitive info');
-                calculateLoan();
-            } else {
-                // Currently shown, so hide all
-                console.log('Checkbox unchecked - hiding sensitive info and admin panel');
-                hideAllSensitiveInfo();
-                hideAdminPanel(); // Hide admin panel when hiding sensitive info
-            }
-        }
-
-        // Create and show admin toggle checkbox
-        function showAdminToggleCheckbox() {
-            if (!isAdminLoggedIn) return;
-            
-            // Remove existing checkbox if it exists
-            const existingCheckbox = document.getElementById('toggleSensitiveInfoContainer');
-            if (existingCheckbox) {
-                existingCheckbox.remove();
-            }
-            
-            // Create simple checkbox near the welcome message
-            const toggleContainer = document.createElement('div');
-            toggleContainer.id = 'toggleSensitiveInfoContainer';
-            toggleContainer.className = 'inline-flex items-center space-x-3 bg-white rounded-lg shadow-md border border-gray-200 p-3 mb-4';
-            
-            // Create checkbox with simple label
-            toggleContainer.innerHTML = `
-                <label class="flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox" id="toggleSensitiveInfoCheckbox" class="w-4 h-4 text-tiamat-blue bg-gray-100 border-gray-300 rounded focus:ring-tiamat-blue focus:ring-2">
-                    <span class="text-sm font-medium text-gray-700" data-en="Show Sensitive Info" data-hy="Ցույց տալ զգայուն տվյալները">Show Sensitive Info</span>
-                </label>
-            `;
-            
-            // Insert after the welcome message (after the h1 title)
-            const welcomeTitle = document.querySelector('h1[data-en="Solar Loan Calculator"]');
-            if (welcomeTitle && welcomeTitle.parentElement) {
-                const parent = welcomeTitle.parentElement;
-                parent.insertBefore(toggleContainer, welcomeTitle.nextSibling);
-            } else {
-                // Fallback: add to the top of the form area
-                const formArea = document.querySelector('.lg\\:col-span-7.bg-white.rounded-lg.shadow-md.p-6');
-                if (formArea) {
-                    formArea.insertBefore(toggleContainer, formArea.firstChild);
-                }
-            }
-            
-            console.log('Simple admin toggle checkbox created near welcome message - sensitive info hidden by default');
-            
-            // DO NOT reveal sensitive info by default - keep it hidden
-            // revealAllSensitiveInfo();
-            
-            // Ensure sensitive info is hidden by default even for admin users
-            hideAllSensitiveInfo();
-            
-            // Add event listener to the checkbox after it's created
-            const checkbox = document.getElementById('toggleSensitiveInfoCheckbox');
-            if (checkbox) {
-                checkbox.addEventListener('change', toggleAllSensitiveInfo);
-                console.log('Event listener added to checkbox');
-            }
-        }
 
 
 
-        function showAdminDetails() {
-            const adminDetails = document.getElementById('adminDetails');
-            if (adminDetails) {
-                adminDetails.style.display = 'block';
-                adminDetails.style.visibility = 'visible';
-            }
-        }
-
-        function hideAdminDetails() {
-            const adminDetails = document.getElementById('adminDetails');
-            if (adminDetails) {
-                adminDetails.style.display = 'none';
-                adminDetails.style.visibility = 'hidden';
-            }
-        }
 
 
 
-        // New admin panel functions - CSS-independent security
-        function showAdminPanel() {
-            if (!isAdminLoggedIn) return;
-            
-            // Show the admin panel on the main page
-            const adminPanelMain = document.getElementById('adminPanelMain');
-            if (adminPanelMain) {
-                adminPanelMain.style.display = 'block';
-                adminPanelMain.style.visibility = 'visible';
-                
-                // Update the last updated timestamp
-                const lastUpdatedElement = document.getElementById('adminLastUpdated');
-                if (lastUpdatedElement) {
-                    lastUpdatedElement.textContent = new Date().toLocaleString();
-                }
-                
-                // Do not auto-scroll on load; keep the current viewport position
+
+
+
+
+
+
+
+
+
+
+
             }
         }
 
@@ -3501,70 +3011,11 @@
         // Listen for auth changes to update admin UI immediately after login/logout
         document.addEventListener('authStateChanged', (event) => {
             const detail = event && event.detail ? event.detail : { isAuthenticated: false, user: null };
-            if (detail.isAuthenticated) {
-                checkAdminStatus();
-            } else {
-                hideAdminPanel();
-            }
+            // Admin functionality removed
         });
 
         // Function to update checkbox language
-        function updateCheckboxLanguage() {
-            const toggleCheckbox = document.getElementById('toggleSensitiveInfoCheckbox');
-            if (!toggleCheckbox || !isAdminLoggedIn) return;
-            
-            const label = toggleCheckbox.closest('label');
-            if (label) {
-                const labelText = label.querySelector('span');
-                
-                if (labelText) {
-                    if (toggleCheckbox.checked) {
-                        // Currently showing sensitive info
-                        labelText.textContent = currentLanguage === 'hy' ? 'Թաքցնել զգայուն տվյալները' : 'Hide Sensitive Info';
-                    } else {
-                        // Currently hiding sensitive info
-                        labelText.textContent = currentLanguage === 'hy' ? 'Ցույց տալ զգայուն տվյալները' : 'Show Sensitive Info';
-                    }
-                }
-            }
-        }
 
-        // Helper: whether sensitive info should be visible (admin AND checkbox checked)
-        function isSensitiveInfoVisible() {
-            console.log('isSensitiveInfoVisible called - isAdminLoggedIn:', isAdminLoggedIn);
-            
-            if (!isAdminLoggedIn) {
-                console.log('User is not admin, returning false');
-                return false;
-            }
-            
-            const checkbox = document.getElementById('toggleSensitiveInfoCheckbox');
-            console.log('Checkbox found:', !!checkbox, 'Checkbox checked:', checkbox ? checkbox.checked : 'N/A');
-            
-            // If checkbox exists, use its checked state
-            if (checkbox) {
-                const result = checkbox.checked;
-                console.log('Checkbox exists, returning:', result);
-                return result;
-            }
-            
-            // If checkbox doesn't exist yet, hide sensitive info by default
-            // This ensures sensitive info is hidden until user explicitly chooses to show it
-            console.log('Checkbox not found, returning false by default - keeping sensitive info hidden');
-            return false;
-        }
-        
-        // Helper: render sensitive value either as spoiler or direct value
-        function renderSensitiveValue(value, suffix = '') {
-            const fullValue = suffix ? `${value}${suffix}` : value;
-            if (isSensitiveInfoVisible()) {
-                // Show actual value directly when sensitive info is visible
-                return `<span class="font-mono">${fullValue}</span>`;
-            } else {
-                // Show as clickable spoiler when sensitive info is hidden
-                return `<span class="font-mono spoiler" onclick="toggleSpoiler(this)" data-value="${fullValue}">████████████</span>`;
-            }
-        }
 
         // Handle login form submission
         document.addEventListener('DOMContentLoaded', function() {
@@ -3615,30 +3066,18 @@
             const { initRouteProtection } = await import('./route-protection.js');
             initRouteProtection();
             
-            // Enforce security immediately on page load
-            enforceSecurityOnLoad();
-            
-            // Fetch system cost settings first, then check admin status
+            // Fetch system cost settings
             try {
                 await fetchSystemCostSettings();
                 console.log('✅ System cost settings loaded successfully');
-                
-                // Now check admin status after data is loaded
-                setTimeout(() => {
-                    checkAdminStatus();
-                    // DO NOT auto-reveal sensitive info - keep it hidden by default
-                    // if (isAdminLoggedIn) {
-                    //     revealAllSensitiveInfo();
-                    // }
-                }, 1000);
             } catch (error) {
                 console.error('❌ Failed to load system cost settings:', error);
             }
         });
         
-        // Also enforce security when window loads to catch any late elements
+        // Window load event handler
         window.addEventListener('load', function() {
-            enforceSecurityOnLoad();
+            // Admin functionality removed
         });
     </script>
 

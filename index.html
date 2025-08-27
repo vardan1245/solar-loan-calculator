@@ -230,14 +230,14 @@
                     </div>
                 </div>
                 
-                <!-- Accumulator Selection (Only visible for Hybrid systems) -->
-                <div id="accumulatorSelectionContainer" class="mb-4 hidden">
+                <!-- Battery Selection (Only visible for Hybrid systems) -->
+                <div id="batterySelectionContainer" class="mb-4 hidden">
                     <div class="flex items-center justify-between mb-2">
-                        <label class="block text-sm font-medium text-gray-700" data-en="Accumulator Selection:" data-hy="Ակումուլյատորի ընտրություն:">Accumulator Selection:</label>
+                        <label class="block text-sm font-medium text-gray-700" data-en="Battery Selection:" data-hy="Մարտկոցի ընտրություն:">Battery Selection:</label>
                         <div class="flex items-center space-x-2">
                             <span class="text-xs text-gray-500" data-en="Auto" data-hy="Ավտո">Auto</span>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="manualAccumulatorToggle" class="sr-only peer" onchange="toggleAccumulatorSelection()">
+                                <input type="checkbox" id="manualBatteryToggle" class="sr-only peer" onchange="toggleBatterySelection()">
                                 <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-tiamat-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tiamat-blue"></div>
                             </label>
                             <span class="text-xs text-gray-500" data-en="Manual" data-hy="Ձեռքով">Manual</span>
@@ -245,30 +245,30 @@
                     </div>
                     
                     <!-- Auto Selection (Default) -->
-                    <div id="autoAccumulatorSelection">
-                        <select id="accumulatorSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                    <div id="autoBatterySelection">
+                        <select id="batterySelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-tiamat-blue">
                             <!-- Options will be populated dynamically -->
                         </select>
                     </div>
                     
                     <!-- Manual Selection (Hidden by default) -->
-                    <div id="manualAccumulatorSelection" class="hidden space-y-3">
+                    <div id="manualBatterySelection" class="hidden space-y-3">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
-                                <label for="manualAccumulatorBrand" class="block text-xs font-medium text-gray-600 mb-1" data-en="Brand:" data-hy="Բրենդ:">Brand:</label>
-                                <select id="manualAccumulatorBrand" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                                <label for="manualBatteryBrand" class="block text-xs font-medium text-gray-600 mb-1" data-en="Brand:" data-hy="Բրենդ:">Brand:</label>
+                                <select id="manualBatteryBrand" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
                                     <option value="" data-en="Select brand" data-hy="Ընտրեք բրենդը">Select brand</option>
                                 </select>
                             </div>
                             <div>
-                                <label for="manualAccumulatorCapacity" class="block text-xs font-medium text-gray-600 mb-1" data-en="Capacity (kWh):" data-hy="Հզորություն (կՎտժ):">Capacity (kWh):</label>
-                                <select id="manualAccumulatorCapacity" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                                <label for="manualBatteryCapacity" class="block text-xs font-medium text-gray-600 mb-1" data-en="Capacity (kWh):" data-hy="Հզորություն (կՎտժ):">Capacity (kWh):</label>
+                                <select id="manualBatteryCapacity" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
                                     <option value="" data-en="Select capacity" data-hy="Ընտրեք հզորությունը">Select capacity</option>
                                 </select>
                             </div>
                             <div>
-                                <label for="manualAccumulatorChemistry" class="block text-xs font-medium text-gray-600 mb-1" data-en="Chemistry:" data-hy="Քիմիա:">Chemistry:</label>
-                                <select id="manualAccumulatorChemistry" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                                <label for="manualBatteryChemistry" class="block text-xs font-medium text-gray-600 mb-1" data-en="Chemistry:" data-hy="Քիմիան">Chemistry:</label>
+                                <select id="manualBatteryChemistry" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-tiamat-blue">
                                     <option value="" data-en="Select chemistry" data-hy="Ընտրեք քիմիան">Select chemistry</option>
                                 </select>
                             </div>
@@ -517,7 +517,7 @@
         let bankConfigurations = []; // Bank configurations for loan calculations
         let inverters = []; // Inverter list for system calculations
         let panels = []; // Panel list for system calculations
-        let accumulators = []; // Accumulator list for hybrid systems
+        let batteries = []; // Battery list for hybrid systems
         let isDataLoaded = false; // Track if database data is fully loaded
         let selectedPanelOption = null; // Store the selected panel option from suggestions
         
@@ -655,8 +655,8 @@
                     
 
                     
-                    // Load banks, inverters, panels, and accumulators from their respective endpoints
-                    const [banksResult, invertersResult, panelsResult, accumulatorsResult] = await Promise.all([
+                            // Load banks, inverters, panels, and batteries from their respective endpoints
+        const [banksResult, invertersResult, panelsResult, batteriesResult] = await Promise.all([
                         fetch('/api/banks')
                             .then(response => response.json())
                             .catch(error => ({ success: false, data: null })),
@@ -669,7 +669,7 @@
                             .then(response => response.json())
                             .catch(error => ({ success: false, data: null })),
                         
-                        fetch('/api/accumulators')
+                        fetch('/api/batteries')
                             .then(response => response.json())
                             .catch(error => ({ success: false, data: null }))
                     ]);
@@ -679,7 +679,7 @@
                         banks: banksResult,
                         inverters: invertersResult,
                         panels: panelsResult,
-                        accumulators: accumulatorsResult
+                        batteries: batteriesResult
                     });
                     
                     // Process results
@@ -706,12 +706,12 @@
                         console.log('❌ Panels failed to load:', panelsResult);
                     }
                     
-                    if (accumulatorsResult.success && accumulatorsResult.data && accumulatorsResult.data.accumulators) {
-                        accumulators = accumulatorsResult.data.accumulators;
-                        console.log('✅ Accumulators loaded:', accumulatorsResult.data.accumulators.length);
-                    } else {
-                        console.log('❌ Accumulators failed to load:', accumulatorsResult);
-                    }
+                            if (batteriesResult.success && batteriesResult.data && batteriesResult.data.batteries) {
+            batteries = batteriesResult.data.batteries;
+            console.log('✅ Batteries loaded:', batteriesResult.data.batteries.length);
+        } else {
+            console.log('❌ Batteries failed to load:', batteriesResult);
+        }
                     
                     // Debug: Log the final data structure
                     
@@ -721,7 +721,7 @@
                     console.log('✅ Data loaded successfully:', {
                         inverters: inverters?.length || 0,
                         panels: panels?.length || 0,
-                        accumulators: accumulators?.length || 0,
+                        batteries: batteries?.length || 0,
                         isDataLoaded: isDataLoaded
                     });
                     
@@ -1158,27 +1158,34 @@
             let accumulatorPrice = 0;
             let selectedAccumulatorInfo = '';
             const selectedInverterType = document.getElementById('inverterType').value;
-            if (selectedInverterType === 'hybrid' && accumulators && accumulators.length > 0) {
-                const accumulatorSelect = document.getElementById('accumulatorSelect');
-                if (accumulatorSelect && accumulatorSelect.value) {
-                    const selectedAccumulator = accumulators.find(acc => acc.id == accumulatorSelect.value);
-                    if (selectedAccumulator) {
-                        accumulatorPrice = selectedAccumulator.price;
-                        selectedAccumulatorInfo = currentLanguage === 'en' 
-                            ? `${selectedAccumulator.brand} ${selectedAccumulator.model} ${selectedAccumulator.capacity_kwh}kWh battery`
-                            : `${selectedAccumulator.brand} ${selectedAccumulator.model} ${selectedAccumulator.capacity_kwh}կՎտժ մարտկոց`;
-                    }
+                    if (selectedInverterType === 'hybrid' && batteries && batteries.length > 0) {
+            const batterySelect = document.getElementById('batterySelect');
+            if (batterySelect && batterySelect.value) {
+                const selectedBattery = batteries.find(bat => bat.id == batterySelect.value);
+                if (selectedBattery) {
+                    accumulatorPrice = selectedBattery.price;
+                    selectedAccumulatorInfo = currentLanguage === 'en'
+                        ? `${selectedBattery.brand} ${selectedBattery.model} ${selectedBattery.capacity_kwh}kWh battery`
+                        : `${selectedBattery.brand} ${selectedBattery.model} ${selectedBattery.capacity_kwh}կՎտժ մարտկոց`;
                 }
             }
+        }
             
-            // Total system price including sales team and unexpected expenses (including accumulator for hybrid)
-            const totalSystemPrice = Math.ceil((basePrice + profitAmount + inverterPrice + panelPrice + accumulatorPrice) / (1 - salesTeamPctDecimal - unanticipatedExpensesPctDecimal));
+                        // Calculate subtotal first (including battery for hybrid)
+            const subtotal = basePrice + profitAmount + inverterPrice + panelPrice + accumulatorPrice;
+            
+            // Calculate final price using division: subtotal ÷ (1 - 6% - 2%) = subtotal ÷ 0.92
+            const totalSystemPrice = Math.ceil(subtotal / (1 - salesTeamPctDecimal - unanticipatedExpensesPctDecimal));
+            
+            // Calculate sales team and unexpected expenses from final price
+            const salesTeamAmount = Math.ceil(totalSystemPrice * salesTeamPctDecimal);
+            const unexpectedExpensesAmount = Math.ceil(totalSystemPrice * unanticipatedExpensesPctDecimal);
             
             // Apply sales discount to final price
             const finalSystemPrice = Math.max(0, totalSystemPrice - totalSalesDiscount);
             
-
-
+            
+            
             // Display results
             const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վաճառքի գին:';
             const breakdownTitle = currentLanguage === 'en' ? 'Calculation Breakdown:' : 'Հաշվարկի մանրամասները:';
@@ -1191,8 +1198,6 @@
             const unexpectedExpensesText = currentLanguage === 'en' ? `Unanticipated Expenses (${unanticipatedExpensesPct.toFixed(1)}%):` : `Անսպասելի ծախսեր (${unanticipatedExpensesPct.toFixed(1)}%):`;
             
             const basePriceWithProfitAndInverterAndPanels = basePrice + profitAmount + inverterPrice + panelPrice;
-            const salesTeamAmount = Math.ceil(totalSystemPrice * salesTeamPctDecimal);
-            const unexpectedExpensesAmount = Math.ceil(totalSystemPrice * unanticipatedExpensesPctDecimal);
             
 
             const selectedPanelText = currentLanguage === 'en' ? 'Selected Panels:' : 'Ընտրված պանելներ:';
@@ -1303,17 +1308,17 @@
                                 </div>
                             </div>
                             
-                            <!-- Step 4: Accumulator (Hybrid Only) -->
+                            <!-- Step 4: Battery (Hybrid Only) -->
                             ${selectedInverterType === 'hybrid' && accumulatorPrice > 0 ? `
                             <div class="space-y-2">
-                                <div class="text-sm font-medium text-gray-700">Step 4: Accumulator Selection</div>
+                                <div class="text-sm font-medium text-gray-700">Step 4: Battery Selection</div>
                                 <div class="pl-4 space-y-1 text-sm">
                                     <div class="flex justify-between">
-                                        <span>Selected Accumulator:</span>
+                                        <span>Selected Battery:</span>
                                         <span>${selectedAccumulatorInfo}</span>
                                     </div>
                                     <div class="flex justify-between font-medium">
-                                        <span>Accumulator Price:</span>
+                                        <span>Battery Price:</span>
                                         ${renderSensitiveValue(accumulatorPrice.toLocaleString(), ' AMD')}
                                     </div>
                                 </div>
@@ -1357,7 +1362,7 @@
                                     </div>
                                     ${selectedInverterType === 'hybrid' && accumulatorPrice > 0 ? `
                                     <div class="flex justify-between">
-                                        <span>+ Accumulator:</span>
+                                        <span>+ Battery:</span>
                                         ${renderSensitiveValue(accumulatorPrice.toLocaleString(), ' AMD')}
                                     </div>
                                     ` : ''}
@@ -1374,7 +1379,7 @@
                                 <div class="pl-4 space-y-1 text-sm">
                                     <div class="flex justify-between">
                                         <span>Subtotal:</span>
-                                        <span class="font-mono">${basePriceWithProfitAndInverterAndPanels.toLocaleString()} AMD</span>
+                                        <span class="font-mono">${(basePriceWithProfitAndInverterAndPanels + (selectedInverterType === 'hybrid' ? accumulatorPrice : 0)).toLocaleString()} AMD</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span>÷ (1 - Sales Team ${salesTeamPctDisplay}% - Unexpected ${unexpectedExpensesPctDisplay}%):</span>
@@ -1977,84 +1982,121 @@
             }
         }
 
-        // Accumulator selection functions
-        function toggleAccumulatorSelection() {
-            const toggle = document.getElementById('manualAccumulatorToggle');
-            const autoSelection = document.getElementById('autoAccumulatorSelection');
-            const manualSelection = document.getElementById('manualAccumulatorSelection');
+        // Battery selection functions
+        function toggleBatterySelection() {
+            const toggle = document.getElementById('manualBatteryToggle');
+            const autoSelection = document.getElementById('autoBatterySelection');
+            const manualSelection = document.getElementById('manualBatterySelection');
             
             if (toggle.checked) {
                 // Switch to manual mode
                 autoSelection.classList.add('hidden');
                 manualSelection.classList.remove('hidden');
-                populateManualAccumulatorBrands();
-                populateManualAccumulatorCapacities();
-                populateManualAccumulatorChemistries();
+                            populateManualBatteryBrands();
+            populateManualBatteryCapacities();
+            populateManualBatteryChemistries();
             } else {
                 // Switch to auto mode
                 autoSelection.classList.remove('hidden');
                 manualSelection.classList.add('hidden');
                 // Reset manual selections
-                document.getElementById('manualAccumulatorBrand').value = '';
-                document.getElementById('manualAccumulatorCapacity').value = '';
-                document.getElementById('manualAccumulatorChemistry').value = '';
+                document.getElementById('manualBatteryBrand').value = '';
+                document.getElementById('manualBatteryCapacity').value = '';
+                document.getElementById('manualBatteryChemistry').value = '';
             }
             
-            // Force recalculation when accumulator selection mode changes
+            // Force recalculation when battery selection mode changes
             forceRecalculate();
         }
 
-        function populateAccumulatorDropdown() {
-            const accumulatorSelect = document.getElementById('accumulatorSelect');
+        function populateBatteryDropdown() {
+            const batterySelect = document.getElementById('batterySelect');
             
-            // Check if accumulators are loaded
-            if (!accumulators || accumulators.length === 0) {
-                accumulatorSelect.innerHTML = '<option value="">Loading accumulators...</option>';
+            // Check if batteries are loaded
+            if (!batteries || batteries.length === 0) {
+                batterySelect.innerHTML = '<option value="">Loading batteries...</option>';
                 return;
             }
             const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
-            accumulatorSelect.innerHTML = '';
+            batterySelect.innerHTML = '';
             
-            // Calculate recommended battery capacity (typically 1-2 days of system power)
-            const recommendedCapacity = systemPower * 1.5; // 1.5 days of storage
-            
-            // Filter and add suitable accumulators
-            const suitableAccumulators = accumulators
-                .filter(accumulator => accumulator.capacity_kwh >= systemPower * 0.5 && accumulator.capacity_kwh <= systemPower * 3)
-                .sort((a, b) => a.capacity_kwh - b.capacity_kwh);
-            
-            suitableAccumulators.forEach(accumulator => {
-                const option = document.createElement('option');
-                option.value = accumulator.id;
-                const text = currentLanguage === 'en' 
-                    ? `${accumulator.brand} ${accumulator.model} - ${accumulator.capacity_kwh} kWh (${accumulator.chemistry})`
-                    : `${accumulator.brand} ${accumulator.model} - ${accumulator.capacity_kwh} կՎտժ (${accumulator.chemistry})`;
-                option.textContent = text;
-                option.setAttribute('data-en', `${accumulator.brand} ${accumulator.model} - ${accumulator.capacity_kwh} kWh (${accumulator.chemistry})`);
-                option.setAttribute('data-hy', `${accumulator.brand} ${accumulator.model} - ${accumulator.capacity_kwh} կՎտժ (${accumulator.chemistry})`);
-                accumulatorSelect.appendChild(option);
+            console.log('🔍 populateBatteryDropdown called:', {
+                systemPower,
+                totalBatteries: batteries.length,
+                batteries: batteries.map(b => ({ id: b.id, capacity: b.capacity_kwh, brand: b.brand }))
             });
             
-            // Set the best suitable accumulator as default selected option
-            if (suitableAccumulators.length > 0) {
-                // Find the accumulator closest to recommended capacity
-                const bestAccumulator = suitableAccumulators.reduce((prev, curr) => 
+            // Debug: Show all batteries for troubleshooting
+            debugShowAllBatteries();
+            
+            // More inclusive filtering: show batteries from 0.5x to 5x system power
+            // This ensures small systems can see larger batteries and large systems can see smaller batteries
+            const minCapacity = Math.max(0.5, systemPower * 0.3); // Minimum 0.5 kWh or 30% of system power
+            const maxCapacity = Math.max(5, systemPower * 5); // Maximum 5 kWh or 500% of system power
+            
+            console.log('🔍 Battery filtering criteria:', { minCapacity, maxCapacity });
+            
+            // Filter and add suitable batteries
+            const suitableBatteries = batteries
+                .filter(battery => {
+                    const isSuitable = battery.capacity_kwh >= minCapacity && battery.capacity_kwh <= maxCapacity;
+                    console.log(`🔍 Battery ${battery.id} (${battery.capacity_kwh}kWh): ${isSuitable ? '✅' : '❌'}`);
+                    return isSuitable;
+                })
+                .sort((a, b) => a.capacity_kwh - b.capacity_kwh);
+            
+            console.log('🔍 Suitable batteries found:', suitableBatteries.length);
+            
+            suitableBatteries.forEach(battery => {
+                const option = document.createElement('option');
+                option.value = battery.id;
+                const text = currentLanguage === 'en' 
+                    ? `${battery.brand} ${battery.model} - ${battery.capacity_kwh} kWh (${battery.chemistry})`
+                    : `${battery.brand} ${battery.model} - ${battery.capacity_kwh} կՎտժ (${battery.chemistry})`;
+                option.textContent = text;
+                option.setAttribute('data-en', `${battery.brand} ${battery.model} - ${battery.capacity_kwh} kWh (${battery.chemistry})`);
+                option.setAttribute('data-hy', `${battery.brand} ${battery.model} - ${battery.capacity_kwh} կՎտժ (${battery.chemistry})`);
+                batterySelect.appendChild(option);
+            });
+            
+            // Set the best suitable battery as default selected option
+            if (suitableBatteries.length > 0) {
+                // Find the battery closest to recommended capacity
+                const recommendedCapacity = systemPower * 1.5; // 1.5 days of storage
+                const bestBattery = suitableBatteries.reduce((prev, curr) => 
                     Math.abs(curr.capacity_kwh - recommendedCapacity) < Math.abs(prev.capacity_kwh - recommendedCapacity) ? curr : prev
                 );
-                accumulatorSelect.value = bestAccumulator.id;
+                batterySelect.value = bestBattery.id;
+                console.log('🔍 Best battery selected:', bestBattery.id, bestBattery.capacity_kwh, 'kWh');
+            } else {
+                console.log('⚠️ No suitable batteries found for system power:', systemPower, 'kW');
+                
+                // Fallback: show all batteries with a note
+                batterySelect.innerHTML = '<option value="" disabled>No batteries match system power - showing all options</option>';
+                batteries.forEach(battery => {
+                    const option = document.createElement('option');
+                    option.value = battery.id;
+                    const text = currentLanguage === 'en' 
+                        ? `${battery.brand} ${battery.model} - ${battery.capacity_kwh} kWh (${battery.chemistry}) - May not be optimal`
+                        : `${battery.brand} ${battery.model} - ${battery.capacity_kwh} կՎտժ (${battery.chemistry}) - Կարող է օպտիմալ չլինել`;
+                    option.textContent = text;
+                    option.setAttribute('data-en', `${battery.brand} ${battery.model} - ${battery.capacity_kwh} kWh (${battery.chemistry}) - May not be optimal`);
+                    option.setAttribute('data-hy', `${battery.brand} ${battery.model} - ${battery.capacity_kwh} կՎտժ (${battery.chemistry}) - Կարող է օպտիմալ չլինել`);
+                    batterySelect.appendChild(option);
+                });
             }
         }
 
-        function populateManualAccumulatorBrands() {
-            const brandSelect = document.getElementById('manualAccumulatorBrand');
+        function populateManualBatteryBrands() {
+            const brandSelect = document.getElementById('manualBatteryBrand');
             
-            if (!accumulators || accumulators.length === 0) {
+            if (!batteries || batteries.length === 0) {
                 brandSelect.innerHTML = '<option value="">Loading brands...</option>';
                 return;
             }
             brandSelect.innerHTML = '<option value="" data-en="Select brand" data-hy="Ընտրեք բրենդը">Select brand</option>';
             
-            const brands = [...new Set(accumulators.map(acc => acc.brand))].sort();
+            const brands = [...new Set(batteries.map(bat => bat.brand))].sort();
             
             brands.forEach(brand => {
                 const option = document.createElement('option');
@@ -2066,23 +2108,23 @@
             });
         }
 
-        function populateManualAccumulatorCapacities() {
-            const capacitySelect = document.getElementById('manualAccumulatorCapacity');
+        function populateManualBatteryCapacities() {
+            const capacitySelect = document.getElementById('manualBatteryCapacity');
             
-            if (!accumulators || accumulators.length === 0) {
+            if (!batteries || batteries.length === 0) {
                 capacitySelect.innerHTML = '<option value="">Loading capacities...</option>';
                 return;
             }
             capacitySelect.innerHTML = '<option value="" data-en="Select capacity" data-hy="Ընտրեք հզորությունը">Select capacity</option>';
             
-            const capacities = [...new Set(accumulators.map(acc => acc.capacity_kwh))].sort((a, b) => a - b);
+            const capacities = [...new Set(batteries.map(bat => bat.capacity_kwh))].sort((a, b) => a - b);
             
             capacities.forEach(capacity => {
                 const option = document.createElement('option');
                 option.value = capacity;
                 const text = currentLanguage === 'en' 
                     ? `${capacity} kWh`
-                    : `${capacity} կՎտժ`;
+                    : `${capacity} kWh`;
                 option.textContent = text;
                 option.setAttribute('data-en', `${capacity} kWh`);
                 option.setAttribute('data-hy', `${capacity} կՎտժ`);
@@ -2090,16 +2132,16 @@
             });
         }
 
-        function populateManualAccumulatorChemistries() {
-            const chemistrySelect = document.getElementById('manualAccumulatorChemistry');
+        function populateManualBatteryChemistries() {
+            const chemistrySelect = document.getElementById('manualBatteryChemistry');
             
-            if (!accumulators || accumulators.length === 0) {
+            if (!batteries || batteries.length === 0) {
                 chemistrySelect.innerHTML = '<option value="">Loading chemistries...</option>';
                 return;
             }
             chemistrySelect.innerHTML = '<option value="" data-en="Select chemistry" data-hy="Ընտրեք քիմիան">Select chemistry</option>';
             
-            const chemistries = [...new Set(accumulators.map(acc => acc.chemistry))].sort();
+            const chemistries = [...new Set(batteries.map(bat => bat.chemistry))].sort();
             
             chemistries.forEach(chemistry => {
                 const option = document.createElement('option');
@@ -2256,15 +2298,15 @@
             const panelPrice = panelOption.totalPrice;
             const inverterPrice = selectedInverter.price;
             
-            // Calculate accumulator cost if hybrid system is selected
+            // Calculate battery cost if hybrid system is selected
             let accumulatorPrice = 0;
             const selectedInverterType = document.getElementById('inverterType').value;
-            if (selectedInverterType === 'hybrid' && accumulators && accumulators.length > 0) {
-                const accumulatorSelect = document.getElementById('accumulatorSelect');
-                if (accumulatorSelect && accumulatorSelect.value) {
-                    const selectedAccumulator = accumulators.find(acc => acc.id == accumulatorSelect.value);
-                    if (selectedAccumulator) {
-                        accumulatorPrice = selectedAccumulator.price;
+            if (selectedInverterType === 'hybrid' && batteries && batteries.length > 0) {
+                const batterySelect = document.getElementById('batterySelect');
+                if (batterySelect && batterySelect.value) {
+                    const selectedBattery = batteries.find(bat => bat.id == batterySelect.value);
+                    if (selectedBattery) {
+                        accumulatorPrice = selectedBattery.price;
                     }
                 }
             }
@@ -2273,8 +2315,15 @@
             const salesTeamPct = (dbSalesCommissions.salesCommissions?.data?.sales_team_pct?.value || 6) / 100;
             const unanticipatedExpensesPct = (dbUnanticipatedExpenses.unanticipatedExpenses?.data?.unanticipated_expenses_pct?.value || 2) / 100;
             
-            // Calculate total system price using exact same formula as main function (including accumulator)
-            const totalSystemPrice = Math.ceil((basePrice + profitAmount + inverterPrice + panelPrice + accumulatorPrice) / (1 - salesTeamPct - unanticipatedExpensesPct));
+            // Calculate subtotal first (including battery for hybrid)
+            const subtotal = basePrice + profitAmount + inverterPrice + panelPrice + accumulatorPrice;
+            
+            // Calculate final price using division: subtotal ÷ (1 - 6% - 2%) = subtotal ÷ 0.92
+            const totalSystemPrice = Math.ceil(subtotal / (1 - salesTeamPct - unanticipatedExpensesPct));
+            
+            // Calculate sales team and unexpected expenses from final price
+            const salesTeamAmount = Math.ceil(totalSystemPrice * salesTeamPct);
+            const unanticipatedExpensesAmount = Math.ceil(totalSystemPrice * unanticipatedExpensesPct);
             
             // Calculate sales discount based on selected stage
             const salesStage = parseInt(document.getElementById('salesStage').value) || 0;
@@ -2681,6 +2730,21 @@
             }
         }
 
+        // Debug function to show all batteries (for troubleshooting)
+        function debugShowAllBatteries() {
+            console.log('🔍 DEBUG: All batteries in system:', {
+                totalBatteries: batteries?.length || 0,
+                systemPower: parseFloat(document.getElementById('systemPower').value) || 0,
+                batteries: batteries?.map(b => ({
+                    id: b.id,
+                    brand: b.brand,
+                    model: b.model,
+                    capacity_kwh: b.capacity_kwh,
+                    price: b.price
+                })) || []
+            });
+        }
+        
         // Function to auto-recalculate when parameters change
         function autoRecalculate() {
             // Check if we have all required data
@@ -2876,14 +2940,14 @@
                 // Update inverter dropdown with filtered options
                 populateInverterDropdown();
                 
-                // Show/hide accumulator selection based on inverter type
+                // Show/hide battery selection based on inverter type
                 const selectedType = this.value;
-                const accumulatorContainer = document.getElementById('accumulatorSelectionContainer');
+                const accumulatorContainer = document.getElementById('batterySelectionContainer');
                 
                 if (selectedType === 'hybrid') {
                     accumulatorContainer.classList.remove('hidden');
-                    // Populate accumulator dropdown
-                    populateAccumulatorDropdown();
+                    // Populate battery dropdown
+                    populateBatteryDropdown();
                 } else {
                     accumulatorContainer.classList.add('hidden');
                 }
@@ -2943,14 +3007,14 @@
                 // Real-time update when inverter type changes
                 populateInverterDropdown();
                 
-                // Show/hide accumulator selection based on inverter type
+                // Show/hide battery selection based on inverter type
                 const selectedType = this.value;
-                const accumulatorContainer = document.getElementById('accumulatorSelectionContainer');
+                const accumulatorContainer = document.getElementById('batterySelectionContainer');
                 
                 if (selectedType === 'hybrid') {
                     accumulatorContainer.classList.remove('hidden');
-                    // Populate accumulator dropdown
-                    populateAccumulatorDropdown();
+                    // Populate battery dropdown
+                    populateBatteryDropdown();
                 } else {
                     accumulatorContainer.classList.add('hidden');
                 }
@@ -3013,21 +3077,21 @@
                 }
             });
             
-            // Add event listener for auto accumulator selection changes
-            document.getElementById('accumulatorSelect').addEventListener('change', function() {
+            // Add event listener for auto battery selection changes
+            document.getElementById('batterySelect').addEventListener('change', function() {
                 forceRecalculate();
             });
             
-            // Add event listeners for manual accumulator selection changes
-            document.getElementById('manualAccumulatorBrand').addEventListener('change', function() {
+            // Add event listeners for manual battery selection changes
+            document.getElementById('manualBatteryBrand').addEventListener('change', function() {
                 forceRecalculate();
             });
             
-            document.getElementById('manualAccumulatorCapacity').addEventListener('change', function() {
+            document.getElementById('manualBatteryCapacity').addEventListener('change', function() {
                 forceRecalculate();
             });
             
-            document.getElementById('manualAccumulatorChemistry').addEventListener('change', function() {
+            document.getElementById('manualBatteryChemistry').addEventListener('change', function() {
                 forceRecalculate();
             });
             
