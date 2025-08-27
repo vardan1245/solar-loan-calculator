@@ -93,70 +93,110 @@ app.get('/api/system-cost-settings', async (req, res) => {
         };
         
         result.rows.forEach(row => {
-            const key = row.setting_key;
-            const value = parseFloat(row.setting_value);
-            
-            if (key.includes('cost_per_kw')) {
-                const installationType = key.replace('_cost_per_kw', '');
+            // Handle new database schema structure
+            if (row.category === 'base_price') {
+                // Handle base prices (installation costs)
+                const installationType = row.installation_type;
+                const price = parseFloat(row.price);
                 organizedData.installationCosts.data[installationType] = {
                     id: row.id,
-                    key: key,
-                    value: value,
-                    description: row.description,
+                    key: `cost_per_kw_${installationType}`,
+                    value: price,
+                    description: row.name,
                     updated_at: row.updated_at
                 };
             } else if (row.category === 'profit_margin') {
                 // Handle warranty-based profit margins
                 const warrantyYears = row.warranty_years;
+                const profitPerKw = parseFloat(row.profit_per_kw);
                 const profitKey = `profit_per_kw_${warrantyYears}Y`;
                 organizedData.profitMargins.data[profitKey] = {
                     id: row.id,
                     key: profitKey,
-                    value: value,
-                    description: row.description,
+                    value: profitPerKw,
+                    description: row.name,
                     updated_at: row.updated_at
                 };
-            } else if (key.includes('profit_per_kw')) {
-                // Handle legacy installation-type-based profit keys (if any exist)
-                const installationType = key.replace('_profit_per_kw', '');
-                organizedData.profitMargins.data[installationType] = {
-                    id: row.id,
-                    key: key,
-                    value: value,
-                    description: row.description,
-                    updated_at: row.updated_at
-                };
-            } else if (key.includes('sales_pct') || key.includes('sales_team_pct')) {
-                // Handle both old sales_pct format and new sales_team_pct format
-                if (key === 'sales_team_pct') {
-                    // This is a common percentage for all installation types
-                    organizedData.salesCommissions.data[key] = {
+            } else if (row.category === 'percentage') {
+                // Handle percentage-based settings
+                if (row.name === 'salesTeam') {
+                    organizedData.salesCommissions.data['sales_team_pct'] = {
                         id: row.id,
-                        key: key,
-                        value: value,
-                        description: row.description,
+                        key: 'sales_team_pct',
+                        value: parseFloat(row.value) * 100, // Convert decimal to percentage
+                        description: row.name,
                         updated_at: row.updated_at
                     };
-                } else {
-                    // This is installation-specific sales percentage
-                    const installationType = key.replace('_sales_pct', '');
-                    organizedData.salesCommissions.data[installationType] = {
+                } else if (row.name === 'unexpectedExpenses') {
+                    organizedData.unanticipatedExpenses.data['unanticipated_expenses_pct'] = {
                         id: row.id,
-                        key: key,
-                        value: value,
-                        description: row.description,
+                        key: 'unanticipated_expenses_pct',
+                        value: parseFloat(row.value) * 100, // Convert decimal to percentage
+                        description: row.name,
                         updated_at: row.updated_at
                     };
                 }
-            } else if (key.includes('unexp_pct') || key.includes('unanticipated_expenses_pct')) {
-                const installationType = key.replace('_unexp_pct', '').replace('_unanticipated_expenses_pct', '');
-                organizedData.unanticipatedExpenses.data[installationType] = {
-                    id: row.id,
-                    key: key,
-                    value: value,
-                    description: row.description,
-                    updated_at: row.updated_at
-                };
+            }
+            
+            // Keep legacy support for old setting_key/setting_value structure
+            if (row.setting_key && row.setting_value !== undefined) {
+                const key = row.setting_key;
+                const value = parseFloat(row.setting_value);
+                
+                if (key.includes('cost_per_kw')) {
+                    const installationType = key.replace('_cost_per_kw', '');
+                    // Only add if not already added by new schema
+                    if (!organizedData.installationCosts.data[installationType]) {
+                        organizedData.installationCosts.data[installationType] = {
+                            id: row.id,
+                            key: key,
+                            value: value,
+                            description: row.description || row.name,
+                            updated_at: row.updated_at
+                        };
+                    }
+                } else if (key.includes('profit_per_kw')) {
+                    // Handle legacy installation-type-based profit keys (if any exist)
+                    const installationType = key.replace('_profit_per_kw', '');
+                    organizedData.profitMargins.data[installationType] = {
+                        id: row.id,
+                        key: key,
+                        value: value,
+                        description: row.description || row.name,
+                        updated_at: row.updated_at
+                    };
+                } else if (key.includes('sales_pct') || key.includes('sales_team_pct')) {
+                    // Handle both old sales_pct format and new sales_team_pct format
+                    if (key === 'sales_team_pct') {
+                        // This is a common percentage for all installation types
+                        organizedData.salesCommissions.data[key] = {
+                            id: row.id,
+                            key: key,
+                            value: value,
+                            description: row.description || row.name,
+                            updated_at: row.updated_at
+                        };
+                    } else {
+                        // This is installation-specific sales percentage
+                        const installationType = key.replace('_sales_pct', '');
+                        organizedData.salesCommissions.data[installationType] = {
+                            id: row.id,
+                            key: key,
+                            value: value,
+                            description: row.description || row.name,
+                            updated_at: row.updated_at
+                        };
+                    }
+                } else if (key.includes('unexp_pct') || key.includes('unanticipated_expenses_pct')) {
+                    const installationType = key.replace('_unexp_pct', '').replace('_unanticipated_expenses_pct', '');
+                    organizedData.unanticipatedExpenses.data[installationType] = {
+                        id: row.id,
+                        key: key,
+                        value: value,
+                        description: row.description || row.name,
+                        updated_at: row.updated_at
+                    };
+                }
             }
         });
         
@@ -195,7 +235,9 @@ app.get('/api/inverters', async (req, res) => {
                     brand: "Manufacturer brand",
                     model: "Model number",
                     efficiency: "Efficiency percentage",
-                    warranty_years: "Warranty period in years"
+                    warranty_years: "Warranty period in years",
+                    type: "Inverter type: on_grid, off_grid, or hybrid",
+                    phase: "Phase configuration: one phase or three phase"
                 },
                 inverters: result.rows.map(row => ({
                     id: row.id,
@@ -206,6 +248,8 @@ app.get('/api/inverters', async (req, res) => {
                     model: row.model,
                     efficiency: parseFloat(row.efficiency),
                     warranty_years: parseInt(row.warranty_years),
+                    type: row.type || 'on_grid', // Default to 'on_grid' for backward compatibility
+                    phase: row.phase || 'one phase', // Default to 'one phase' for backward compatibility
                     description: row.description
                 }))
             },
@@ -217,6 +261,56 @@ app.get('/api/inverters', async (req, res) => {
         res.status(500).json({ 
             success: false,
             error: 'Failed to fetch inverter options',
+            details: error.message 
+        });
+    }
+});
+
+// Get all accumulator options
+app.get('/api/accumulators', async (req, res) => {
+    try {
+        const query = 'SELECT * FROM accumulator_options WHERE is_active = true ORDER BY capacity_kwh';
+        const result = await pool.query(query);
+        
+        res.json({
+            success: true,
+            message: "Accumulator options retrieved successfully",
+            data: {
+                description: "Battery storage options for hybrid solar systems",
+                fields: {
+                    capacity_kwh: "Battery capacity in kilowatt-hours",
+                    voltage: "Battery voltage in volts",
+                    price: "Price in Armenian Dram (AMD)",
+                    brand: "Manufacturer brand",
+                    model: "Model number",
+                    cycle_life: "Number of charge/discharge cycles",
+                    warranty_years: "Warranty period in years",
+                    chemistry: "Battery chemistry type"
+                },
+                accumulators: result.rows.map(row => ({
+                    id: row.id,
+                    name: row.name,
+                    capacity_kwh: parseFloat(row.capacity_kwh),
+                    voltage: parseFloat(row.voltage),
+                    price: parseInt(row.price),
+                    brand: row.brand,
+                    model: row.model,
+                    cycle_life: parseInt(row.cycle_life),
+                    warranty_years: parseInt(row.warranty_years),
+                    chemistry: row.chemistry,
+                    dimensions: row.dimensions,
+                    weight_kg: parseFloat(row.weight_kg),
+                    description: row.description
+                }))
+            },
+            totalAccumulators: result.rows.length,
+            lastUpdated: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error fetching accumulator options:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Failed to fetch accumulator options',
             details: error.message 
         });
     }
@@ -328,11 +422,12 @@ app.get('/api/banks', async (req, res) => {
 app.get('/api/pricing-complete', async (req, res) => {
     try {
         // Get all data from all tables
-        const [costSettings, inverters, panels, banks] = await Promise.all([
+        const [costSettings, inverters, panels, banks, accumulators] = await Promise.all([
             pool.query('SELECT * FROM system_cost_settings ORDER BY id'),
             pool.query('SELECT * FROM inverter_options WHERE is_active = true ORDER BY kw'),
             pool.query('SELECT * FROM panel_options WHERE is_active = true ORDER BY wattage'),
-            pool.query('SELECT * FROM bank_configurations WHERE is_active = true ORDER BY bank_name, interest_rate, loan_period')
+            pool.query('SELECT * FROM bank_configurations WHERE is_active = true ORDER BY bank_name, interest_rate, loan_period'),
+            pool.query('SELECT * FROM accumulator_options WHERE is_active = true ORDER BY capacity_kwh')
         ]);
         
         // Organize cost settings
@@ -344,21 +439,47 @@ app.get('/api/pricing-complete', async (req, res) => {
         };
         
         costSettings.rows.forEach(row => {
-            const key = row.setting_key;
-            const value = parseFloat(row.setting_value);
+            // Handle new database schema structure
+            if (row.category === 'base_price') {
+                // Handle base prices (installation costs)
+                const installationType = row.installation_type;
+                const price = parseFloat(row.price);
+                organizedCosts.installationCosts[installationType] = price;
+            } else if (row.category === 'profit_margin') {
+                // Handle warranty-based profit margins
+                const warrantyYears = row.warranty_years;
+                const profitPerKw = parseFloat(row.profit_per_kw);
+                organizedCosts.profitMargins[`${warrantyYears}Y`] = profitPerKw;
+            } else if (row.category === 'percentage') {
+                // Handle percentage-based settings
+                if (row.name === 'salesTeam') {
+                    organizedCosts.salesCommissions['sales_team_pct'] = parseFloat(row.value) * 100; // Convert decimal to percentage
+                } else if (row.name === 'unexpectedExpenses') {
+                    organizedCosts.unanticipatedExpenses['unanticipated_expenses_pct'] = parseFloat(row.value) * 100; // Convert decimal to percentage
+                }
+            }
             
-            if (key.includes('cost_per_kw')) {
-                const installationType = key.replace('_cost_per_kw', '');
-                organizedCosts.installationCosts[installationType] = value;
-            } else if (key.includes('profit_per_kw')) {
-                const installationType = key.replace('_profit_per_kw', '');
-                organizedCosts.profitMargins[installationType] = value;
-            } else if (key.includes('sales_pct')) {
-                const installationType = key.replace('_sales_pct', '');
-                organizedCosts.salesCommissions[installationType] = value;
-            } else if (key.includes('unexp_pct') || key.includes('unanticipated_expenses_pct')) {
-                const installationType = key.replace('_unexp_pct', '').replace('_unanticipated_expenses_pct', '');
-                organizedCosts.unanticipatedExpenses[installationType] = value;
+            // Keep legacy support for old setting_key/setting_value structure
+            if (row.setting_key && row.setting_value !== undefined) {
+                const key = row.setting_key;
+                const value = parseFloat(row.setting_value);
+                
+                if (key.includes('cost_per_kw')) {
+                    const installationType = key.replace('_cost_per_kw', '');
+                    // Only add if not already added by new schema
+                    if (!organizedCosts.installationCosts[installationType]) {
+                        organizedCosts.installationCosts[installationType] = value;
+                    }
+                } else if (key.includes('profit_per_kw')) {
+                    const installationType = key.replace('_profit_per_kw', '');
+                    organizedCosts.profitMargins[installationType] = value;
+                } else if (key.includes('sales_pct')) {
+                    const installationType = key.replace('_sales_pct', '');
+                    organizedCosts.salesCommissions[installationType] = value;
+                } else if (key.includes('unexp_pct') || key.includes('unanticipated_expenses_pct')) {
+                    const installationType = key.replace('_unexp_pct', '').replace('_unanticipated_expenses_pct', '');
+                    organizedCosts.unanticipatedExpenses[installationType] = value;
+                }
             }
         });
         
@@ -384,12 +505,20 @@ app.get('/api/pricing-complete', async (req, res) => {
                 inverters: inverters.rows.map(row => ({
                     kw: parseFloat(row.kw),
                     price: parseInt(row.price),
-                    name: row.name
+                    name: row.name,
+                    type: row.type || 'on_grid' // Default to 'on_grid' for backward compatibility
                 })),
                 panels: panels.rows.map(row => ({
                     wattage: parseInt(row.wattage),
                     price_per_watt: parseFloat(row.price_per_watt),
                     name: row.name
+                })),
+                accumulators: accumulators.rows.map(row => ({
+                    capacity_kwh: parseFloat(row.capacity_kwh),
+                    voltage: parseFloat(row.voltage),
+                    price: parseInt(row.price),
+                    name: row.name,
+                    chemistry: row.chemistry
                 })),
                 banks: organizedBanks
             },
@@ -397,6 +526,7 @@ app.get('/api/pricing-complete', async (req, res) => {
                 totalCostSettings: costSettings.rows.length,
                 totalInverters: inverters.rows.length,
                 totalPanels: panels.rows.length,
+                totalAccumulators: accumulators.rows.length,
                 totalBankOptions: banks.rows.length
             },
             lastUpdated: new Date().toISOString()
@@ -495,61 +625,7 @@ app.delete('/api/system-cost-settings/:id', async (req, res) => {
     }
 });
 
-// Admin authentication endpoint
-app.post('/api/admin/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        
-        if (!username || !password) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Username and password are required' 
-            });
-        }
-        
-        // Query admin users table
-        const query = 'SELECT id, username, password_hash, full_name, role, is_active FROM admin_users WHERE username = $1 AND is_active = true';
-        const result = await pool.query(query, [username]);
-        
-        if (result.rows.length === 0) {
-            return res.status(401).json({ 
-                success: false, 
-                error: 'Invalid credentials' 
-            });
-        }
-        
-        const user = result.rows[0];
-        
-        // Simple password check (in production, use proper hashing)
-        if (password !== user.password_hash) {
-            return res.status(401).json({ 
-                success: false, 
-                error: 'Invalid credentials' 
-            });
-        }
-        
-        // Update last login
-        await pool.query('UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
-        
-        res.json({
-            success: true,
-            message: 'Login successful',
-            user: {
-                id: user.id,
-                username: user.username,
-                full_name: user.full_name,
-                role: user.role
-            }
-        });
-        
-    } catch (error) {
-        console.error('Error during admin login:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Internal server error during login' 
-        });
-    }
-});
+
 
 
 
@@ -573,6 +649,11 @@ app.get('/test', (req, res) => {
 // Serve the main app for the root route (redirect to login)
 app.get('/', (req, res) => {
     res.redirect('/login');
+});
+
+// Serve the main app directly for easier access
+app.get('/app', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
 });
 
 // Serve static files (CSS, JS, images) from root directory - AFTER ALL routes

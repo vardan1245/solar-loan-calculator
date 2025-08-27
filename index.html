@@ -144,6 +144,8 @@
                         </select>
                     </div>
 
+
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Warranty Years" data-hy="Երաշխիքային տարիներ">Warranty Years</label>
                             <select id="warrantyYears" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
@@ -166,6 +168,27 @@
                     </div>
 
 
+
+                <!-- Inverter Type and Phase Selection -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Inverter Type" data-hy="Փոխակերպիչի տեսակը">Inverter Type</label>
+                        <select id="inverterType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                            <option value="on_grid" data-en="On Grid" data-hy="Ցանցային" selected>On Grid</option>
+                            <option value="off_grid" data-en="Off Grid" data-hy="Ավտոնոմ">Off Grid</option>
+                            <option value="hybrid" data-en="Hybrid" data-hy="Հիբրիդ">Hybrid</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Phase" data-hy="Ֆազ">Phase</label>
+                        <select id="phaseFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                            <option value="" data-en="All Phases" data-hy="Բոլոր ֆազերը" selected>All Phases</option>
+                            <option value="one phase" data-en="1 Phase" data-hy="1 Ֆազ">1 Phase</option>
+                            <option value="three phase" data-en="3 Phase" data-hy="3 Ֆազ">3 Phase</option>
+                        </select>
+                    </div>
+                </div>
 
                 <div id="inverterSelectionContainer" class="mb-4">
                     <div class="flex items-center justify-between mb-2">
@@ -204,6 +227,52 @@
                             </div>
                             </div>
 
+                    </div>
+                </div>
+                
+                <!-- Accumulator Selection (Only visible for Hybrid systems) -->
+                <div id="accumulatorSelectionContainer" class="mb-4 hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-gray-700" data-en="Accumulator Selection:" data-hy="Ակումուլյատորի ընտրություն:">Accumulator Selection:</label>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500" data-en="Auto" data-hy="Ավտո">Auto</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="manualAccumulatorToggle" class="sr-only peer" onchange="toggleAccumulatorSelection()">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-tiamat-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tiamat-blue"></div>
+                            </label>
+                            <span class="text-xs text-gray-500" data-en="Manual" data-hy="Ձեռքով">Manual</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Auto Selection (Default) -->
+                    <div id="autoAccumulatorSelection">
+                        <select id="accumulatorSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    
+                    <!-- Manual Selection (Hidden by default) -->
+                    <div id="manualAccumulatorSelection" class="hidden space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label for="manualAccumulatorBrand" class="block text-xs font-medium text-gray-600 mb-1" data-en="Brand:" data-hy="Բրենդ:">Brand:</label>
+                                <select id="manualAccumulatorBrand" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                                    <option value="" data-en="Select brand" data-hy="Ընտրեք բրենդը">Select brand</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="manualAccumulatorCapacity" class="block text-xs font-medium text-gray-600 mb-1" data-en="Capacity (kWh):" data-hy="Հզորություն (կՎտժ):">Capacity (kWh):</label>
+                                <select id="manualAccumulatorCapacity" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                                    <option value="" data-en="Select capacity" data-hy="Ընտրեք հզորությունը">Select capacity</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="manualAccumulatorChemistry" class="block text-xs font-medium text-gray-600 mb-1" data-en="Chemistry:" data-hy="Քիմիա:">Chemistry:</label>
+                                <select id="manualAccumulatorChemistry" class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                                    <option value="" data-en="Select chemistry" data-hy="Ընտրեք քիմիան">Select chemistry</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -448,6 +517,7 @@
         let bankConfigurations = []; // Bank configurations for loan calculations
         let inverters = []; // Inverter list for system calculations
         let panels = []; // Panel list for system calculations
+        let accumulators = []; // Accumulator list for hybrid systems
         let isDataLoaded = false; // Track if database data is fully loaded
         let selectedPanelOption = null; // Store the selected panel option from suggestions
         
@@ -488,23 +558,16 @@
                         dbProfitMargins.installationCosts = {
                             data: costs
                         };
-
-                        // Debug: Log the loaded installation costs
                     }
                     
                     // Extract profit margins - now warranty-based instead of installation-type-based
                     if (result.data.profitMargins && result.data.profitMargins.data) {
                         const profits = result.data.profitMargins.data;
                         
-                        // Debug: Log the actual profit margin keys from database
-                        
-                        
                         // Load warranty-based profit margins - no hardcoded fallbacks
                         dbProfitMargins.profitMargins = {
                             data: profits
                         };
-                        
-                        // Debug: Log the loaded profit margins
                     }
                     
                     // Extract sales commissions - now using common percentage for all installation types
@@ -592,8 +655,8 @@
                     
 
                     
-                    // Load banks, inverters, and panels from their respective endpoints
-                    const [banksResult, invertersResult, panelsResult] = await Promise.all([
+                    // Load banks, inverters, panels, and accumulators from their respective endpoints
+                    const [banksResult, invertersResult, panelsResult, accumulatorsResult] = await Promise.all([
                         fetch('/api/banks')
                             .then(response => response.json())
                             .catch(error => ({ success: false, data: null })),
@@ -604,22 +667,50 @@
                         
                         fetch('/api/panels')
                             .then(response => response.json())
+                            .catch(error => ({ success: false, data: null })),
+                        
+                        fetch('/api/accumulators')
+                            .then(response => response.json())
                             .catch(error => ({ success: false, data: null }))
                     ]);
+                    
+                    // Debug: Log API responses
+                    console.log('🔍 API Responses:', {
+                        banks: banksResult,
+                        inverters: invertersResult,
+                        panels: panelsResult,
+                        accumulators: accumulatorsResult
+                    });
                     
                     // Process results
                     if (banksResult.success && banksResult.data && banksResult.data.banks) {
                         dbBanks = banksResult.data.banks;
                         bankConfigurations = banksResult.data.banks;
+                        console.log('✅ Banks loaded:', banksResult.data.banks.length);
+                    } else {
+                        console.log('❌ Banks failed to load:', banksResult);
                     }
                     
                     if (invertersResult.success && invertersResult.data && invertersResult.data.inverters) {
                         dbInverters = invertersResult.data.inverters;
                         inverters = invertersResult.data.inverters;
+                        console.log('✅ Inverters loaded:', invertersResult.data.inverters.length);
+                    } else {
+                        console.log('❌ Inverters failed to load:', invertersResult);
                     }
                     
                     if (panelsResult.success && panelsResult.data && panelsResult.data.panels) {
                         panels = panelsResult.data.panels;
+                        console.log('✅ Panels loaded:', panelsResult.data.panels.length);
+                    } else {
+                        console.log('❌ Panels failed to load:', panelsResult);
+                    }
+                    
+                    if (accumulatorsResult.success && accumulatorsResult.data && accumulatorsResult.data.accumulators) {
+                        accumulators = accumulatorsResult.data.accumulators;
+                        console.log('✅ Accumulators loaded:', accumulatorsResult.data.accumulators.length);
+                    } else {
+                        console.log('❌ Accumulators failed to load:', accumulatorsResult);
                     }
                     
                     // Debug: Log the final data structure
@@ -627,6 +718,12 @@
                     
                     // Mark data as loaded
                     isDataLoaded = true;
+                    console.log('✅ Data loaded successfully:', {
+                        inverters: inverters?.length || 0,
+                        panels: panels?.length || 0,
+                        accumulators: accumulators?.length || 0,
+                        isDataLoaded: isDataLoaded
+                    });
                     
                     // Enable calculate button
                     const calculateBtn = document.getElementById('calculateBtn');
@@ -647,10 +744,18 @@
                     // Update the main inverter dropdown with new data
                     populateInverterDropdown();
                     
+                    // Also populate manual inverter options with default "on_grid" selection
+                    populateManualBrands();
+                    populateManualPowers();
+                    
                     // Now that ALL data is loaded, populate panel suggestions
                     if (panels && panels.length > 0) {
+                        // Populate panel suggestions immediately
+                        populatePanelDropdown();
+                        
+                        // Also retry after a short delay to ensure everything is loaded
                         setTimeout(() => {
-                    populatePanelDropdown();
+                            populatePanelDropdown();
                         }, 100);
                         
                         // Also retry after a longer delay in case some data loads later
@@ -658,6 +763,13 @@
                             populatePanelDropdown();
                         }, 1000);
                     }
+                    
+                    // Force a recalculation to ensure everything is updated
+                    setTimeout(() => {
+                        if (typeof calculatePanelRequirements === 'function') {
+                            calculatePanelRequirements();
+                        }
+                    }, 200);
                     
 
                     
@@ -943,27 +1055,36 @@
                 }
             } else {
                 // Auto selection mode
-                const selectedInverterKw = document.getElementById('inverterSelect').value;
+                const selectedInverterId = parseInt(document.getElementById('inverterSelect').value);
                 
-                // Find the selected inverter from the dropdown (no more auto option)
-                    selectedInverter = inverters.find(inv => inv.kw == selectedInverterKw);
-                    if (!selectedInverter) {
-                        const message = currentLanguage === 'en' 
-                            ? 'Selected inverter not found!'
-                        : 'Ընտրված փոխակերպիչը չի գտնվել:';
-                        
-                        document.getElementById('results').innerHTML = `
-                            <div class="space-y-3">
-                                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                                    <div class="flex items-center">
-                                        <span class="w-5 h-5 text-red-400 mr-2 text-xl font-bold">✕</span>
-                                        <span class="text-red-800 font-medium">${message}</span>
-                                    </div>
+                // Find the selected inverter from the dropdown by ID
+                selectedInverter = inverters.find(inv => inv.id === selectedInverterId);
+                if (!selectedInverter) {
+                    const message = currentLanguage === 'en' 
+                        ? 'Selected inverter not found!'
+                    : 'Ընտրված փոխակերպիչը չի գտնվել:';
+                    
+                    document.getElementById('results').innerHTML = `
+                        <div class="space-y-3">
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <span class="w-5 h-5 text-red-400 mr-2 text-xl font-bold">✕</span>
+                                    <span class="text-red-800 font-medium">${message}</span>
                                 </div>
                             </div>
-                        `;
-                        return;
+                        </div>
+                    `;
+                    return;
                 }
+                
+                // Debug logging for inverter selection
+                console.log('🔍 calculateLoan using selected inverter:', {
+                    id: selectedInverter.id,
+                    brand: selectedInverter.brand,
+                    model: selectedInverter.model,
+                    kw: selectedInverter.kw,
+                    price: selectedInverter.price
+                });
             }
             
             const inverterPrice = selectedInverter.price;
@@ -1033,8 +1154,25 @@
             const salesDiscountPerKw = salesStage === 0 ? 0 : salesStage === 1 ? 5000 : salesStage === 2 ? 10000 : 15000;
             const totalSalesDiscount = Math.ceil(systemPower * salesDiscountPerKw);
             
-            // Total system price including sales team and unexpected expenses
-            const totalSystemPrice = Math.ceil((basePrice + profitAmount + inverterPrice + panelPrice) / (1 - salesTeamPctDecimal - unanticipatedExpensesPctDecimal));
+            // Calculate accumulator cost if hybrid system is selected
+            let accumulatorPrice = 0;
+            let selectedAccumulatorInfo = '';
+            const selectedInverterType = document.getElementById('inverterType').value;
+            if (selectedInverterType === 'hybrid' && accumulators && accumulators.length > 0) {
+                const accumulatorSelect = document.getElementById('accumulatorSelect');
+                if (accumulatorSelect && accumulatorSelect.value) {
+                    const selectedAccumulator = accumulators.find(acc => acc.id == accumulatorSelect.value);
+                    if (selectedAccumulator) {
+                        accumulatorPrice = selectedAccumulator.price;
+                        selectedAccumulatorInfo = currentLanguage === 'en' 
+                            ? `${selectedAccumulator.brand} ${selectedAccumulator.model} ${selectedAccumulator.capacity_kwh}kWh battery`
+                            : `${selectedAccumulator.brand} ${selectedAccumulator.model} ${selectedAccumulator.capacity_kwh}կՎտժ մարտկոց`;
+                    }
+                }
+            }
+            
+            // Total system price including sales team and unexpected expenses (including accumulator for hybrid)
+            const totalSystemPrice = Math.ceil((basePrice + profitAmount + inverterPrice + panelPrice + accumulatorPrice) / (1 - salesTeamPctDecimal - unanticipatedExpensesPctDecimal));
             
             // Apply sales discount to final price
             const finalSystemPrice = Math.max(0, totalSystemPrice - totalSalesDiscount);
@@ -1165,9 +1303,26 @@
                                 </div>
                             </div>
                             
-                            <!-- Step 4: Panels -->
+                            <!-- Step 4: Accumulator (Hybrid Only) -->
+                            ${selectedInverterType === 'hybrid' && accumulatorPrice > 0 ? `
                             <div class="space-y-2">
-                                <div class="text-sm font-medium text-gray-700">Step 4: Panel Selection</div>
+                                <div class="text-sm font-medium text-gray-700">Step 4: Accumulator Selection</div>
+                                <div class="pl-4 space-y-1 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Selected Accumulator:</span>
+                                        <span>${selectedAccumulatorInfo}</span>
+                                    </div>
+                                    <div class="flex justify-between font-medium">
+                                        <span>Accumulator Price:</span>
+                                        ${renderSensitiveValue(accumulatorPrice.toLocaleString(), ' AMD')}
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            <!-- Step ${selectedInverterType === 'hybrid' && accumulatorPrice > 0 ? '5' : '4'}: Panels -->
+                            <div class="space-y-2">
+                                <div class="text-sm font-medium text-gray-700">Step ${selectedInverterType === 'hybrid' && accumulatorPrice > 0 ? '5' : '4'}: Panel Selection</div>
                                 <div class="pl-4 space-y-1 text-sm">
                                     <div class="flex justify-between">
                                         <span>Selected Panels:</span>
@@ -1200,9 +1355,15 @@
                                         <span>+ Panels:</span>
                                         ${renderSensitiveValue(panelPrice.toLocaleString(), ` AMD (${panelPct}%)`)}
                                     </div>
+                                    ${selectedInverterType === 'hybrid' && accumulatorPrice > 0 ? `
+                                    <div class="flex justify-between">
+                                        <span>+ Accumulator:</span>
+                                        ${renderSensitiveValue(accumulatorPrice.toLocaleString(), ' AMD')}
+                                    </div>
+                                    ` : ''}
                                     <div class="flex justify-between font-semibold border-t pt-1">
                                         <span>Subtotal:</span>
-                                        <span class="font-mono">${basePriceWithProfitAndInverterAndPanels.toLocaleString()} AMD</span>
+                                        <span class="font-mono">${(basePriceWithProfitAndInverterAndPanels + (selectedInverterType === 'hybrid' ? accumulatorPrice : 0)).toLocaleString()} AMD</span>
                                     </div>
                                 </div>
                             </div>
@@ -1434,65 +1595,182 @@
 
         // Populate inverter dropdown
         function populateInverterDropdown() {
+            const inverterSelect = document.getElementById('inverterSelect');
+            const selectedInverterType = document.getElementById('inverterType').value;
+            const selectedPhase = document.getElementById('phaseFilter').value;
+            
+            console.log('🔍 populateInverterDropdown called:', {
+                selectedInverterType,
+                selectedPhase,
+                inverters: inverters?.length || 0,
+                inverterSelect: !!inverterSelect
+            });
+            
             // Check if inverters are loaded
             if (!inverters || inverters.length === 0) {
+                console.log('❌ No inverters data available');
+                // Show loading state when data isn't loaded yet
+                inverterSelect.innerHTML = '<option value="">Loading inverters...</option>';
                 return;
             }
             
-            const inverterSelect = document.getElementById('inverterSelect');
             const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
             inverterSelect.innerHTML = '';
+            
+            // Filter inverters by selected type strictly
+            const typeFilteredInverters = inverters.filter(inverter => {
+                // If inverter has no type specified, treat it as 'on_grid' for backward compatibility
+                const inverterType = inverter.type || 'on_grid';
+                return inverterType === selectedInverterType;
+            });
+            
+            // Filter inverters by selected phase (if a specific phase is selected)
+            const phaseFilteredInverters = selectedPhase 
+                ? typeFilteredInverters.filter(inverter => {
+                    const inverterPhase = inverter.phase || 'one phase';
+                    return inverterPhase === selectedPhase;
+                })
+                : typeFilteredInverters;
+            
+            console.log('🔍 Type and phase filtering inverters:', {
+                selectedInverterType,
+                selectedPhase,
+                totalInverters: inverters.length,
+                typeFilteredCount: typeFilteredInverters.length,
+                phaseFilteredCount: phaseFilteredInverters.length,
+                phaseFilteredInverters: phaseFilteredInverters.map(inv => ({
+                    id: inv.id,
+                    brand: inv.brand,
+                    model: inv.model,
+                    kw: inv.kw,
+                    type: inv.type || 'on_grid',
+                    phase: inv.phase || 'one phase'
+                }))
+            });
+            
+            if (phaseFilteredInverters.length === 0) {
+                // If no inverters of selected type/phase, show a message
+                const option = document.createElement('option');
+                option.value = '';
+                const phaseText = selectedPhase ? ` ${selectedPhase.replace('_', ' ')}` : '';
+                option.textContent = currentLanguage === 'en' 
+                    ? `No ${selectedInverterType.replace('_', ' ')}${phaseText} inverters available`
+                    : `${selectedInverterType === 'on_grid' ? 'Ցանցային' : selectedInverterType === 'off_grid' ? 'Ավտոնոմ' : 'Հիբրիդ'}${phaseText} փոխակերպիչներ չկան`;
+                inverterSelect.appendChild(option);
+                return;
+            }
             
             // Find the auto-selected inverter (inverter that can handle system power without overload)
             let autoSelectedInverter = null;
             const minPower = systemPower / 1.15; // Inverter must be able to handle system power
             
-            for (let i = 0; i < inverters.length; i++) {
-                if (inverters[i].kw >= minPower) {
-                    autoSelectedInverter = inverters[i];
+            for (let i = 0; i < phaseFilteredInverters.length; i++) {
+                if (phaseFilteredInverters[i].kw >= minPower) {
+                    autoSelectedInverter = phaseFilteredInverters[i];
                     break;
                 }
             }
             
             // Filter and add suitable inverters (inverters that can handle the system power)
-            const suitableInverters = inverters
+            const suitableInverters = phaseFilteredInverters
                 .filter(inverter => inverter.kw >= minPower)
-                .sort((a, b) => a.kw - b.kw);
+                .sort((a, b) => a.price - b.price); // Sort by price (lowest first)
+            
+            console.log('🔍 Filtering inverters:', {
+                totalTypeFiltered: typeFilteredInverters.length,
+                minPowerRequired: minPower,
+                suitableCount: suitableInverters.length,
+                suitableInverters: suitableInverters.map(inv => ({
+                    id: inv.id,
+                    brand: inv.brand,
+                    model: inv.model,
+                    kw: inv.kw,
+                    type: inv.type,
+                    price: inv.price
+                }))
+            });
             
             suitableInverters.forEach(inverter => {
                 const option = document.createElement('option');
-                option.value = inverter.kw;
+                option.value = inverter.id; // Store inverter ID instead of power
+                
+                // Create more robust text that handles missing model field
+                const modelText = inverter.model ? ` ${inverter.model}` : '';
+                const phaseText = inverter.phase ? ` - ${inverter.phase === 'one phase' ? '1Φ' : '3Φ'}` : '';
                 const text = currentLanguage === 'en' 
-                    ? `${inverter.brand} ${inverter.model} - ${inverter.kw} kW`
-                    : `${inverter.brand} ${inverter.model} - ${inverter.kw} կՎտ`;
+                    ? `${inverter.brand}${modelText} - ${inverter.kw} kW (${inverter.type || 'on_grid'})${phaseText}`
+                    : `${inverter.brand}${modelText} - ${inverter.kw} կՎտ (${inverter.type === 'on_grid' ? 'Ցանցային' : inverter.type === 'off_grid' ? 'Ավտոնոմ' : inverter.type === 'hybrid' ? 'Հիբրիդ' : 'Ցանցային'})${phaseText}`;
+                
                 option.textContent = text;
-                option.setAttribute('data-en', `${inverter.brand} ${inverter.model} - ${inverter.kw} kW`);
-                option.setAttribute('data-hy', `${inverter.brand} ${inverter.model} - ${inverter.kw} կՎտ`);
+                option.setAttribute('data-en', `${inverter.brand}${modelText} - ${inverter.kw} kW (${inverter.type || 'on_grid'})${phaseText}`);
+                option.setAttribute('data-hy', `${inverter.brand}${modelText} - ${inverter.kw} կՎտ (${inverter.type === 'on_grid' ? 'Ցանցային' : inverter.type === 'off_grid' ? 'Ավտոնոմ' : inverter.type === 'hybrid' ? 'Հիբրիդ' : 'Ցանցային'})${phaseText}`);
+                
+                // Debug logging for each option
+                console.log('🔍 Adding inverter option:', {
+                    id: inverter.id,
+                    brand: inverter.brand,
+                    model: inverter.model,
+                    kw: inverter.kw,
+                    type: inverter.type,
+                    text: text
+                });
+                
                 inverterSelect.appendChild(option);
             });
             
-            // Set the best suitable inverter as default selected option (smallest inverter that can handle system power)
+            // Set the best suitable inverter as default selected option (lowest price inverter that can handle system power)
             if (suitableInverters.length > 0) {
-                // The suitableInverters are already sorted by power (a.kw - b.kw), so the first one is the smallest
+                // The suitableInverters are already sorted by price (a.price - b.price), so the first one is the cheapest
                 const bestInverter = suitableInverters[0];
-                inverterSelect.value = bestInverter.kw;
+                inverterSelect.value = bestInverter.id; // Use inverter ID instead of power
+                console.log('✅ Inverter dropdown populated successfully:', {
+                    totalInverters: inverters.length,
+                    typeFilteredCount: typeFilteredInverters.length,
+                    phaseFilteredCount: phaseFilteredInverters.length,
+                    suitableInverters: suitableInverters.length,
+                    selectedInverter: bestInverter.kw + 'kW - ' + bestInverter.price.toLocaleString() + ' AMD (' + bestInverter.id + ')'
+                });
                 
-
+                // Debug: Show final dropdown options
+                console.log('🔍 Final dropdown options:', Array.from(inverterSelect.options).map(opt => ({
+                    value: opt.value,
+                    text: opt.textContent,
+                    selected: opt.selected
+                })));
+            } else {
+                console.log('❌ No suitable inverters found for system power');
             }
         }
 
         // Populate panel dropdown with intelligent options
         function populatePanelDropdown() {
+            console.log('🔍 populatePanelDropdown called:', {
+                panels: panels?.length || 0,
+                inverters: inverters?.length || 0,
+                dbProfitMargins: !!dbProfitMargins,
+                dbSalesCommissions: !!dbSalesCommissions,
+                dbUnanticipatedExpenses: !!dbUnanticipatedExpenses
+            });
+            
             // Check if all required data is loaded
             if (!panels || panels.length === 0) {
+                console.log('❌ No panels data available');
                 return;
             }
             
-        if (!inverters || !dbProfitMargins || !dbSalesCommissions || !dbUnanticipatedExpenses) {
-            return;
-        }
-        // Use the intelligent calculation function
-        calculatePanelRequirements();
+            if (!inverters || !dbProfitMargins || !dbSalesCommissions || !dbUnanticipatedExpenses) {
+                console.log('❌ Missing required data:', {
+                    inverters: !!inverters,
+                    dbProfitMargins: !!dbProfitMargins,
+                    dbSalesCommissions: !!dbSalesCommissions,
+                    dbUnanticipatedExpenses: !!dbUnanticipatedExpenses
+                });
+                return;
+            }
+            
+            console.log('✅ All data available, calling calculatePanelRequirements');
+            // Use the intelligent calculation function
+            calculatePanelRequirements();
         }
 
         // Manual inverter selection functions
@@ -1540,25 +1818,41 @@
         }
 
         function populateManualBrands() {
+            const brandSelect = document.getElementById('manualBrand');
+            
             // Check if inverters are loaded
             if (!inverters || inverters.length === 0) {
+                brandSelect.innerHTML = '<option value="">Loading brands...</option>';
                 return;
             }
-            
-
-            
-            const brandSelect = document.getElementById('manualBrand');
             brandSelect.innerHTML = '<option value="" data-en="Select brand" data-hy="Ընտրեք բրենդը">Select brand</option>';
             
-            // Get system power to apply 15% rule
+            // Get system power, inverter type, and phase
             const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            const selectedInverterType = document.getElementById('inverterType').value;
+            const selectedPhase = document.getElementById('phaseFilter').value;
+            
+            // Filter inverters by type strictly
+            const typeFilteredInverters = inverters.filter(inverter => {
+                // If inverter has no type specified, treat it as 'on_grid' for backward compatibility
+                const inverterType = inverter.type || 'on_grid';
+                return inverterType === selectedInverterType;
+            });
+            
+            // Filter inverters by selected phase (if a specific phase is selected)
+            const phaseFilteredInverters = selectedPhase 
+                ? typeFilteredInverters.filter(inverter => {
+                    const inverterPhase = inverter.phase || 'one phase';
+                    return inverterPhase === selectedPhase;
+                })
+                : typeFilteredInverters;
             
             if (systemPower > 0) {
                 // Calculate minimum power (inverter must be able to handle system power)
                 const minPower = systemPower / 1.15; // Inverter must be able to handle system power
                 
                 // Filter brands: show all brands with inverters that can handle the system power
-                const suitableBrands = [...new Set(inverters
+                const suitableBrands = [...new Set(phaseFilteredInverters
                     .filter(inv => inv.kw >= minPower) // Inverter must be able to handle system power
                     .map(inv => inv.brand)
                 )].sort();
@@ -1578,16 +1872,16 @@
                     option.value = "";
                     option.disabled = true;
                     const text = currentLanguage === 'en' 
-                        ? 'No suitable brands (15% rule)'
-                        : 'Հարմար բրենդներ չկան (15% կանոն)';
+                        ? `No suitable ${selectedInverterType.replace('_', ' ')} brands (15% rule)`
+                        : `Հարմար ${selectedInverterType === 'on_grid' ? 'ցանցային' : selectedInverterType === 'off_grid' ? 'ավտոնոմ' : 'հիբրիդ'} բրենդներ չկան (15% կանոն)`;
                     option.textContent = text;
-                    option.setAttribute('data-en', 'No suitable brands (15% rule)');
-                    option.setAttribute('data-hy', 'Հարմար բրենդներ չկան (15% կանոն)');
+                    option.setAttribute('data-en', `No suitable ${selectedInverterType.replace('_', ' ')} brands (15% rule)`);
+                    option.setAttribute('data-hy', `Հարմար ${selectedInverterType === 'on_grid' ? 'ցանցային' : selectedInverterType === 'off_grid' ? 'ավտոնոմ' : 'հիբրիդ'} բրենդներ չկան (15% կանոն)`);
                     brandSelect.appendChild(option);
                 }
             } else {
-                // No system power entered yet - show all brands
-                const brands = [...new Set(inverters.map(inv => inv.brand))].sort();
+                // No system power entered yet - show all brands of selected type and phase
+                const brands = [...new Set(phaseFilteredInverters.map(inv => inv.brand))].sort();
                 
                 brands.forEach(brand => {
                     const option = document.createElement('option');
@@ -1601,25 +1895,41 @@
         }
 
         function populateManualPowers() {
+            const powerSelect = document.getElementById('manualPower');
+            
             // Check if inverters loaded
             if (!inverters || inverters.length === 0) {
+                powerSelect.innerHTML = '<option value="">Loading powers...</option>';
                 return;
             }
-            
-
-            
-            const powerSelect = document.getElementById('manualPower');
             powerSelect.innerHTML = '<option value="" data-en="Select power" data-hy="Ընտրեք հզորությունը">Select power</option>';
             
-            // Get system power to apply 15% rule
+            // Get system power, inverter type, and phase
             const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            const selectedInverterType = document.getElementById('inverterType').value;
+            const selectedPhase = document.getElementById('phaseFilter').value;
             
-                        if (systemPower > 0) {
+            // Filter inverters by type strictly
+            const typeFilteredInverters = inverters.filter(inverter => {
+                // If inverter has no type specified, treat it as 'on_grid' for backward compatibility
+                const inverterType = inverter.type || 'on_grid';
+                return inverterType === selectedInverterType;
+            });
+            
+            // Filter inverters by selected phase (if a specific phase is selected)
+            const phaseFilteredInverters = selectedPhase 
+                ? typeFilteredInverters.filter(inverter => {
+                    const inverterPhase = inverter.phase || 'one phase';
+                    return inverterPhase === selectedPhase;
+                })
+                : typeFilteredInverters;
+            
+            if (systemPower > 0) {
                 // Calculate minimum power (inverter must be able to handle system power)
                 const minPower = systemPower / 1.15; // Inverter must be able to handle system power
                 
                 // Filter inverters: show all inverters that can handle the system power
-                const suitablePowers = [...new Set(inverters
+                const suitablePowers = [...new Set(phaseFilteredInverters
                     .filter(inv => inv.kw >= minPower) // Inverter must be able to handle system power
                     .map(inv => inv.kw)
                 )].sort((a, b) => a - b);
@@ -1642,16 +1952,16 @@
                     option.value = "";
                     option.disabled = true;
                     const text = currentLanguage === 'en' 
-                        ? 'No suitable inverters (15% rule)'
-                        : 'Հարմար փոխակերպիչներ չկան (15% կանոն)';
+                        ? `No suitable ${selectedInverterType.replace('_', ' ')} inverters (15% rule)`
+                        : `Հարմար ${selectedInverterType === 'on_grid' ? 'ցանցային' : selectedInverterType === 'off_grid' ? 'ավտոնոմ' : 'հիբրիդ'} փոխակերպիչներ չկան (15% կանոն)`;
                     option.textContent = text;
-                    option.setAttribute('data-en', 'No suitable inverters (15% rule)');
-                    option.setAttribute('data-hy', 'Հարմար փոխակերպիչներ չկան (15% կանոն)');
+                    option.setAttribute('data-en', `No suitable ${selectedInverterType.replace('_', ' ')} inverters (15% rule)`);
+                    option.setAttribute('data-hy', `Հարմար ${selectedInverterType === 'on_grid' ? 'ցանցային' : selectedInverterType === 'off_grid' ? 'ավտոնոմ' : 'հիբրիդ'} փոխակերպիչներ չկան (15% կանոն)`);
                     powerSelect.appendChild(option);
                 }
             } else {
-                // No system power entered yet - show all powers
-                const powers = [...new Set(inverters.map(inv => inv.kw))].sort((a, b) => a - b);
+                // No system power entered yet - show all powers of selected type and phase
+                const powers = [...new Set(phaseFilteredInverters.map(inv => inv.kw))].sort((a, b) => a - b);
                 
                 powers.forEach(power => {
                     const option = document.createElement('option');
@@ -1667,9 +1977,139 @@
             }
         }
 
+        // Accumulator selection functions
+        function toggleAccumulatorSelection() {
+            const toggle = document.getElementById('manualAccumulatorToggle');
+            const autoSelection = document.getElementById('autoAccumulatorSelection');
+            const manualSelection = document.getElementById('manualAccumulatorSelection');
+            
+            if (toggle.checked) {
+                // Switch to manual mode
+                autoSelection.classList.add('hidden');
+                manualSelection.classList.remove('hidden');
+                populateManualAccumulatorBrands();
+                populateManualAccumulatorCapacities();
+                populateManualAccumulatorChemistries();
+            } else {
+                // Switch to auto mode
+                autoSelection.classList.remove('hidden');
+                manualSelection.classList.add('hidden');
+                // Reset manual selections
+                document.getElementById('manualAccumulatorBrand').value = '';
+                document.getElementById('manualAccumulatorCapacity').value = '';
+                document.getElementById('manualAccumulatorChemistry').value = '';
+            }
+            
+            // Force recalculation when accumulator selection mode changes
+            forceRecalculate();
+        }
 
+        function populateAccumulatorDropdown() {
+            const accumulatorSelect = document.getElementById('accumulatorSelect');
+            
+            // Check if accumulators are loaded
+            if (!accumulators || accumulators.length === 0) {
+                accumulatorSelect.innerHTML = '<option value="">Loading accumulators...</option>';
+                return;
+            }
+            const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            accumulatorSelect.innerHTML = '';
+            
+            // Calculate recommended battery capacity (typically 1-2 days of system power)
+            const recommendedCapacity = systemPower * 1.5; // 1.5 days of storage
+            
+            // Filter and add suitable accumulators
+            const suitableAccumulators = accumulators
+                .filter(accumulator => accumulator.capacity_kwh >= systemPower * 0.5 && accumulator.capacity_kwh <= systemPower * 3)
+                .sort((a, b) => a.capacity_kwh - b.capacity_kwh);
+            
+            suitableAccumulators.forEach(accumulator => {
+                const option = document.createElement('option');
+                option.value = accumulator.id;
+                const text = currentLanguage === 'en' 
+                    ? `${accumulator.brand} ${accumulator.model} - ${accumulator.capacity_kwh} kWh (${accumulator.chemistry})`
+                    : `${accumulator.brand} ${accumulator.model} - ${accumulator.capacity_kwh} կՎտժ (${accumulator.chemistry})`;
+                option.textContent = text;
+                option.setAttribute('data-en', `${accumulator.brand} ${accumulator.model} - ${accumulator.capacity_kwh} kWh (${accumulator.chemistry})`);
+                option.setAttribute('data-hy', `${accumulator.brand} ${accumulator.model} - ${accumulator.capacity_kwh} կՎտժ (${accumulator.chemistry})`);
+                accumulatorSelect.appendChild(option);
+            });
+            
+            // Set the best suitable accumulator as default selected option
+            if (suitableAccumulators.length > 0) {
+                // Find the accumulator closest to recommended capacity
+                const bestAccumulator = suitableAccumulators.reduce((prev, curr) => 
+                    Math.abs(curr.capacity_kwh - recommendedCapacity) < Math.abs(prev.capacity_kwh - recommendedCapacity) ? curr : prev
+                );
+                accumulatorSelect.value = bestAccumulator.id;
+            }
+        }
 
+        function populateManualAccumulatorBrands() {
+            const brandSelect = document.getElementById('manualAccumulatorBrand');
+            
+            if (!accumulators || accumulators.length === 0) {
+                brandSelect.innerHTML = '<option value="">Loading brands...</option>';
+                return;
+            }
+            brandSelect.innerHTML = '<option value="" data-en="Select brand" data-hy="Ընտրեք բրենդը">Select brand</option>';
+            
+            const brands = [...new Set(accumulators.map(acc => acc.brand))].sort();
+            
+            brands.forEach(brand => {
+                const option = document.createElement('option');
+                option.value = brand;
+                option.textContent = brand;
+                option.setAttribute('data-en', brand);
+                option.setAttribute('data-hy', brand);
+                brandSelect.appendChild(option);
+            });
+        }
 
+        function populateManualAccumulatorCapacities() {
+            const capacitySelect = document.getElementById('manualAccumulatorCapacity');
+            
+            if (!accumulators || accumulators.length === 0) {
+                capacitySelect.innerHTML = '<option value="">Loading capacities...</option>';
+                return;
+            }
+            capacitySelect.innerHTML = '<option value="" data-en="Select capacity" data-hy="Ընտրեք հզորությունը">Select capacity</option>';
+            
+            const capacities = [...new Set(accumulators.map(acc => acc.capacity_kwh))].sort((a, b) => a - b);
+            
+            capacities.forEach(capacity => {
+                const option = document.createElement('option');
+                option.value = capacity;
+                const text = currentLanguage === 'en' 
+                    ? `${capacity} kWh`
+                    : `${capacity} կՎտժ`;
+                option.textContent = text;
+                option.setAttribute('data-en', `${capacity} kWh`);
+                option.setAttribute('data-hy', `${capacity} կՎտժ`);
+                capacitySelect.appendChild(option);
+            });
+        }
+
+        function populateManualAccumulatorChemistries() {
+            const chemistrySelect = document.getElementById('manualAccumulatorChemistry');
+            
+            if (!accumulators || accumulators.length === 0) {
+                chemistrySelect.innerHTML = '<option value="">Loading chemistries...</option>';
+                return;
+            }
+            chemistrySelect.innerHTML = '<option value="" data-en="Select chemistry" data-hy="Ընտրեք քիմիան">Select chemistry</option>';
+            
+            const chemistries = [...new Set(accumulators.map(acc => acc.chemistry))].sort();
+            
+            chemistries.forEach(chemistry => {
+                const option = document.createElement('option');
+                option.value = chemistry;
+                option.textContent = chemistry;
+                option.setAttribute('data-en', chemistry);
+                option.setAttribute('data-hy', chemistry);
+                chemistrySelect.appendChild(option);
+            });
+        }
 
         // Panel selection functions
         function togglePanelSelection() {
@@ -1700,12 +2140,13 @@
         }
 
         function populateManualPanelBrands() {
+            const brandSelect = document.getElementById('manualPanelBrand');
+            
             // Check if panels are loaded
             if (!panels || panels.length === 0) {
+                brandSelect.innerHTML = '<option value="">Loading brands...</option>';
                 return;
             }
-            
-            const brandSelect = document.getElementById('manualPanelBrand');
             brandSelect.innerHTML = '<option value="" data-en="Select brand" data-hy="Ընտրեք բրենդը">Select brand</option>';
             
             // Get all unique brands from panels
@@ -1722,12 +2163,13 @@
         }
 
         function populateManualPanelWattages() {
+            const wattageSelect = document.getElementById('manualPanelWattage');
+            
             // Check if panels are loaded
             if (!panels || panels.length === 0) {
+                wattageSelect.innerHTML = '<option value="">Loading wattages...</option>';
                 return;
             }
-            
-            const wattageSelect = document.getElementById('manualPanelWattage');
             wattageSelect.innerHTML = '<option value="" data-en="Select wattage" data-hy="Ընտրեք հզորությունը">Select wattage</option>';
             
             // Get all unique wattages from panels
@@ -1758,13 +2200,25 @@
                 return panelOption.totalPrice; // Fallback to panel price only
             }
             
-            // Find suitable inverter (smallest inverter where inverter.kw * 1.15 >= systemPower)
+            // Use the currently selected inverter from the dropdown
             let selectedInverter = null;
-            for (let i = 0; i < inverters.length; i++) {
-                if (inverters[i].kw * 1.15 >= systemPower) {
-                    selectedInverter = inverters[i];
-                    break;
+            const inverterSelect = document.getElementById('inverterSelect');
+            if (inverterSelect && inverterSelect.value) {
+                const selectedInverterId = parseInt(inverterSelect.value);
+                selectedInverter = inverters.find(inv => inv.id === selectedInverterId);
+                console.log('🔍 calculateCompleteSystemCost using selected inverter ID:', selectedInverterId, selectedInverter);
+            }
+            
+            // If no inverter is selected, fall back to auto-selection logic
+            if (!selectedInverter) {
+                // Find suitable inverter (smallest inverter where inverter.kw * 1.15 >= systemPower)
+                for (let i = 0; i < inverters.length; i++) {
+                    if (inverters[i].kw * 1.15 >= systemPower) {
+                        selectedInverter = inverters[i];
+                        break;
+                    }
                 }
+                console.log('🔍 calculateCompleteSystemCost using auto-selected inverter:', selectedInverter?.kw + 'kW', selectedInverter);
             }
             
             if (!selectedInverter) {
@@ -1772,8 +2226,15 @@
             }
             
             // Calculate base price from installation costs - use same logic as main function
-            const basePricePerKw = dbProfitMargins.installationCosts?.data?.[`cost_per_kw_${installationType}`]?.value || 36000;
+            // Convert camelCase to underscore format to match API response keys
+            const installationTypeKey = installationType
+                .replace(/([A-Z])/g, '_$1')
+                .toLowerCase();
+            const installationCostKey = `cost_per_kw_${installationTypeKey}`;
+            const basePricePerKw = dbProfitMargins.installationCosts?.data?.[installationCostKey]?.value || 36000;
             const basePrice = Math.ceil(systemPower * basePricePerKw);
+            
+
             
             // Get profit margin based on warranty years (profit margins are global, not per installation type)
             const profitKey = `profit_per_kw_${warrantyYears}Y`;
@@ -1795,12 +2256,25 @@
             const panelPrice = panelOption.totalPrice;
             const inverterPrice = selectedInverter.price;
             
+            // Calculate accumulator cost if hybrid system is selected
+            let accumulatorPrice = 0;
+            const selectedInverterType = document.getElementById('inverterType').value;
+            if (selectedInverterType === 'hybrid' && accumulators && accumulators.length > 0) {
+                const accumulatorSelect = document.getElementById('accumulatorSelect');
+                if (accumulatorSelect && accumulatorSelect.value) {
+                    const selectedAccumulator = accumulators.find(acc => acc.id == accumulatorSelect.value);
+                    if (selectedAccumulator) {
+                        accumulatorPrice = selectedAccumulator.price;
+                    }
+                }
+            }
+            
             // Get sales team and unanticipated expenses percentages - use same logic as main function
             const salesTeamPct = (dbSalesCommissions.salesCommissions?.data?.sales_team_pct?.value || 6) / 100;
             const unanticipatedExpensesPct = (dbUnanticipatedExpenses.unanticipatedExpenses?.data?.unanticipated_expenses_pct?.value || 2) / 100;
             
-            // Calculate total system price using exact same formula as main function
-            const totalSystemPrice = Math.ceil((basePrice + profitAmount + inverterPrice + panelPrice) / (1 - salesTeamPct - unanticipatedExpensesPct));
+            // Calculate total system price using exact same formula as main function (including accumulator)
+            const totalSystemPrice = Math.ceil((basePrice + profitAmount + inverterPrice + panelPrice + accumulatorPrice) / (1 - salesTeamPct - unanticipatedExpensesPct));
             
             // Calculate sales discount based on selected stage
             const salesStage = parseInt(document.getElementById('salesStage').value) || 0;
@@ -1813,9 +2287,12 @@
             return finalSystemPrice;
         }
 
-        // Function to calculate intelligent panel options based on system power
+        // Function to calculate intelligent panel options based on system cost for a panel option
         function calculatePanelRequirements() {
+            console.log('🔍 calculatePanelRequirements called');
             const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
+            console.log('🔍 System power:', systemPower, 'kW');
+            console.log('🔍 Panels available:', panels?.length || 0);
             
             if (systemPower > 0 && panels && panels.length > 0) {
                 const targetWattage = systemPower * 1000; // Convert kW to W
@@ -1924,6 +2401,8 @@
                     return;
                 }
                 
+
+                
                 // Clear and populate the suggestions display
                 panelSuggestions.innerHTML = '';
                 
@@ -1997,6 +2476,10 @@
                         ? `${option.quantity} × ${option.brand} ${option.wattage}W = ${option.actualPower} kW`
                         : `${option.quantity} × ${option.brand} ${option.wattage}Վտ = ${option.actualPower} կՎտ`;
                     
+                    // Calculate system value for debugging
+                    const systemValue = calculateCompleteSystemCost(option) || option.totalPrice;
+                    console.log(`🔍 Panel option ${index}: ${text} - System Value: ${systemValue.toLocaleString()} AMD`);
+                    
                     suggestionCard.innerHTML = `
                         <div class="grid grid-cols-1 gap-2">
                             <div class="flex justify-between items-start">
@@ -2010,7 +2493,7 @@
                                 ${index === 0 ? '<span class="text-green-600 text-xs font-bold">⭐ BEST</span>' : ''}
                             </div>
                             <div class="text-xs">
-                                <span class="text-gray-600 font-medium">${currentLanguage === 'en' ? 'System Value' : 'Համակարգի արժեք'}: ${(calculateCompleteSystemCost(option) || option.totalPrice).toLocaleString()} AMD</span>
+                                <span class="text-gray-600 font-medium">${currentLanguage === 'en' ? 'System Value' : 'Համակարգի արժեք'}: ${systemValue.toLocaleString()} AMD</span>
                             </div>
                         </div>
                     `;
@@ -2031,6 +2514,8 @@
                 
                 // Auto-recalculate when panel suggestions are updated
                 autoRecalculate();
+                
+                console.log('✅ Panel suggestions completed with updated system values');
             } else {
                 // Clear suggestions when no system power
                 const panelSuggestions = document.getElementById('panelSuggestions');
@@ -2129,38 +2614,70 @@
             // Only update if we're in auto inverter mode
             const manualToggle = document.getElementById('manualInverterToggle');
             if (manualToggle.checked) {
+                console.log('🔍 updateInverterAutoSelection: Manual mode enabled, skipping auto-update');
                 return;
             }
             
             // Check if inverters are loaded
             if (!inverters || inverters.length === 0) {
+                console.log('⚠️ updateInverterAutoSelection: No inverters loaded');
                 return;
             }
             
-            // Find the best inverter for the system power (smallest inverter where inverter.kw * 1.15 >= systemPower)
+            // Check if user has manually selected an inverter (even in auto mode)
+            const inverterSelect = document.getElementById('inverterSelect');
+            if (inverterSelect && inverterSelect.value) {
+                const userSelectedInverterId = parseInt(inverterSelect.value);
+                const userSelectedInverter = inverters.find(inv => inv.id === userSelectedInverterId);
+                if (userSelectedInverter) {
+                    console.log('🔍 updateInverterAutoSelection: User has manually selected inverter:', userSelectedInverter.kw + 'kW', userSelectedInverter.brand, '(ID:', userSelectedInverterId + ')');
+                    console.log('🔍 updateInverterAutoSelection: Respecting user selection, skipping auto-update');
+                    return; // Respect user's manual selection
+                }
+            }
+            
+            // Also check the global flag
+            if (window.userHasSelectedInverter) {
+                console.log('🔍 updateInverterAutoSelection: User has manually selected inverter (flag set), skipping auto-update');
+                return; // Respect user's manual selection
+            }
+            
+            console.log('🔍 updateInverterAutoSelection: Updating inverter selection for system power:', systemPower);
+            
+            // Find the best inverter for the system power (cheapest inverter where inverter.kw * 1.15 >= systemPower)
             let bestInverter = null;
             const minPower = systemPower / 1.15;
             
-            for (let i = 0; i < inverters.length; i++) {
-                if (inverters[i].kw >= minPower) {
-                    bestInverter = inverters[i];
-                    break;
-                }
+            // Filter inverters that can handle the system power, then find the cheapest one
+            const suitableInverters = inverters.filter(inv => inv.kw >= minPower);
+            if (suitableInverters.length > 0) {
+                // Sort by price (lowest first) and take the first one
+                suitableInverters.sort((a, b) => a.price - b.price);
+                bestInverter = suitableInverters[0];
             }
             
             if (bestInverter) {
                 // Update the inverter dropdown selection
-                const inverterSelect = document.getElementById('inverterSelect');
                 if (inverterSelect) {
-                    // Find the option with the matching power
+                    // Find the option with the matching inverter ID
                     const targetOption = Array.from(inverterSelect.options).find(option => 
-                        parseFloat(option.value) === bestInverter.kw
+                        parseInt(option.value) === bestInverter.id
                     );
                     
                     if (targetOption) {
                         inverterSelect.value = targetOption.value;
+                        console.log('🔍 updateInverterAutoSelection: Updated to inverter:', {
+                            id: bestInverter.id,
+                            kw: bestInverter.kw,
+                            brand: bestInverter.brand,
+                            price: bestInverter.price
+                        });
+                    } else {
+                        console.log('⚠️ updateInverterAutoSelection: Target inverter option not found in dropdown');
                     }
                 }
+            } else {
+                console.log('⚠️ updateInverterAutoSelection: No suitable inverter found for system power:', systemPower);
             }
         }
 
@@ -2258,8 +2775,18 @@
 
         // Set default values
         document.addEventListener('DOMContentLoaded', function() {
-            // CRITICAL SECURITY: Enforce security immediately on page load
-            enforceSecurityOnLoad();
+            // Initialize language from localStorage
+            const savedLanguage = localStorage.getItem('loanCalculatorLanguage');
+            if (savedLanguage) {
+                currentLanguage = savedLanguage;
+                // Update language buttons to reflect saved preference
+                document.getElementById('langEn').className = savedLanguage === 'en' 
+                    ? 'px-3 py-1 rounded-md text-sm font-medium bg-tiamat-blue text-white'
+                    : 'px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300';
+                document.getElementById('langHy').className = savedLanguage === 'hy' 
+                    ? 'px-3 py-1 rounded-md text-sm font-medium bg-tiamat-blue text-white'
+                    : 'px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300';
+            }
             
             document.getElementById('systemPower').value = '10.44';
             
@@ -2270,7 +2797,16 @@
             
 
             
-            // Don't populate inverter dropdown here - wait for data to load
+            // Populate inverter dropdown with initial state (shows loading message)
+            populateInverterDropdown();
+            
+            // Also populate manual inverter options with initial state
+            populateManualBrands();
+            populateManualPowers();
+            
+            // Also populate panel options with initial state
+            populateManualPanelBrands();
+            populateManualPanelWattages();
             
             // Add event listeners for filters
             document.getElementById('bankFilter').addEventListener('change', applyFilters);
@@ -2308,6 +2844,9 @@
                 // Update the profit per kW display immediately
                 updateProfitPerKwDisplay();
                 
+                // Update panel suggestions immediately when warranty changes
+                calculatePanelRequirements();
+                
                 // Auto-recalculate when warranty changes
                 autoRecalculate();
             });
@@ -2325,7 +2864,57 @@
                 // Update the profit per kW display immediately
                 updateProfitPerKwDisplay();
                 
+                // Update panel suggestions immediately when installation type changes
+                calculatePanelRequirements();
+                
                 // Auto-recalculate when installation type changes
+                autoRecalculate();
+            });
+            
+            // Add event listener for inverter type to recalculate when changed
+            document.getElementById('inverterType').addEventListener('change', function() {
+                // Update inverter dropdown with filtered options
+                populateInverterDropdown();
+                
+                // Show/hide accumulator selection based on inverter type
+                const selectedType = this.value;
+                const accumulatorContainer = document.getElementById('accumulatorSelectionContainer');
+                
+                if (selectedType === 'hybrid') {
+                    accumulatorContainer.classList.remove('hidden');
+                    // Populate accumulator dropdown
+                    populateAccumulatorDropdown();
+                } else {
+                    accumulatorContainer.classList.add('hidden');
+                }
+                
+                // Update panel suggestions immediately when inverter type changes
+                calculatePanelRequirements();
+                
+                // Auto-recalculate when inverter type changes
+                autoRecalculate();
+            });
+            
+            // Add event listener for phase filter to recalculate when changed
+            document.getElementById('phaseFilter').addEventListener('change', function() {
+                // Update inverter dropdown with filtered options
+                populateInverterDropdown();
+                
+                // Update panel suggestions immediately when phase changes
+                calculatePanelRequirements();
+                
+                // Auto-recalculate when phase changes
+                autoRecalculate();
+            });
+            
+            // Add real-time updates for phase filter
+            document.getElementById('phaseFilter').addEventListener('input', function() {
+                // Real-time update when phase changes
+                populateInverterDropdown();
+                
+                // Update panel suggestions in real-time when phase changes
+                calculatePanelRequirements();
+                
                 autoRecalculate();
             });
             
@@ -2333,12 +2922,42 @@
             document.getElementById('warrantyYears').addEventListener('input', function() {
                 // Real-time update when warranty changes
                 updateProfitPerKwDisplay();
+                
+                // Update panel suggestions in real-time when warranty changes
+                calculatePanelRequirements();
+                
                 autoRecalculate();
             });
             
             document.getElementById('installationType').addEventListener('input', function() {
                 // Real-time update when installation type changes
                 updateProfitPerKwDisplay();
+                
+                // Update panel suggestions in real-time when installation type changes
+                calculatePanelRequirements();
+                
+                autoRecalculate();
+            });
+            
+            document.getElementById('inverterType').addEventListener('input', function() {
+                // Real-time update when inverter type changes
+                populateInverterDropdown();
+                
+                // Show/hide accumulator selection based on inverter type
+                const selectedType = this.value;
+                const accumulatorContainer = document.getElementById('accumulatorSelectionContainer');
+                
+                if (selectedType === 'hybrid') {
+                    accumulatorContainer.classList.remove('hidden');
+                    // Populate accumulator dropdown
+                    populateAccumulatorDropdown();
+                } else {
+                    accumulatorContainer.classList.add('hidden');
+                }
+                
+                // Update panel suggestions in real-time when inverter type changes
+                calculatePanelRequirements();
+                
                 autoRecalculate();
             });
             
@@ -2371,6 +2990,44 @@
             
             // Add event listener for auto inverter selection changes
             document.getElementById('inverterSelect').addEventListener('change', function() {
+                const selectedInverterId = parseInt(this.value);
+                const selectedInverter = inverters.find(inv => inv.id === selectedInverterId);
+                console.log('🔍 Inverter selection changed to ID:', selectedInverterId, '->', selectedInverter ? `${selectedInverter.brand} ${selectedInverter.kw}kW` : 'Unknown');
+                
+                // Mark that user has manually selected an inverter
+                window.userHasSelectedInverter = true;
+                console.log('🔍 User has manually selected inverter, marking for respect');
+                
+                // Force recalculation for main calculations
+                forceRecalculate();
+                
+                // Force refresh of panel suggestions to update system values
+                if (typeof calculatePanelRequirements === 'function') {
+                    console.log('🔍 Refreshing panel suggestions after inverter change...');
+                    setTimeout(() => {
+                        calculatePanelRequirements();
+                        console.log('✅ Panel suggestions refreshed');
+                    }, 100);
+                } else {
+                    console.log('❌ calculatePanelRequirements function not found');
+                }
+            });
+            
+            // Add event listener for auto accumulator selection changes
+            document.getElementById('accumulatorSelect').addEventListener('change', function() {
+                forceRecalculate();
+            });
+            
+            // Add event listeners for manual accumulator selection changes
+            document.getElementById('manualAccumulatorBrand').addEventListener('change', function() {
+                forceRecalculate();
+            });
+            
+            document.getElementById('manualAccumulatorCapacity').addEventListener('change', function() {
+                forceRecalculate();
+            });
+            
+            document.getElementById('manualAccumulatorChemistry').addEventListener('change', function() {
                 forceRecalculate();
             });
             
@@ -2404,7 +3061,6 @@
             });
             
             // Load saved language preference
-            const savedLanguage = localStorage.getItem('loanCalculatorLanguage');
             if (savedLanguage) {
                 switchLanguage(savedLanguage);
             }
@@ -2412,7 +3068,7 @@
             // ADDITIONAL SECURITY: Double-check security on window load
             window.addEventListener('load', function() {
                 // Force security check again after all resources are loaded
-                enforceSecurityOnLoad();
+                // enforceSecurityOnLoad(); // Temporarily disabled
             });
             
             // Ensure Armenian button is always visible
@@ -3424,7 +4080,7 @@
             initRouteProtection();
             
             // Enforce security immediately on page load
-            enforceSecurityOnLoad();
+            // enforceSecurityOnLoad(); // Temporarily disabled
             
             // Fetch system cost settings first, then check admin status
             try {
@@ -3445,7 +4101,7 @@
         
         // Also enforce security when window loads to catch any late elements
         window.addEventListener('load', function() {
-            enforceSecurityOnLoad();
+            // enforceSecurityOnLoad(); // Temporarily disabled
         });
     </script>
 
