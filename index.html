@@ -523,6 +523,25 @@
         let isDataLoaded = false; // Track if database data is fully loaded
         let selectedPanelOption = null; // Store the selected panel option from suggestions
         
+        // Helper function to calculate safety margin based on inverter power
+        function getSafetyMargin(inverterPower) {
+            // For inverters ≤ 10kW: 15% safety margin
+            // For inverters > 10kW: 25% safety margin
+            return inverterPower <= 10 ? 1.15 : 1.25;
+        }
+        
+        // Helper function to calculate minimum inverter power needed for system power
+        function getMinInverterPower(systemPower) {
+            // For systems that would need ≤ 10kW inverter: use 15% margin
+            // For systems that would need > 10kW inverter: use 25% margin
+            const margin15 = systemPower / 1.15;
+            const margin25 = systemPower / 1.25;
+            
+            // If 15% margin gives us ≤ 10kW, use 15% margin
+            // Otherwise, use 25% margin
+            return margin15 <= 10 ? margin15 : margin25;
+        }
+        
         // Function to fetch system cost settings from database
         async function fetchSystemCostSettings() {
             try {
@@ -1680,7 +1699,7 @@
             
             // Find the auto-selected inverter (inverter that can handle system power without overload)
             let autoSelectedInverter = null;
-            const minPower = systemPower / 1.25; // Inverter must be able to handle system power (25% safety margin)
+            const minPower = getMinInverterPower(systemPower); // Conditional safety margin (15% for ≤10kW, 25% for >10kW)
             
             for (let i = 0; i < phaseFilteredInverters.length; i++) {
                 if (phaseFilteredInverters[i].kw >= minPower) {
@@ -1867,11 +1886,11 @@
             
             if (systemPower > 0) {
                 // Calculate minimum power (inverter must be able to handle system power)
-                const minPower = systemPower / 1.25; // Inverter must be able to handle system power (25% safety margin)
+                const minPower = getMinInverterPower(systemPower); // Conditional safety margin (15% for ≤10kW, 25% for >10kW)
                 
                 // Filter brands: show all brands with inverters that can handle the system power
                 const suitableBrands = [...new Set(phaseFilteredInverters
-                    .filter(inv => inv.kw >= minPower) // Inverter must be able to handle system power (25% safety margin)
+                    .filter(inv => inv.kw >= minPower) // Inverter must be able to handle system power (conditional safety margin)
                     .map(inv => inv.brand)
                 )].sort();
                 
@@ -1944,11 +1963,11 @@
             
             if (systemPower > 0) {
                 // Calculate minimum power (inverter must be able to handle system power)
-                const minPower = systemPower / 1.25; // Inverter must be able to handle system power (25% safety margin)
+                const minPower = getMinInverterPower(systemPower); // Conditional safety margin (15% for ≤10kW, 25% for >10kW)
                 
                 // Filter inverters: show all inverters that can handle the system power
                 const suitablePowers = [...new Set(phaseFilteredInverters
-                    .filter(inv => inv.kw >= minPower) // Inverter must be able to handle system power (25% safety margin)
+                    .filter(inv => inv.kw >= minPower) // Inverter must be able to handle system power (conditional safety margin)
                     .map(inv => inv.kw)
                 )].sort((a, b) => a - b);
                 
@@ -2291,9 +2310,10 @@
             
             // If no inverter is selected, fall back to auto-selection logic
             if (!selectedInverter) {
-                // Find suitable inverter (smallest inverter where inverter.kw * 1.25 >= systemPower)
+                // Find suitable inverter using conditional safety margin
                 for (let i = 0; i < inverters.length; i++) {
-                    if (inverters[i].kw * 1.15 >= systemPower) {
+                    const safetyMargin = getSafetyMargin(inverters[i].kw);
+                    if (inverters[i].kw * safetyMargin >= systemPower) {
                         selectedInverter = inverters[i];
                         break;
                     }
@@ -2734,9 +2754,9 @@
             
             console.log('🔍 updateInverterAutoSelection: Updating inverter selection for system power:', systemPower);
             
-            // Find the best inverter for the system power (cheapest inverter where inverter.kw * 1.25 >= systemPower)
+            // Find the best inverter for the system power using conditional safety margin
             let bestInverter = null;
-            const minPower = systemPower / 1.25;
+            const minPower = getMinInverterPower(systemPower);
             
             // Filter inverters that can handle the system power, then find the cheapest one
             const suitableInverters = inverters.filter(inv => inv.kw >= minPower);

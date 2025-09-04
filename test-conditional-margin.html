@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Conditional Safety Margin</title>
+</head>
+<body>
+    <h1>Test Conditional Safety Margin Logic</h1>
+    <div id="results"></div>
+
+    <script>
+        // Helper function to calculate safety margin based on inverter power
+        function getSafetyMargin(inverterPower) {
+            // For inverters ≤ 10kW: 15% safety margin
+            // For inverters > 10kW: 25% safety margin
+            return inverterPower <= 10 ? 1.15 : 1.25;
+        }
+        
+        // Helper function to calculate minimum inverter power needed for system power
+        function getMinInverterPower(systemPower) {
+            // For systems that would need ≤ 10kW inverter: use 15% margin
+            // For systems that would need > 10kW inverter: use 25% margin
+            const margin15 = systemPower / 1.15;
+            const margin25 = systemPower / 1.25;
+            
+            // If 15% margin gives us ≤ 10kW, use 15% margin
+            // Otherwise, use 25% margin
+            return margin15 <= 10 ? margin15 : margin25;
+        }
+
+        // Test cases
+        const testCases = [
+            { systemPower: 8, expected: "≤10kW system, should use 15% margin" },
+            { systemPower: 10, expected: "≤10kW system, should use 15% margin" },
+            { systemPower: 11, expected: ">10kW system, should use 25% margin" },
+            { systemPower: 15, expected: ">10kW system, should use 25% margin" },
+            { systemPower: 20, expected: ">10kW system, should use 25% margin" }
+        ];
+
+        const results = document.getElementById('results');
+        
+        testCases.forEach(test => {
+            const minPower = getMinInverterPower(test.systemPower);
+            const margin15 = test.systemPower / 1.15;
+            const margin25 = test.systemPower / 1.25;
+            const actualMargin = minPower === margin15 ? '15%' : '25%';
+            
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <h3>System Power: ${test.systemPower}kW</h3>
+                <p>Expected: ${test.expected}</p>
+                <p>Actual Margin: ${actualMargin}</p>
+                <p>Min Inverter Power: ${minPower.toFixed(2)}kW</p>
+                <p>15% margin would need: ${margin15.toFixed(2)}kW</p>
+                <p>25% margin would need: ${margin25.toFixed(2)}kW</p>
+                <hr>
+            `;
+            results.appendChild(div);
+        });
+
+        // Test specific case: 12kW inverter with 15kW system
+        const systemPower = 15;
+        const inverterPower = 12;
+        const safetyMargin = getSafetyMargin(inverterPower);
+        const canHandle = inverterPower * safetyMargin >= systemPower;
+        
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <h3>Specific Test: 12kW Inverter with 15kW System</h3>
+            <p>Inverter Power: ${inverterPower}kW</p>
+            <p>System Power: ${systemPower}kW</p>
+            <p>Safety Margin: ${(safetyMargin - 1) * 100}%</p>
+            <p>Max System Power: ${(inverterPower * safetyMargin).toFixed(2)}kW</p>
+            <p>Can Handle 15kW System: ${canHandle ? 'YES' : 'NO'}</p>
+        `;
+        results.appendChild(div);
+    </script>
+</body>
+</html>
