@@ -1680,7 +1680,7 @@
             
             // Find the auto-selected inverter (inverter that can handle system power without overload)
             let autoSelectedInverter = null;
-            const minPower = systemPower / 1.15; // Inverter must be able to handle system power
+            const minPower = systemPower / 1.25; // Inverter must be able to handle system power (25% safety margin)
             
             for (let i = 0; i < phaseFilteredInverters.length; i++) {
                 if (phaseFilteredInverters[i].kw >= minPower) {
@@ -1867,11 +1867,11 @@
             
             if (systemPower > 0) {
                 // Calculate minimum power (inverter must be able to handle system power)
-                const minPower = systemPower / 1.15; // Inverter must be able to handle system power
+                const minPower = systemPower / 1.25; // Inverter must be able to handle system power (25% safety margin)
                 
                 // Filter brands: show all brands with inverters that can handle the system power
                 const suitableBrands = [...new Set(phaseFilteredInverters
-                    .filter(inv => inv.kw >= minPower) // Inverter must be able to handle system power
+                    .filter(inv => inv.kw >= minPower) // Inverter must be able to handle system power (25% safety margin)
                     .map(inv => inv.brand)
                 )].sort();
                 
@@ -1944,11 +1944,11 @@
             
             if (systemPower > 0) {
                 // Calculate minimum power (inverter must be able to handle system power)
-                const minPower = systemPower / 1.15; // Inverter must be able to handle system power
+                const minPower = systemPower / 1.25; // Inverter must be able to handle system power (25% safety margin)
                 
                 // Filter inverters: show all inverters that can handle the system power
                 const suitablePowers = [...new Set(phaseFilteredInverters
-                    .filter(inv => inv.kw >= minPower) // Inverter must be able to handle system power
+                    .filter(inv => inv.kw >= minPower) // Inverter must be able to handle system power (25% safety margin)
                     .map(inv => inv.kw)
                 )].sort((a, b) => a - b);
                 
@@ -2291,7 +2291,7 @@
             
             // If no inverter is selected, fall back to auto-selection logic
             if (!selectedInverter) {
-                // Find suitable inverter (smallest inverter where inverter.kw * 1.15 >= systemPower)
+                // Find suitable inverter (smallest inverter where inverter.kw * 1.25 >= systemPower)
                 for (let i = 0; i < inverters.length; i++) {
                     if (inverters[i].kw * 1.15 >= systemPower) {
                         selectedInverter = inverters[i];
@@ -2734,9 +2734,9 @@
             
             console.log('🔍 updateInverterAutoSelection: Updating inverter selection for system power:', systemPower);
             
-            // Find the best inverter for the system power (cheapest inverter where inverter.kw * 1.15 >= systemPower)
+            // Find the best inverter for the system power (cheapest inverter where inverter.kw * 1.25 >= systemPower)
             let bestInverter = null;
-            const minPower = systemPower / 1.15;
+            const minPower = systemPower / 1.25;
             
             // Filter inverters that can handle the system power, then find the cheapest one
             const suitableInverters = inverters.filter(inv => inv.kw >= minPower);
