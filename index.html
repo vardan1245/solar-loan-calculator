@@ -801,6 +801,40 @@
             }
         }
         
+        // Function to fetch bank configurations filtered by installation type
+        async function fetchBankConfigurationsForInstallationType(installationType) {
+            try {
+                console.log('🔄 Fetching bank configurations for installation type:', installationType);
+                
+                const url = installationType 
+                    ? `/api/banks?installationType=${encodeURIComponent(installationType)}`
+                    : '/api/banks';
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success && result.data && result.data.banks) {
+                    // Update the global bank configurations
+                    bankConfigurations = result.data.banks;
+                    console.log('✅ Bank configurations updated for installation type:', installationType, 'Count:', result.data.banks.length);
+                    
+                    // Log which bank configurations are available
+                    result.data.banks.forEach(bank => {
+                        console.log(`📋 ${bank.name}: ${bank.options.length} options available`);
+                    });
+                } else {
+                    console.log('❌ Failed to fetch bank configurations:', result);
+                }
+            } catch (error) {
+                console.error('❌ Error fetching bank configurations for installation type:', error);
+            }
+        }
+        
         function calculateLoanPayment(principal, annualRate, months) {
             const monthlyRate = annualRate / 12;
             if (monthlyRate === 0) return principal / months;
@@ -2992,6 +3026,9 @@
                 // Update panel suggestions immediately when installation type changes
                 calculatePanelRequirements();
                 
+                // Refetch bank configurations with installation type filtering
+                fetchBankConfigurationsForInstallationType(this.value);
+                
                 // Auto-recalculate when installation type changes
                 autoRecalculate();
             });
@@ -3060,6 +3097,9 @@
                 
                 // Update panel suggestions in real-time when installation type changes
                 calculatePanelRequirements();
+                
+                // Refetch bank configurations with installation type filtering
+                fetchBankConfigurationsForInstallationType(this.value);
                 
                 autoRecalculate();
             });

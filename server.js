@@ -369,8 +369,23 @@ app.get('/api/panels', async (req, res) => {
 // Get all bank configurations
 app.get('/api/banks', async (req, res) => {
     try {
-        const query = 'SELECT * FROM bank_configurations WHERE is_active = true ORDER BY bank_name, interest_rate, loan_period';
-        const result = await pool.query(query);
+        const { installationType } = req.query;
+        
+        // Build the query with optional installation type filtering
+        let query = 'SELECT * FROM bank_configurations WHERE is_active = true';
+        let params = [];
+        
+        if (installationType) {
+            // Filter bank configurations that are either:
+            // 1. Available for all installation types (installation_type IS NULL)
+            // 2. Available for the specific installation type (installation_type contains the type)
+            query += ' AND (installation_type IS NULL OR installation_type LIKE $1)';
+            params.push(`%${installationType}%`);
+        }
+        
+        query += ' ORDER BY bank_name, interest_rate, loan_period';
+        
+        const result = await pool.query(query, params);
         
         // Organize by bank
         const organizedBanks = {};
@@ -421,12 +436,25 @@ app.get('/api/banks', async (req, res) => {
 // Get comprehensive pricing data (all tables combined)
 app.get('/api/pricing-complete', async (req, res) => {
     try {
+        const { installationType } = req.query;
+        
+        // Build bank query with optional installation type filtering
+        let bankQuery = 'SELECT * FROM bank_configurations WHERE is_active = true';
+        let bankParams = [];
+        
+        if (installationType) {
+            bankQuery += ' AND (installation_type IS NULL OR installation_type LIKE $1)';
+            bankParams.push(`%${installationType}%`);
+        }
+        
+        bankQuery += ' ORDER BY bank_name, interest_rate, loan_period';
+        
         // Get all data from all tables
         const [costSettings, inverters, panels, banks, batteries] = await Promise.all([
             pool.query('SELECT * FROM system_cost_settings ORDER BY id'),
             pool.query('SELECT * FROM inverter_options WHERE is_active = true ORDER BY kw'),
             pool.query('SELECT * FROM panel_options WHERE is_active = true ORDER BY wattage'),
-            pool.query('SELECT * FROM bank_configurations WHERE is_active = true ORDER BY bank_name, interest_rate, loan_period'),
+            pool.query(bankQuery, bankParams),
             pool.query('SELECT * FROM battery_options WHERE is_active = true ORDER BY capacity_kwh')
         ]);
         
