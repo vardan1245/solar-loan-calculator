@@ -297,9 +297,7 @@
                         <!-- Panel Suggestions Display -->
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Panel Suggestions" data-hy="Վահանակների առաջարկներ">Panel Suggestions</label>
-                            <div id="panelSuggestions" class="space-y-2 border border-gray-200 rounded-md p-3 bg-gray-50">
-                                <div class="text-sm text-gray-500 text-center py-4" data-en="Enter System Power above to see panel suggestions" data-hy="Մուտքագրեք համակարգի հզորությունը վերևում՝ վահանակների առաջարկները տեսնելու համար">Enter System Power above to see panel suggestions</div>
-                            </div>
+                            <div id="panelSuggestions" class="space-y-2 border border-gray-200 rounded-md p-3 bg-gray-50"></div>
                         </div>
                         
 
@@ -893,8 +891,8 @@
             const installationType = document.getElementById('installationType').value;
             const warrantyYears = parseInt(document.getElementById('warrantyYears').value) || 12;
 
+            // If no system power, skip calculation silently
             if (!systemPower) {
-                alert('Please enter system power');
                 return;
             }
 
@@ -1064,8 +1062,6 @@
                 const selectedBrand = document.getElementById('manualBrand').value;
                 const selectedPower = document.getElementById('manualPower').value;
                 
-
-                
                 if (!selectedBrand || !selectedPower) {
                     const message = currentLanguage === 'en' 
                         ? 'Please select both brand and power in manual mode.'
@@ -1084,10 +1080,42 @@
                     return;
                 }
                 
-                // Find inverter by brand and power
-                selectedInverter = inverters.find(inv => 
-                    inv.brand === selectedBrand && inv.kw == selectedPower
-                );
+                // Find inverter by brand, power, and current filters (type and phase)
+                const selectedInverterType = document.getElementById('inverterType').value;
+                const selectedPhase = document.getElementById('phaseFilter').value;
+                const manualCandidates = inverters.filter(inv => {
+                    const type = inv.type || 'on_grid';
+                    const phase = inv.phase || 'one phase';
+                    if (inv.brand !== selectedBrand) return false;
+                    if (String(inv.kw) != String(selectedPower)) return false;
+                    if (type !== selectedInverterType) return false;
+                    if (selectedPhase && phase !== selectedPhase) return false;
+                    return true;
+                });
+                
+                if (manualCandidates.length > 0) {
+                    // Prefer the cheapest among matches just in case there are duplicates
+                    manualCandidates.sort((a, b) => (a.price || 0) - (b.price || 0));
+                    selectedInverter = manualCandidates[0];
+                } else {
+                    // No exact match for current type/phase. Provide a clear message.
+                    const message = currentLanguage === 'en'
+                        ? 'No inverter found for the selected brand/power under current type/phase. Please adjust inverter type/phase or choose a different power.'
+                        : 'Ընտրած բրենդի/հզորության համար չկա փոխակերպիչ տվյալ տեսակի/փուլի ներքո։ Փոխեք փոխակերպիչի տեսակը/փուլը կամ ընտրեք այլ հզորություն։';
+                    document.getElementById('results').innerHTML = `
+                        <div class="space-y-3">
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 0 1 2 0zm-1-9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-yellow-800">${message}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
                 
 
                 
@@ -1858,6 +1886,27 @@
                 manualSelection.classList.remove('hidden');
                 populateManualBrands();
                 populateManualPowers();
+
+                // Prefill manual selects with the current auto-selected inverter
+                const inverterSelect = document.getElementById('inverterSelect');
+                if (inverterSelect && inverterSelect.value) {
+                    const selectedInverterId = parseInt(inverterSelect.value);
+                    const selectedInverter = inverters.find(inv => inv.id === selectedInverterId);
+                    if (selectedInverter) {
+                        // Set brand first and repopulate powers filtered by brand
+                        const manualBrandEl = document.getElementById('manualBrand');
+                        const manualPowerEl = document.getElementById('manualPower');
+                        if (manualBrandEl) {
+                            manualBrandEl.value = selectedInverter.brand || '';
+                            // Repopulate powers to reflect selected brand
+                            populateManualPowers();
+                        }
+                        if (manualPowerEl) {
+                            // Ensure value matches the option value format
+                            manualPowerEl.value = String(selectedInverter.kw);
+                        }
+                    }
+                }
                 
 
             } else {
@@ -1878,13 +1927,52 @@
         // Function to refresh manual inverter options when system power changes
         function refreshManualInverterOptions() {
             const toggle = document.getElementById('manualInverterToggle');
-            if (toggle.checked) {
-                // Only refresh if in manual mode
-                populateManualBrands();
-                populateManualPowers();
-                // Reset both selections when system power changes
-                document.getElementById('manualBrand').value = '';
-                document.getElementById('manualPower').value = '';
+            // Only act in manual mode
+            if (!toggle.checked) return;
+
+            const manualBrandEl = document.getElementById('manualBrand');
+            const manualPowerEl = document.getElementById('manualPower');
+            const previousBrand = manualBrandEl?.value || '';
+            const previousPower = manualPowerEl?.value || '';
+
+            // Repopulate lists based on current constraints
+            populateManualBrands();
+            // Try to restore previous brand if still available
+            if (previousBrand) {
+                const brandOptionExists = Array.from(manualBrandEl.options).some(o => o.value === previousBrand);
+                if (brandOptionExists) {
+                    manualBrandEl.value = previousBrand;
+                }
+            }
+
+            // Repopulate powers (respecting possibly restored brand)
+            populateManualPowers();
+
+            // Try to restore previous power if still available
+            if (previousPower) {
+                const powerOptionExists = Array.from(manualPowerEl.options).some(o => o.value == previousPower);
+                if (powerOptionExists) {
+                    manualPowerEl.value = previousPower;
+                }
+            }
+
+            // If nothing was previously selected or no longer valid, sync from auto inverter selection
+            if (!manualBrandEl.value || !manualPowerEl.value) {
+                const inverterSelect = document.getElementById('inverterSelect');
+                if (inverterSelect && inverterSelect.value) {
+                    const selectedInverterId = parseInt(inverterSelect.value);
+                    const selectedInverter = inverters.find(inv => inv.id === selectedInverterId);
+                    if (selectedInverter) {
+                        if (!manualBrandEl.value) {
+                            manualBrandEl.value = selectedInverter.brand || '';
+                            // Refresh powers for this brand before setting power
+                            populateManualPowers();
+                        }
+                        if (!manualPowerEl.value) {
+                            manualPowerEl.value = String(selectedInverter.kw);
+                        }
+                    }
+                }
             }
         }
 
@@ -1979,6 +2067,7 @@
             const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
             const selectedInverterType = document.getElementById('inverterType').value;
             const selectedPhase = document.getElementById('phaseFilter').value;
+            const selectedBrand = document.getElementById('manualBrand').value;
             
             // Filter inverters by type strictly
             const typeFilteredInverters = inverters.filter(inverter => {
@@ -1995,12 +2084,17 @@
                 })
                 : typeFilteredInverters;
             
+            // Further filter by selected brand (if chosen)
+            const brandFilteredInverters = selectedBrand
+                ? phaseFilteredInverters.filter(inv => inv.brand === selectedBrand)
+                : phaseFilteredInverters;
+            
             if (systemPower > 0) {
                 // Calculate minimum power (inverter must be able to handle system power)
                 const minPower = getMinInverterPower(systemPower); // Conditional safety margin (15% for ≤10kW, 25% for >10kW)
                 
                 // Filter inverters: show all inverters that can handle the system power
-                const suitablePowers = [...new Set(phaseFilteredInverters
+                const suitablePowers = [...new Set(brandFilteredInverters
                     .filter(inv => inv.kw >= minPower) // Inverter must be able to handle system power (conditional safety margin)
                     .map(inv => inv.kw)
                 )].sort((a, b) => a - b);
@@ -2032,7 +2126,7 @@
                 }
             } else {
                 // No system power entered yet - show all powers of selected type and phase
-                const powers = [...new Set(phaseFilteredInverters.map(inv => inv.kw))].sort((a, b) => a - b);
+                const powers = [...new Set(brandFilteredInverters.map(inv => inv.kw))].sort((a, b) => a - b);
                 
                 powers.forEach(power => {
                     const option = document.createElement('option');
@@ -2256,6 +2350,32 @@
                 manualSelection.classList.remove('hidden');
                 populateManualPanelBrands();
                 populateManualPanelWattages();
+
+                // Prefill manual panel selects with current auto-selected panel (if any)
+                try {
+                    const brandEl = document.getElementById('manualPanelBrand');
+                    const wattageEl = document.getElementById('manualPanelWattage');
+                    const qtyEl = document.getElementById('manualPanelQuantity');
+                    if (typeof selectedPanelOption !== 'undefined' && selectedPanelOption) {
+                        if (brandEl) {
+                            brandEl.value = selectedPanelOption.brand || '';
+                            // Repopulate wattages to reflect selected brand
+                            populateManualPanelWattages();
+                        }
+                        if (wattageEl) {
+                            wattageEl.value = String(selectedPanelOption.wattage);
+                        }
+                        if (qtyEl && selectedPanelOption.quantity) {
+                            qtyEl.value = String(selectedPanelOption.quantity);
+                        }
+                        // Update info to reflect selected values
+                        if (typeof updateManualPanelInfo === 'function') {
+                            updateManualPanelInfo();
+                        }
+                    }
+                } catch (e) {
+                    // Silent fail - not critical if prefill is unavailable
+                }
             } else {
                 // Switch to auto mode
                 autoSelection.classList.remove('hidden');
@@ -2297,6 +2417,8 @@
 
         function populateManualPanelWattages() {
             const wattageSelect = document.getElementById('manualPanelWattage');
+            const brandSelect = document.getElementById('manualPanelBrand');
+            const selectedBrand = brandSelect ? brandSelect.value : '';
             
             // Check if panels are loaded
             if (!panels || panels.length === 0) {
@@ -2305,20 +2427,47 @@
             }
             wattageSelect.innerHTML = '<option value="" data-en="Select wattage" data-hy="Ընտրեք հզորությունը">Select wattage</option>';
             
-            // Get all unique wattages from panels
-            const wattages = [...new Set(panels.map(panel => panel.wattage))].sort((a, b) => a - b);
+            // Get unique wattages filtered by selected brand when provided
+            let sourcePanels = selectedBrand ? panels.filter(p => p.brand === selectedBrand) : panels;
+            let wattages = [...new Set(sourcePanels.map(panel => panel.wattage))].sort((a, b) => a - b);
             
-            wattages.forEach(wattage => {
-                const option = document.createElement('option');
-                option.value = wattage;
-                const text = currentLanguage === 'en' 
-                    ? `${wattage}W`
-                    : `${wattage}Վտ`;
-                option.textContent = text;
-                option.setAttribute('data-en', `${wattage}W`);
-                option.setAttribute('data-hy', `${wattage}Վտ`);
-                wattageSelect.appendChild(option);
-            });
+            // Fallback: if no wattages for selected brand, show all available wattages
+            if (wattages.length === 0) {
+                sourcePanels = panels;
+                wattages = [...new Set(sourcePanels.map(panel => panel.wattage))].sort((a, b) => a - b);
+            }
+            
+            if (wattages.length === 0) {
+                // Absolute fallback to ensure dropdown is not empty
+                const emptyOption = document.createElement('option');
+                emptyOption.value = '';
+                emptyOption.disabled = true;
+                emptyOption.textContent = currentLanguage === 'en' ? 'No wattages available' : 'Հզորություններ չկան';
+                wattageSelect.appendChild(emptyOption);
+            } else {
+                wattages.forEach(wattage => {
+                    const option = document.createElement('option');
+                    option.value = wattage;
+                    const text = currentLanguage === 'en' 
+                        ? `${wattage}W`
+                        : `${wattage}Վտ`;
+                    option.textContent = text;
+                    option.setAttribute('data-en', `${wattage}W`);
+                    option.setAttribute('data-hy', `${wattage}Վտ`);
+                    wattageSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Helper: choose the highest available wattage option value
+        function getHighestWattageOptionValue() {
+            const wattageSelect = document.getElementById('manualPanelWattage');
+            if (!wattageSelect) return '';
+            const numericValues = Array.from(wattageSelect.options)
+                .map(o => parseInt(o.value))
+                .filter(v => !isNaN(v));
+            if (numericValues.length === 0) return '';
+            return String(Math.max(...numericValues));
         }
 
 
@@ -2683,7 +2832,22 @@
             
             const selectedBrand = brandSelect.value;
             const selectedWattage = wattageSelect.value;
-            const selectedQuantity = parseInt(quantitySelect.value) || 1;
+            let selectedQuantity = parseInt(quantitySelect.value) || 1;
+            
+            // Auto-set quantity from system power when in manual mode and user hasn't edited quantity
+            const manualPanelMode = document.getElementById('manualPanelToggle')?.checked;
+            if (manualPanelMode && selectedBrand && selectedWattage && !window.userEditedPanelQuantity) {
+                const targetKw = parseFloat(document.getElementById('systemPower').value) || 0;
+                if (targetKw > 0) {
+                    const targetW = Math.round(targetKw * 1000);
+                    const w = parseInt(selectedWattage) || 0;
+                    if (w > 0) {
+                        const qty = Math.max(1, Math.round(targetW / w));
+                        quantitySelect.value = String(qty);
+                        selectedQuantity = qty;
+                    }
+                }
+            }
             
             if (selectedBrand && selectedWattage) {
                 // Find the first panel with matching brand and wattage
@@ -2708,8 +2872,12 @@
                     
                     document.getElementById('panelSystemPowerInfo').textContent = powerInfo;
                     
-                    // Update the system power input field
-                    document.getElementById('systemPower').value = systemPowerKw;
+                    // Sync system power to panel quantity changes, or when user hasn't explicitly edited system power
+                    if (window.panelQuantityJustChanged || !window.userEditedSystemPower) {
+                        document.getElementById('systemPower').value = systemPowerKw;
+                        // Reset the quantity-changed one-shot flag
+                        window.panelQuantityJustChanged = false;
+                    }
                     
                     // Refresh inverter options based on new system power
                     refreshManualInverterOptions();
@@ -2974,6 +3142,8 @@
             
             // Add event listener for system power to update inverter and panel dropdowns automatically
             document.getElementById('systemPower').addEventListener('input', function() {
+                // Mark that user is explicitly editing system power
+                window.userEditedSystemPower = true;
                 // Add a small delay to prevent rapid firing during typing
                 clearTimeout(this.debounceTimer);
                 this.debounceTimer = setTimeout(() => {
@@ -2991,6 +3161,13 @@
                     if (isDataLoaded && panels && panels.length > 0) {
                         // This will automatically calculate and display panel suggestions
                         populatePanelDropdown();
+                        // If panel manual mode is on, recalc quantity to match target power
+                        const manualPanelMode = document.getElementById('manualPanelToggle')?.checked;
+                        if (manualPanelMode) {
+                            // reset user edit flag so we can auto-adjust
+                            window.userEditedPanelQuantity = false;
+                            updateManualPanelInfo();
+                        }
                     }
                     
                     // Auto-recalculate when system power changes
@@ -3136,6 +3313,9 @@
             // Add event listeners for manual inverter selection changes with real-time updates
             document.getElementById('manualBrand').addEventListener('input', function() {
                 // Real-time update when brand changes
+                // Repopulate powers based on selected brand and reset selection
+                populateManualPowers();
+                document.getElementById('manualPower').value = '';
                 forceRecalculate();
             });
             
@@ -3146,8 +3326,56 @@
             
             // Also keep change events for compatibility
             document.getElementById('manualBrand').addEventListener('change', function() {
+                // On change ensure powers list reflects the brand
+                populateManualPowers();
+                document.getElementById('manualPower').value = '';
                 forceRecalculate();
             });
+
+            // Manual panel selection: brand/wattage events to filter and recalc quantity
+            const manualPanelBrandEl = document.getElementById('manualPanelBrand');
+            const manualPanelWattageEl = document.getElementById('manualPanelWattage');
+            const manualPanelQuantityEl = document.getElementById('manualPanelQuantity');
+            if (manualPanelBrandEl) {
+                manualPanelBrandEl.addEventListener('input', function() {
+                    // Reset flag to allow auto quantity calc, then filter wattages
+                    window.userEditedPanelQuantity = false;
+                    populateManualPanelWattages();
+                    // Auto-select highest available wattage for convenience
+                    manualPanelWattageEl.value = getHighestWattageOptionValue();
+                    updateManualPanelInfo();
+                });
+                manualPanelBrandEl.addEventListener('change', function() {
+                    window.userEditedPanelQuantity = false;
+                    populateManualPanelWattages();
+                    manualPanelWattageEl.value = getHighestWattageOptionValue();
+                    updateManualPanelInfo();
+                });
+            }
+            if (manualPanelWattageEl) {
+                manualPanelWattageEl.addEventListener('input', function() {
+                    window.userEditedPanelQuantity = false;
+                    updateManualPanelInfo();
+                });
+                manualPanelWattageEl.addEventListener('change', function() {
+                    window.userEditedPanelQuantity = false;
+                    updateManualPanelInfo();
+                });
+            }
+            if (manualPanelQuantityEl) {
+                manualPanelQuantityEl.addEventListener('input', function() {
+                    // Mark that user wants to control quantity manually
+                    window.userEditedPanelQuantity = true;
+                    // Indicate that quantity changed so system power should sync to panels
+                    window.panelQuantityJustChanged = true;
+                    updateManualPanelInfo();
+                });
+                manualPanelQuantityEl.addEventListener('change', function() {
+                    window.userEditedPanelQuantity = true;
+                    window.panelQuantityJustChanged = true;
+                    updateManualPanelInfo();
+                });
+            }
             
             document.getElementById('manualPower').addEventListener('change', function() {
                 forceRecalculate();
@@ -3592,11 +3820,7 @@
             hideProfitPerKwDisplay();
             hideAllSensitiveInfo(); // Hide all sensitive information
             
-            // Remove the toggle container when admin panel is hidden/logged out
-            const toggleContainer = document.getElementById('toggleSensitiveInfoContainer');
-            if (toggleContainer) {
-                toggleContainer.remove();
-            }
+            // Do NOT remove the toggle container when hiding the admin panel; keep it visible for user control
             
             // Recalculate to hide detailed breakdown
             if (allLoanOptions.length > 0) {
@@ -3609,10 +3833,7 @@
             
             // Hide all sensitive information and remove toggle
             hideAllSensitiveInfo();
-            const toggleContainer = document.getElementById('toggleSensitiveInfoContainer');
-            if (toggleContainer) {
-                toggleContainer.remove();
-            }
+            // Keep the toggle checkbox UI present so the user can re-show after login
             
             // Reset admin state
             hideAdminDetails();
