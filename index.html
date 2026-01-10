@@ -1278,7 +1278,8 @@
             // Apply sales discount to final price
             const finalSystemPrice = Math.max(0, totalSystemPrice - totalSalesDiscount);
             
-            
+            // Calculate final profit after sales discount (discount reduces profit)
+            const finalProfit = Math.max(0, profitAmount - totalSalesDiscount);
             
             // Display results
             const systemValueText = currentLanguage === 'en' ? 'System Value for Cash:' : 'Կանխիկ վաճառքի գին:';
@@ -1514,7 +1515,19 @@
                                         <span>Total Sales Discount:</span>
                                         <span class="font-mono">-${totalSalesDiscount.toLocaleString()} AMD</span>
                                     </div>
+                                    <div class="flex justify-between border-t pt-1 mt-1">
+                                        <span>Original Profit:</span>
+                                        ${renderSensitiveValue(profitAmount.toLocaleString(), ' AMD')}
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>- Sales Discount:</span>
+                                        <span class="font-mono text-red-600">-${totalSalesDiscount.toLocaleString()} AMD</span>
+                                    </div>
                                     <div class="flex justify-between font-semibold text-green-600 border-t pt-1">
+                                        <span>Final Profit After Discount:</span>
+                                        ${renderSensitiveValue(finalProfit.toLocaleString(), ' AMD')}
+                                    </div>
+                                    <div class="flex justify-between font-semibold text-blue-600 border-t pt-1 mt-1">
                                         <span>Final Price After Discount:</span>
                                         <span class="font-mono">${finalSystemPrice.toLocaleString()} AMD</span>
                                     </div>
@@ -1936,7 +1949,7 @@
             const previousPower = manualPowerEl?.value || '';
 
             // Repopulate lists based on current constraints
-            populateManualBrands();
+                populateManualBrands();
             // Try to restore previous brand if still available
             if (previousBrand) {
                 const brandOptionExists = Array.from(manualBrandEl.options).some(o => o.value === previousBrand);
@@ -1946,7 +1959,7 @@
             }
 
             // Repopulate powers (respecting possibly restored brand)
-            populateManualPowers();
+                populateManualPowers();
 
             // Try to restore previous power if still available
             if (previousPower) {
@@ -2445,17 +2458,17 @@
                 emptyOption.textContent = currentLanguage === 'en' ? 'No wattages available' : 'Հզորություններ չկան';
                 wattageSelect.appendChild(emptyOption);
             } else {
-                wattages.forEach(wattage => {
-                    const option = document.createElement('option');
-                    option.value = wattage;
-                    const text = currentLanguage === 'en' 
-                        ? `${wattage}W`
-                        : `${wattage}Վտ`;
-                    option.textContent = text;
-                    option.setAttribute('data-en', `${wattage}W`);
-                    option.setAttribute('data-hy', `${wattage}Վտ`);
-                    wattageSelect.appendChild(option);
-                });
+            wattages.forEach(wattage => {
+                const option = document.createElement('option');
+                option.value = wattage;
+                const text = currentLanguage === 'en' 
+                    ? `${wattage}W`
+                    : `${wattage}Վտ`;
+                option.textContent = text;
+                option.setAttribute('data-en', `${wattage}W`);
+                option.setAttribute('data-hy', `${wattage}Վտ`);
+                wattageSelect.appendChild(option);
+            });
             }
         }
 
@@ -2874,7 +2887,7 @@
                     
                     // Sync system power to panel quantity changes, or when user hasn't explicitly edited system power
                     if (window.panelQuantityJustChanged || !window.userEditedSystemPower) {
-                        document.getElementById('systemPower').value = systemPowerKw;
+                    document.getElementById('systemPower').value = systemPowerKw;
                         // Reset the quantity-changed one-shot flag
                         window.panelQuantityJustChanged = false;
                     }
