@@ -1268,15 +1268,18 @@
                         // Calculate subtotal first (including battery for hybrid)
             const subtotal = basePrice + profitAmount + inverterPrice + panelPrice + accumulatorPrice;
             
-            // Calculate final price using division: subtotal ÷ (1 - 6% - 2%) = subtotal ÷ 0.92
-            const totalSystemPrice = Math.ceil(subtotal / (1 - salesTeamPctDecimal - unanticipatedExpensesPctDecimal));
+            // Apply sales discount to subtotal BEFORE calculating percentages
+            const subtotalAfterDiscount = Math.max(0, subtotal - totalSalesDiscount);
             
-            // Calculate sales team and unexpected expenses from final price
+            // Calculate final price using division: discounted subtotal ÷ (1 - 6% - 2%) = subtotal ÷ 0.92
+            const totalSystemPrice = Math.ceil(subtotalAfterDiscount / (1 - salesTeamPctDecimal - unanticipatedExpensesPctDecimal));
+            
+            // Calculate sales team and unexpected expenses from final price (which already includes discount effect)
             const salesTeamAmount = Math.ceil(totalSystemPrice * salesTeamPctDecimal);
             const unexpectedExpensesAmount = Math.ceil(totalSystemPrice * unanticipatedExpensesPctDecimal);
             
-            // Apply sales discount to final price
-            const finalSystemPrice = Math.max(0, totalSystemPrice - totalSalesDiscount);
+            // Final system price is already calculated with discount applied
+            const finalSystemPrice = totalSystemPrice;
             
             // Calculate final profit after sales discount (discount reduces profit)
             const finalProfit = Math.max(0, profitAmount - totalSalesDiscount);
@@ -1319,7 +1322,26 @@
             }
             
             // Show detailed breakdown only when sensitive info is visible; else show simple view
-            if (isSensitiveInfoVisible()) {
+            // CRITICAL: Always ensure breakdown is hidden by default - only show if explicitly enabled
+            // Double-check that checkbox exists and is checked before showing breakdown
+            const checkbox = document.getElementById('toggleSensitiveInfoCheckbox');
+            const shouldShowBreakdown = isAdminLoggedIn && checkbox && checkbox.checked === true;
+            
+            // If breakdown should be hidden, ensure any existing breakdown is removed first
+            if (!shouldShowBreakdown) {
+                const existingResults = document.getElementById('results');
+                if (existingResults) {
+                    const existingBreakdown = existingResults.querySelector('.bg-gray-50.p-4.rounded-md.space-y-4');
+                    if (existingBreakdown) {
+                        const h4 = existingBreakdown.querySelector('h4');
+                        if (h4 && (h4.textContent.includes('Calculation Breakdown') || h4.textContent.includes('Հաշվարկի մանրամասները'))) {
+                            // Don't render breakdown at all - go straight to simple view
+                        }
+                    }
+                }
+            }
+            
+            if (shouldShowBreakdown) {
                 // Calculate percentages for display
                 const basePricePct = ((basePrice / totalSystemPrice) * 100).toFixed(1);
                 const profitPct = ((profitAmount / totalSystemPrice) * 100).toFixed(1);
@@ -1346,189 +1368,82 @@
                         <div class="bg-gray-50 p-4 rounded-md space-y-4">
                             <h4 class="font-semibold text-gray-800 border-b pb-2">${breakdownTitle}</h4>
                             
-                            <!-- Step 1: Base Price -->
+                            <!-- Step 1: Components Subtotal -->
                             <div class="space-y-2">
-                                <div class="text-sm font-medium text-gray-700">Step 1: Base Price Calculation</div>
+                                <div class="text-sm font-medium text-gray-700">Step 1: Components</div>
                                 <div class="pl-4 space-y-1 text-sm">
                                     <div class="flex justify-between">
-                                        <span>Installation Type:</span>
-                                        <span>${installationTypeName}</span>
+                                        <span>Base Price (${installationTypeName}):</span>
+                                        <span class="font-mono">${basePrice.toLocaleString()} AMD</span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span>Base Price per kW:</span>
-                                        <span class="font-mono">${basePricePerKw.toLocaleString()} AMD</span>
+                                        <span>+ Profit (${warrantyYears}Y warranty):</span>
+                                        ${renderSensitiveValue(profitAmount.toLocaleString(), ' AMD')}
                                     </div>
                                     <div class="flex justify-between">
-                                        <span>System Power:</span>
-                                        <span>${systemPower} kW</span>
-                                    </div>
-                                    <div class="flex justify-between font-medium">
-                                        <span>Base Price:</span>
-                                        <span class="font-mono">${basePrice.toLocaleString()} AMD (${basePricePct}%)</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Step 2: Profit -->
-                            <div class="space-y-2">
-                                <div class="text-sm font-medium text-gray-700">Step 2: Profit Calculation</div>
-                                <div class="pl-4 space-y-1 text-sm">
-                                    <div class="flex justify-between">
-                                        <span>Warranty Period:</span>
-                                        <span>${warrantyYears} years</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Profit per kW:</span>
-                                        ${renderSensitiveValue(profitPerKw.toLocaleString(), ' AMD')}
-                                    </div>
-                                    <div class="flex justify-between font-medium">
-                                        <span>Total Profit:</span>
-                                        ${renderSensitiveValue(profitAmount.toLocaleString(), ` AMD (${profitPct}%)`)}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Step 3: Inverter (Admin Only) -->
-                            <div class="space-y-2">
-                                <div class="text-sm font-medium text-gray-700">Step 3: Inverter Selection</div>
-                                <div class="pl-4 space-y-1 text-sm">
-                                    <div class="flex justify-between">
-                                        <span>Selected Inverter:</span>
-                                        <span>${selectedInverter.brand} ${selectedInverter.model} (${selectedInverter.kw} kW)</span>
-                                    </div>
-                                    <div class="flex justify-between font-medium">
-                                        <span>Inverter Price:</span>
+                                        <span>+ Inverter (${selectedInverter.brand} ${selectedInverter.kw}kW):</span>
                                         ${renderSensitiveValue(selectedInverter.price.toLocaleString(), ' AMD')}
                                     </div>
+                                    <div class="flex justify-between">
+                                        <span>+ Panels:</span>
+                                        ${renderSensitiveValue(panelPrice.toLocaleString(), ' AMD')}
+                                    </div>
+                                    ${selectedInverterType === 'hybrid' && accumulatorPrice > 0 ? `
+                                    <div class="flex justify-between">
+                                        <span>+ Battery:</span>
+                                        ${renderSensitiveValue(accumulatorPrice.toLocaleString(), ' AMD')}
+                                    </div>
+                                    ` : ''}
+                                    <div class="flex justify-between font-semibold border-t pt-1">
+                                        <span>Subtotal:</span>
+                                        <span class="font-mono">${subtotal.toLocaleString()} AMD</span>
+                                    </div>
                                 </div>
                             </div>
                             
-                            <!-- Step 4: Battery (Hybrid Only) -->
-                            ${selectedInverterType === 'hybrid' && accumulatorPrice > 0 ? `
-                            <div class="space-y-2">
-                                <div class="text-sm font-medium text-gray-700">Step 4: Battery Selection</div>
+                            <!-- Step 2: Sales Discount (if applicable) -->
+                            ${totalSalesDiscount > 0 ? `
+                            <div class="space-y-2 border-t pt-3">
+                                <div class="text-sm font-medium text-gray-700">Step 2: Sales Discount</div>
                                 <div class="pl-4 space-y-1 text-sm">
                                     <div class="flex justify-between">
-                                        <span>Selected Battery:</span>
-                                        <span>${selectedAccumulatorInfo}</span>
+                                        <span>Sales Stage ${salesStage} (${salesDiscountPerKw.toLocaleString()} AMD/kW):</span>
+                                        <span class="font-mono text-red-600">-${totalSalesDiscount.toLocaleString()} AMD</span>
                                     </div>
-                                    <div class="flex justify-between font-medium">
-                                        <span>Battery Price:</span>
-                                        ${renderSensitiveValue(accumulatorPrice.toLocaleString(), ' AMD')}
+                                    <div class="flex justify-between font-semibold border-t pt-1">
+                                        <span>Subtotal After Discount:</span>
+                                        <span class="font-mono">${subtotalAfterDiscount.toLocaleString()} AMD</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm text-gray-600 mt-1">
+                                        <span>Final Profit:</span>
+                                        ${renderSensitiveValue(finalProfit.toLocaleString(), ' AMD')}
                                     </div>
                                 </div>
                             </div>
                             ` : ''}
                             
-                            <!-- Step ${selectedInverterType === 'hybrid' && accumulatorPrice > 0 ? '5' : '4'}: Panels -->
-                            <div class="space-y-2">
-                                <div class="text-sm font-medium text-gray-700">Step ${selectedInverterType === 'hybrid' && accumulatorPrice > 0 ? '5' : '4'}: Panel Selection</div>
-                                <div class="pl-4 space-y-1 text-sm">
-                                    <div class="flex justify-between">
-                                        <span>Selected Panels:</span>
-                                        <span>Auto-selected</span>
-                                    </div>
-                                    <div class="flex justify-between font-medium">
-                                        <span>Panel Price:</span>
-                                        ${renderSensitiveValue(panelPrice.toLocaleString(), ` AMD (${panelPct}%)`)}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Step 5: Subtotal -->
+                            <!-- Step ${totalSalesDiscount > 0 ? '3' : '2'}: Final Calculation -->
                             <div class="space-y-2 border-t pt-3">
-                                <div class="text-sm font-medium text-gray-700">Step 5: Subtotal</div>
+                                <div class="text-sm font-medium text-gray-700">Step ${totalSalesDiscount > 0 ? '3' : '2'}: Final Price</div>
                                 <div class="pl-4 space-y-1 text-sm">
                                     <div class="flex justify-between">
-                                        <span>Base Price:</span>
-                                        <span class="font-mono">${basePrice.toLocaleString()} AMD</span>
+                                        <span>Subtotal${totalSalesDiscount > 0 ? ' After Discount' : ''}:</span>
+                                        <span class="font-mono">${subtotalAfterDiscount.toLocaleString()} AMD</span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span>+ Profit:</span>
-                                        ${renderSensitiveValue(profitAmount.toLocaleString(), ' AMD')}
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>+ Inverter:</span>
-                                        ${renderSensitiveValue(selectedInverter.price.toLocaleString(), ' AMD')}
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>+ Panels:</span>
-                                        ${renderSensitiveValue(panelPrice.toLocaleString(), ` AMD (${panelPct}%)`)}
-                                    </div>
-                                    ${selectedInverterType === 'hybrid' ? `
-                                    <div class="flex justify-between">
-                                        <span>+ Battery:</span>
-                                        ${accumulatorPrice > 0 ? renderSensitiveValue(accumulatorPrice.toLocaleString(), ' AMD') : 'No battery selected'}
-                                    </div>
-                                    ` : ''}
-                                    <div class="flex justify-between font-semibold border-t pt-1">
-                                        <span>Subtotal:</span>
-                                        <span class="font-mono">${(basePriceWithProfitAndInverterAndPanels + (selectedInverterType === 'hybrid' ? accumulatorPrice : 0)).toLocaleString()} AMD</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Step 6: Final Calculation -->
-                            <div class="space-y-2 border-t pt-3">
-                                <div class="text-sm font-medium text-gray-700">Step 6: Final Price Calculation</div>
-                                <div class="pl-4 space-y-1 text-sm">
-                                    <div class="flex justify-between">
-                                        <span>Subtotal:</span>
-                                        <span class="font-mono">${(basePriceWithProfitAndInverterAndPanels + (selectedInverterType === 'hybrid' ? accumulatorPrice : 0)).toLocaleString()} AMD</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>÷ (1 - Sales Team ${salesTeamPctDisplay}% - Unexpected ${unexpectedExpensesPctDisplay}%):</span>
-                                        <span class="font-mono">÷ 0.92</span>
+                                        <span>÷ (1 - ${salesTeamPctDisplay}% - ${unexpectedExpensesPctDisplay}%):</span>
+                                        <span class="font-mono">÷ ${(1 - salesTeamPctDecimal - unanticipatedExpensesPctDecimal).toFixed(2)}</span>
                                     </div>
                                     <div class="flex justify-between text-blue-600">
-                                        <span>Sales Team (${salesTeamPctDisplay}%):</span>
+                                        <span>+ Sales Team (${salesTeamPctDisplay}%):</span>
                                         <span class="font-mono">${salesTeamAmount.toLocaleString()} AMD</span>
                                     </div>
                                     <div class="flex justify-between text-orange-600">
-                                        <span>Unexpected Expenses (${unexpectedExpensesPctDisplay}%):</span>
+                                        <span>+ Unexpected Expenses (${unexpectedExpensesPctDisplay}%):</span>
                                         <span class="font-mono">${unexpectedExpensesAmount.toLocaleString()} AMD</span>
                                     </div>
                                     <div class="flex justify-between font-semibold text-green-600 border-t pt-1">
                                         <span>Final System Value:</span>
-                                        <span class="font-mono">${totalSystemPrice.toLocaleString()} AMD</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Step 7: Sales Discount -->
-                            <div class="space-y-2 border-t pt-3">
-                                <div class="text-sm font-medium text-gray-700">Step 7: Sales Discount</div>
-                                <div class="pl-4 space-y-1 text-sm">
-                                    <div class="flex justify-between">
-                                        <span>Sales Stage:</span>
-                                        <span>Stage ${salesStage}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Discount per kW:</span>
-                                        <span class="font-mono">${salesDiscountPerKw.toLocaleString()} AMD</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>System Power:</span>
-                                        <span>${systemPower} kW</span>
-                                    </div>
-                                    <div class="flex justify-between font-medium text-red-600">
-                                        <span>Total Sales Discount:</span>
-                                        <span class="font-mono">-${totalSalesDiscount.toLocaleString()} AMD</span>
-                                    </div>
-                                    <div class="flex justify-between border-t pt-1 mt-1">
-                                        <span>Original Profit:</span>
-                                        ${renderSensitiveValue(profitAmount.toLocaleString(), ' AMD')}
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>- Sales Discount:</span>
-                                        <span class="font-mono text-red-600">-${totalSalesDiscount.toLocaleString()} AMD</span>
-                                    </div>
-                                    <div class="flex justify-between font-semibold text-green-600 border-t pt-1">
-                                        <span>Final Profit After Discount:</span>
-                                        ${renderSensitiveValue(finalProfit.toLocaleString(), ' AMD')}
-                                    </div>
-                                    <div class="flex justify-between font-semibold text-blue-600 border-t pt-1 mt-1">
-                                        <span>Final Price After Discount:</span>
                                         <span class="font-mono">${finalSystemPrice.toLocaleString()} AMD</span>
                                     </div>
                                 </div>
@@ -1554,6 +1469,19 @@
                         </div>
                     </div>
                 `;
+            }
+            
+            // Double-check: Ensure breakdown is hidden if sensitive info is not visible
+            // This prevents any breakdown from showing if it was accidentally rendered
+            if (!isSensitiveInfoVisible()) {
+                const breakdownSections = document.querySelectorAll('#results .bg-gray-50.p-4.rounded-md.space-y-4');
+                breakdownSections.forEach(section => {
+                    const h4 = section.querySelector('h4');
+                    if (h4 && (h4.textContent.includes('Calculation Breakdown') || h4.textContent.includes('Հաշվարկի մանրամասները'))) {
+                        section.style.display = 'none';
+                        section.style.visibility = 'hidden';
+                    }
+                });
             }
 
             // Calculate loan options
@@ -2575,22 +2503,19 @@
             // Calculate subtotal first (including battery for hybrid)
             const subtotal = basePrice + profitAmount + inverterPrice + panelPrice + accumulatorPrice;
             
-            // Calculate final price using division: subtotal ÷ (1 - 6% - 2%) = subtotal ÷ 0.92
-            const totalSystemPrice = Math.ceil(subtotal / (1 - salesTeamPct - unanticipatedExpensesPct));
-            
-            // Calculate sales team and unexpected expenses from final price
-            const salesTeamAmount = Math.ceil(totalSystemPrice * salesTeamPct);
-            const unanticipatedExpensesAmount = Math.ceil(totalSystemPrice * unanticipatedExpensesPct);
-            
             // Calculate sales discount based on selected stage
             const salesStage = parseInt(document.getElementById('salesStage').value) || 0;
             const salesDiscountPerKw = salesStage === 0 ? 0 : salesStage === 1 ? 5000 : salesStage === 2 ? 10000 : 15000;
             const totalSalesDiscount = Math.ceil(systemPower * salesDiscountPerKw);
             
-            // Apply sales discount to final price
-            const finalSystemPrice = Math.max(0, totalSystemPrice - totalSalesDiscount);
+            // Apply sales discount to subtotal BEFORE calculating percentages
+            const subtotalAfterDiscount = Math.max(0, subtotal - totalSalesDiscount);
             
-            return finalSystemPrice;
+            // Calculate final price using division: discounted subtotal ÷ (1 - 6% - 2%) = subtotal ÷ 0.92
+            const totalSystemPrice = Math.ceil(subtotalAfterDiscount / (1 - salesTeamPct - unanticipatedExpensesPct));
+            
+            // Final system price already includes discount effect on percentages
+            return totalSystemPrice;
         }
 
         // Function to calculate intelligent panel options based on system cost for a panel option
@@ -2810,10 +2735,29 @@
                 // Append the grid container to the suggestions display
                 panelSuggestions.appendChild(gridContainer);
                 
-                // Automatically select the best match (first option) by default
+                // Preserve existing panel selection if it still exists in new suggestions, otherwise select best match
                 if (bestOptions.length > 0) {
-                    const bestOption = bestOptions[0]; // First option is the best match
-                    updateSelectedPanelInfo(bestOption);
+                    let optionToSelect = null;
+                    
+                    // Try to preserve the currently selected panel if it exists in new suggestions
+                    if (selectedPanelOption) {
+                        const matchingOption = bestOptions.find(opt => 
+                            opt.brand === selectedPanelOption.brand &&
+                            opt.wattage === selectedPanelOption.wattage &&
+                            opt.quantity === selectedPanelOption.quantity
+                        );
+                        
+                        if (matchingOption) {
+                            optionToSelect = matchingOption;
+                        }
+                    }
+                    
+                    // If no matching option found, select the best match (first option)
+                    if (!optionToSelect) {
+                        optionToSelect = bestOptions[0];
+                    }
+                    
+                    updateSelectedPanelInfo(optionToSelect);
                 }
                 
                 // Final validation: Log which options got which labels
@@ -3728,10 +3672,21 @@
         function displayLoanOptions(options) {
             const tableBody = document.getElementById('loanTableBody');
             tableBody.innerHTML = '';
+            
+            // Ensure commission column header visibility matches sensitive info state
+            const commissionHeader = document.querySelector('.admin-only');
+            if (commissionHeader) {
+                commissionHeader.style.display = isSensitiveInfoVisible() ? 'table-cell' : 'none';
+            }
 
-            options.forEach(option => {
+            options.forEach((option, index) => {
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50';
+                // Highlight the first row (lowest price) with a distinct background
+                if (index === 0) {
+                    row.className = 'bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500';
+                } else {
+                    row.className = 'hover:bg-gray-50';
+                }
                 const monthsText = currentLanguage === 'en' ? 'months' : 'ամիս';
                 
                 // Create commission cell conditionally
@@ -3799,12 +3754,19 @@
                     
                     // Keep admin panels hidden by default - admin must use toggle to show them
                     // showAdminPanel(); // Commented out - admin panel stays hidden by default
-                showAdminDetails();
-                showCommissionColumn();
-                showProfitPerKwDisplay();
+                // Don't show adminDetails here - it should be controlled by sensitive info toggle
+                // showAdminDetails();
+                // Don't show commission column here - it should be controlled by sensitive info toggle
+                // showCommissionColumn();
+                // Don't show profit per kW display here - it should be controlled by sensitive info toggle
+                // showProfitPerKwDisplay();
                     
                     // DO NOT auto-reveal sensitive info - keep it hidden by default
                     // revealAllSensitiveInfo(); // Commented out - sensitive info stays hidden
+                    // Ensure all sensitive info elements are hidden by default
+                    hideAdminDetails();
+                    hideCommissionColumn();
+                    hideProfitPerKwDisplay();
                     
             } else {
                     isAdminLoggedIn = false;
@@ -4103,9 +4065,15 @@
             });
             
             // Hide all Calculation Breakdown sections
-            const breakdownSections = document.querySelectorAll('.bg-gray-50.p-4.rounded-md.space-y-4');
+            // The breakdown is rendered inside results, so recalculation will handle it
+            // But also hide any existing breakdown sections for immediate effect
+            const breakdownSections = document.querySelectorAll('#results .bg-gray-50.p-4.rounded-md.space-y-4');
             breakdownSections.forEach(section => {
-                section.style.display = 'none';
+                const h4 = section.querySelector('h4');
+                if (h4 && (h4.textContent.includes('Calculation Breakdown') || h4.textContent.includes('Հաշվարկի մանրամասները'))) {
+                    section.style.display = 'none';
+                    section.style.visibility = 'hidden';
+                }
             });
         }
 
@@ -4127,6 +4095,11 @@
                 // Currently shown, so hide all
                 hideAllSensitiveInfo();
                 hideAdminPanel(); // Hide admin panel when hiding sensitive info
+                
+                // Recalculate to show simple view without breakdown
+                if (allLoanOptions.length > 0 || document.getElementById('systemPower')?.value) {
+                    calculateLoan();
+                }
             }
         }
 
@@ -4145,7 +4118,7 @@
             toggleContainer.id = 'toggleSensitiveInfoContainer';
             toggleContainer.className = 'inline-flex items-center space-x-3 bg-white rounded-lg shadow-md border border-gray-200 p-3 mb-4';
             
-            // Create checkbox with simple label
+            // Create checkbox with simple label - DO NOT include checked attribute (unchecked by default)
             toggleContainer.innerHTML = `
                 <label class="flex items-center space-x-2 cursor-pointer">
                     <input type="checkbox" id="toggleSensitiveInfoCheckbox" class="w-4 h-4 text-tiamat-blue bg-gray-100 border-gray-300 rounded focus:ring-tiamat-blue focus:ring-2">
@@ -4166,17 +4139,32 @@
                 }
             }
             
+            // Explicitly ensure checkbox is unchecked (should be by default, but be extra sure)
+            const checkbox = document.getElementById('toggleSensitiveInfoCheckbox');
+            if (checkbox) {
+                checkbox.checked = false;
+                
+                // Immediately hide any breakdown sections that might exist
+                setTimeout(() => {
+                    const breakdownSections = document.querySelectorAll('#results .bg-gray-50.p-4.rounded-md.space-y-4');
+                    breakdownSections.forEach(section => {
+                        const h4 = section.querySelector('h4');
+                        if (h4 && (h4.textContent.includes('Calculation Breakdown') || h4.textContent.includes('Հաշվարկի մանրամասները'))) {
+                            section.style.display = 'none';
+                            section.style.visibility = 'hidden';
+                        }
+                    });
+                }, 0);
+                
+                // Add event listener to the checkbox
+                checkbox.addEventListener('change', toggleAllSensitiveInfo);
+            }
+            
             // DO NOT reveal sensitive info by default - keep it hidden
             // revealAllSensitiveInfo();
             
             // Ensure sensitive info is hidden by default even for admin users
             hideAllSensitiveInfo();
-            
-            // Add event listener to the checkbox after it's created
-            const checkbox = document.getElementById('toggleSensitiveInfoCheckbox');
-            if (checkbox) {
-                checkbox.addEventListener('change', toggleAllSensitiveInfo);
-            }
         }
 
 
@@ -4441,20 +4429,21 @@
 
         // Helper: whether sensitive info should be visible (admin AND checkbox checked)
         function isSensitiveInfoVisible() {
+            // Always return false if not admin
             if (!isAdminLoggedIn) {
                 return false;
             }
             
             const checkbox = document.getElementById('toggleSensitiveInfoCheckbox');
             
-            // If checkbox exists, use its checked state
-            if (checkbox) {
-                return checkbox.checked;
+            // If checkbox doesn't exist yet, hide sensitive info by default
+            if (!checkbox) {
+                return false;
             }
             
-            // If checkbox doesn't exist yet, hide sensitive info by default
+            // Explicitly check the checked property - default to false if undefined/null
             // This ensures sensitive info is hidden until user explicitly chooses to show it
-            return false;
+            return checkbox.checked === true;
         }
         
         // Helper: render sensitive value either as spoiler or direct value
@@ -4486,15 +4475,30 @@
             initRouteProtection();
             
             // Enforce security immediately on page load
-            // enforceSecurityOnLoad(); // Temporarily disabled
+            // Hide any existing breakdown sections immediately
+            const existingBreakdowns = document.querySelectorAll('#results .bg-gray-50.p-4.rounded-md.space-y-4');
+            existingBreakdowns.forEach(section => {
+                const h4 = section.querySelector('h4');
+                if (h4 && (h4.textContent.includes('Calculation Breakdown') || h4.textContent.includes('Հաշվարկի մանրամասները'))) {
+                    section.style.display = 'none';
+                    section.style.visibility = 'hidden';
+                }
+            });
             
             // Fetch system cost settings first, then check admin status
             try {
-                await fetchSystemCostSettings();
+                // Check if function exists before calling
+                if (typeof fetchSystemCostSettings === 'function') {
+                    await fetchSystemCostSettings();
+                } else {
+                    console.error('❌ fetchSystemCostSettings function not found');
+                }
                 
                 // Now check admin status after data is loaded
                 setTimeout(() => {
-                    checkAdminStatus();
+                    if (typeof checkAdminStatus === 'function') {
+                        checkAdminStatus();
+                    }
                     // DO NOT auto-reveal sensitive info - keep it hidden by default
                     // if (isAdminLoggedIn) {
                     //     revealAllSensitiveInfo();
@@ -4507,7 +4511,18 @@
         
         // Also enforce security when window loads to catch any late elements
         window.addEventListener('load', function() {
-            // enforceSecurityOnLoad(); // Temporarily disabled
+            // Hide any breakdown sections that might have been rendered
+            const breakdowns = document.querySelectorAll('#results .bg-gray-50.p-4.rounded-md.space-y-4');
+            breakdowns.forEach(section => {
+                const h4 = section.querySelector('h4');
+                if (h4 && (h4.textContent.includes('Calculation Breakdown') || h4.textContent.includes('Հաշվարկի մանրամասները'))) {
+                    // Only hide if sensitive info is not visible
+                    if (!isSensitiveInfoVisible()) {
+                        section.style.display = 'none';
+                        section.style.visibility = 'hidden';
+                    }
+                }
+            });
         });
     </script>
 
