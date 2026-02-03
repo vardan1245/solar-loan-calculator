@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(100),
     email VARCHAR(100),
-    role VARCHAR(20) DEFAULT 'admin',
+    role VARCHAR(20) DEFAULT 'admin' CHECK (role IN ('admin', 'sales_office', 'user')),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP,

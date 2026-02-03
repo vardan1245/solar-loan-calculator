@@ -167,7 +167,54 @@
                         </div>
                     </div>
 
-
+                <!-- Sales Office: Sales Team Percentage Adjustment (Only visible for sales_office role) -->
+                <div id="salesOfficeControls" class="hidden mt-4">
+                    <!-- Minimal Bar (No text - Just a clickable bar) -->
+                    <button id="salesOfficeToggleBtn" 
+                            onclick="toggleSalesOfficePanel()"
+                            class="w-full h-3 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full hover:from-purple-500 hover:to-blue-500 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer"
+                            aria-label="Sales Office Controls">
+                    </button>
+                    
+                    <!-- Expandable Panel (Hidden by Default) -->
+                    <div id="salesOfficePanel" class="hidden mt-2 p-4 bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-lg shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                </svg>
+                                <label class="block text-sm font-semibold text-purple-800" data-en="Sales Team Percentage Adjustment" data-hy="Վաճառքի թիմի տոկոսի ճշգրտում">Sales Team Percentage Adjustment</label>
+                            </div>
+                            <button onclick="toggleSalesOfficePanel()" class="text-gray-500 hover:text-gray-700">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2" data-en="Sales Team %" data-hy="Վաճառքի թիմ %">Sales Team %</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" 
+                                       id="customSalesTeamPctInput" 
+                                       min="0" 
+                                       max="50" 
+                                       step="0.1" 
+                                       value="8.0"
+                                       class="w-32 px-3 py-2 border-2 border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                       onchange="updateSalesTeamPercentage()">
+                                <span class="text-sm font-semibold text-purple-800">%</span>
+                                <button onclick="resetSalesTeamPercentage()" 
+                                        class="px-3 py-2 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
+                                        data-en="Reset to Default (8%)" 
+                                        data-hy="Վերականգնել լռելյայն (8%)">
+                                    Reset to Default (8%)
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-600 mt-1" data-en="Adjust to see price impact (Default: 8%)" data-hy="Ճշգրտեք գնի ազդեցությունը տեսնելու համար (Լռելյայն: 8%)">Adjust to see price impact (Default: 8%)</p>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Inverter Type and Phase Selection -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -469,7 +516,7 @@
                     <thead>
                         <tr class="bg-gray-50">
                             <th class="border p-3 text-left font-medium cursor-pointer hover:bg-gray-100" onclick="sortTable('bankName')">
-                                <span data-en="Bank" data-hy="Բանկ">Bank</span> <span id="bankSortIcon" class="ml-1">↕</span>
+                                <span data-en="Bank / Option" data-hy="Բանկ / Տարբերակ">Bank / Option</span> <span id="bankSortIcon" class="ml-1">↕</span>
                             </th>
                             <th class="border p-3 text-center font-medium w-32 cursor-pointer hover:bg-gray-100" onclick="sortTable('loanPeriod')">
                                 <span data-en="Loan Period" data-hy="Վարկի ժամկետ">Loan Period</span> <span id="periodSortIcon" class="ml-1">↕</span>
@@ -523,6 +570,10 @@
         let batteries = []; // Battery list for hybrid systems
         let isDataLoaded = false; // Track if database data is fully loaded
         let selectedPanelOption = null; // Store the selected panel option from suggestions
+        
+        // Custom percentage values (null means use database values)
+        let customSalesTeamPct = null;
+        let customUnanticipatedExpensesPct = null;
         
         // Helper function to calculate safety margin based on inverter power
         function getSafetyMargin(inverterPower) {
@@ -740,6 +791,12 @@
                     
                     // Mark data as loaded
                     isDataLoaded = true;
+                    
+                    // Update percentage editor display with loaded database values
+                    if (typeof updatePercentageEditorDisplay === 'function') {
+                        updatePercentageEditorDisplay();
+                    }
+                    
                     console.log('✅ Data loaded successfully:', {
                         inverters: inverters?.length || 0,
                         panels: panels?.length || 0,
@@ -1141,36 +1198,52 @@
                 }
             } else {
                 // Auto selection mode
-                const selectedInverterId = parseInt(document.getElementById('inverterSelect').value);
+                const selectedInverterValue = document.getElementById('inverterSelect').value;
                 
-                // Find the selected inverter from the dropdown by ID
-                selectedInverter = inverters.find(inv => inv.id === selectedInverterId);
-                if (!selectedInverter) {
-                    const message = currentLanguage === 'en' 
-                        ? 'Selected inverter not found!'
-                    : 'Ընտրված փոխակերպիչը չի գտնվել:';
+                // Check if "None" is selected
+                if (selectedInverterValue === 'none') {
+                    // No inverter selected - create a dummy inverter object
+                    selectedInverter = {
+                        id: 0,
+                        brand: currentLanguage === 'en' ? 'None' : 'Առանց',
+                        model: '',
+                        kw: 0,
+                        price: 0,
+                        type: 'none'
+                    };
+                    console.log('🔍 calculateLoan with NO inverter (panels only)');
+                } else {
+                    const selectedInverterId = parseInt(selectedInverterValue);
                     
-                    document.getElementById('results').innerHTML = `
-                        <div class="space-y-3">
-                            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                                <div class="flex items-center">
-                                    <span class="w-5 h-5 text-red-400 mr-2 text-xl font-bold">✕</span>
-                                    <span class="text-red-800 font-medium">${message}</span>
+                    // Find the selected inverter from the dropdown by ID
+                    selectedInverter = inverters.find(inv => inv.id === selectedInverterId);
+                    if (!selectedInverter) {
+                        const message = currentLanguage === 'en' 
+                            ? 'Selected inverter not found!'
+                        : 'Ընտրված փոխակերպիչը չի գտնվել:';
+                        
+                        document.getElementById('results').innerHTML = `
+                            <div class="space-y-3">
+                                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                    <div class="flex items-center">
+                                        <span class="w-5 h-5 text-red-400 mr-2 text-xl font-bold">✕</span>
+                                        <span class="text-red-800 font-medium">${message}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                    return;
+                        `;
+                        return;
+                    }
+                    
+                    // Debug logging for inverter selection
+                    console.log('🔍 calculateLoan using selected inverter:', {
+                        id: selectedInverter.id,
+                        brand: selectedInverter.brand,
+                        model: selectedInverter.model,
+                        kw: selectedInverter.kw,
+                        price: selectedInverter.price
+                    });
                 }
-                
-                // Debug logging for inverter selection
-                console.log('🔍 calculateLoan using selected inverter:', {
-                    id: selectedInverter.id,
-                    brand: selectedInverter.brand,
-                    model: selectedInverter.model,
-                    kw: selectedInverter.kw,
-                    price: selectedInverter.price
-                });
             }
             
             const inverterPrice = selectedInverter.price;
@@ -1209,9 +1282,14 @@
                 }
             }
 
-            // Calculate total system price including sales team and unexpected expenses - database values only
-            const salesTeamPct = dbSalesCommissions.salesCommissions?.data?.sales_team_pct?.value || 6;
-            const unanticipatedExpensesPct = dbUnanticipatedExpenses.unanticipatedExpenses?.data?.unanticipated_expenses_pct?.value || 2;
+            // Calculate total system price including sales team and unexpected expenses
+            // Use custom percentages if set, otherwise use database values
+            const salesTeamPct = customSalesTeamPct !== null 
+                ? customSalesTeamPct 
+                : (dbSalesCommissions.salesCommissions?.data?.sales_team_pct?.value || 6);
+            const unanticipatedExpensesPct = customUnanticipatedExpensesPct !== null 
+                ? customUnanticipatedExpensesPct 
+                : (dbUnanticipatedExpenses.unanticipatedExpenses?.data?.unanticipated_expenses_pct?.value || 2);
             
             // Convert percentages to decimals
             const salesTeamPctDecimal = salesTeamPct / 100;
@@ -1383,10 +1461,17 @@
                                         <span>+ Profit (${warrantyYears}Y warranty):</span>
                                         ${renderSensitiveValue(profitAmount.toLocaleString(), ' AMD')}
                                     </div>
+                                    ${inverterPrice > 0 ? `
                                     <div class="flex justify-between">
                                         <span>+ Inverter (${selectedInverter.brand} ${selectedInverter.kw}kW):</span>
                                         ${renderSensitiveValue(selectedInverter.price.toLocaleString(), ' AMD')}
                                     </div>
+                                    ` : `
+                                    <div class="flex justify-between text-gray-500">
+                                        <span>+ Inverter:</span>
+                                        <span class="font-mono">None (0 AMD)</span>
+                                    </div>
+                                    `}
                                     <div class="flex justify-between">
                                         <span>+ Panels:</span>
                                         ${renderSensitiveValue(panelPrice.toLocaleString(), ' AMD')}
@@ -1511,20 +1596,38 @@
             
             const loanOptions = [];
             
+            // Base system price is what the company wants to keep (after all deductions)
+            const baseSystemPrice = subtotalAfterDiscount; // This is after discount
+            
             bankConfigurations.forEach(bank => {
                 bank.options.forEach(option => {
                     option.periods.forEach(period => {
-                        // Calculate loan amount with commission using the final price after sales discount
-                        // Add 20% to commission to account for taxes
-                        const effectiveCommission = option.commission * 1.2;
-                        const loanAmountWithCommission = Math.ceil(finalSystemPrice / (1 - effectiveCommission));
+                        // STEP 1: Calculate BACKWARDS from base system price
+                        // The loan amount must account for: Bank Commission, Sales Team %, and Unexpected %
+                        // Formula: Loan Amount = Base System Price ÷ (1 - Commission - Sales% - Unexpected%)
+                        
+                        const effectiveCommission = option.commission * 1.2; // Include 20% tax
+                        
+                        // Total percentage that will be deducted from loan amount
+                        const totalDeductions = effectiveCommission + salesTeamPctDecimal + unanticipatedExpensesPctDecimal;
+                        
+                        // Calculate the loan principal (working backwards)
+                        const loanAmountWithCommission = Math.ceil(baseSystemPrice / (1 - totalDeductions));
+                        
+                        // Now calculate each deduction from this loan amount
+                        const bankCommissionAmount = Math.ceil(loanAmountWithCommission * effectiveCommission);
+                        const salesTeamAmountForLoan = Math.ceil(loanAmountWithCommission * salesTeamPctDecimal);
+                        const unexpectedExpensesAmountForLoan = Math.ceil(loanAmountWithCommission * unanticipatedExpensesPctDecimal);
+                        
+                        // Verify: base price should equal loan amount minus all deductions
+                        const verifyBasePrice = loanAmountWithCommission - bankCommissionAmount - salesTeamAmountForLoan - unexpectedExpensesAmountForLoan;
                         
                         // Calculate actual loan amount (after down payment)
                         const actualLoanAmount = loanAmountWithCommission - 0; // No down payment for now
                         
-                        // Calculate monthly payment
+                        // Calculate monthly payment and interest (customer pays interest on the full loan amount)
                         const monthlyPayment = Math.ceil(calculateLoanPayment(actualLoanAmount, option.interestRate, period));
-                        const totalInterest = (monthlyPayment * period) - actualLoanAmount;
+                        const finalTotalInterest = (monthlyPayment * period) - actualLoanAmount;
                         const totalAmount = monthlyPayment * period;
                         
                         loanOptions.push({
@@ -1534,10 +1637,10 @@
                             baseCommission: option.commission, // Store original commission before 20% adjustment
                             loanPeriod: period,
                             monthlyPayment: monthlyPayment,
-                            totalInterest: totalInterest,
+                            totalInterest: finalTotalInterest,
                             totalAmount: totalAmount,
                             loanAmount: actualLoanAmount,
-                            finalSystemPrice: finalSystemPrice, // Store for calculation breakdown
+                            finalSystemPrice: baseSystemPrice, // This is what company keeps
                             loanAmountWithCommission: loanAmountWithCommission, // Store for calculation breakdown
                             // Store detailed calculation values for breakdown
                             basePrice: basePrice,
@@ -1550,9 +1653,13 @@
                             unanticipatedExpensesPctDecimal: unanticipatedExpensesPctDecimal,
                             subtotal: subtotal,
                             subtotalAfterDiscount: subtotalAfterDiscount,
-                            totalSystemPrice: totalSystemPrice,
-                            salesTeamAmount: salesTeamAmount,
-                            unexpectedExpensesAmount: unexpectedExpensesAmount
+                            totalSystemPrice: totalSystemPrice, // Keep for cash price display
+                            salesTeamAmount: salesTeamAmountForLoan, // Calculated from loan amount
+                            unexpectedExpensesAmount: unexpectedExpensesAmountForLoan, // Calculated from loan amount
+                            baseSystemPrice: baseSystemPrice, // Store base before percentages
+                            bankCommissionAmount: bankCommissionAmount, // Store for breakdown
+                            totalDeductions: totalDeductions, // Store for breakdown
+                            verifyBasePrice: verifyBasePrice // Store for verification
                         });
                     });
                 });
@@ -1677,6 +1784,16 @@
             
             const systemPower = parseFloat(document.getElementById('systemPower').value) || 0;
             inverterSelect.innerHTML = '';
+            
+            // Add "None" option for stations without inverter
+            const noneOption = document.createElement('option');
+            noneOption.value = 'none';
+            noneOption.textContent = currentLanguage === 'en' 
+                ? 'None (No Inverter)'
+                : 'Առանց փոխակերպիչի';
+            noneOption.setAttribute('data-en', 'None (No Inverter)');
+            noneOption.setAttribute('data-hy', 'Առանց փոխակերպիչի');
+            inverterSelect.appendChild(noneOption);
             
             // Filter inverters by selected type strictly
             const typeFilteredInverters = inverters.filter(inverter => {
@@ -2446,28 +2563,39 @@
             
             // Use the currently selected inverter from the dropdown
             let selectedInverter = null;
+            let inverterPrice = 0;
             const inverterSelect = document.getElementById('inverterSelect');
+            
             if (inverterSelect && inverterSelect.value) {
-                const selectedInverterId = parseInt(inverterSelect.value);
-                selectedInverter = inverters.find(inv => inv.id === selectedInverterId);
-                console.log('🔍 calculateCompleteSystemCost using selected inverter ID:', selectedInverterId, selectedInverter);
+                // Check if "None" is selected
+                if (inverterSelect.value === 'none') {
+                    // No inverter - set price to 0
+                    inverterPrice = 0;
+                    console.log('🔍 calculateCompleteSystemCost: No inverter selected (price = 0)');
+                } else {
+                    // Parse inverter ID and find inverter
+                    const selectedInverterId = parseInt(inverterSelect.value);
+                    selectedInverter = inverters.find(inv => inv.id === selectedInverterId);
+                    console.log('🔍 calculateCompleteSystemCost using selected inverter ID:', selectedInverterId, selectedInverter);
+                    
+                    if (selectedInverter) {
+                        inverterPrice = selectedInverter.price;
+                    }
+                }
             }
             
-            // If no inverter is selected, fall back to auto-selection logic
-            if (!selectedInverter) {
+            // If no inverter is selected from dropdown, fall back to auto-selection logic
+            if (!selectedInverter && inverterPrice === 0 && inverterSelect.value !== 'none') {
                 // Find suitable inverter using conditional safety margin
                 for (let i = 0; i < inverters.length; i++) {
                     const safetyMargin = getSafetyMargin(inverters[i].kw);
                     if (inverters[i].kw * safetyMargin >= systemPower) {
                         selectedInverter = inverters[i];
+                        inverterPrice = selectedInverter.price;
                         break;
                     }
                 }
                 console.log('🔍 calculateCompleteSystemCost using auto-selected inverter:', selectedInverter?.kw + 'kW', selectedInverter);
-            }
-            
-            if (!selectedInverter) {
-                return panelOption.totalPrice; // Fallback to panel price only
             }
             
             // Calculate base price from installation costs - use same logic as main function
@@ -2499,7 +2627,6 @@
             
             // Get panel price from the option
             const panelPrice = panelOption.totalPrice;
-            const inverterPrice = selectedInverter.price;
             
             // Calculate battery cost if hybrid system is selected
             let accumulatorPrice = 0;
@@ -3093,7 +3220,7 @@
                     : 'px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300';
             }
             
-            document.getElementById('systemPower').value = '10.44';
+            document.getElementById('systemPower').value = '10.08';
             
             // Initialize selectedPanelInfo to prevent undefined errors
             if (typeof selectedPanelInfo === 'undefined') {
@@ -3700,81 +3827,138 @@
                 header.style.display = isSensitiveInfoVisible() ? 'table-cell' : 'none';
             });
 
-            options.forEach((option, index) => {
-                const rowId = `loan-row-${index}`;
-                const detailRowId = `loan-detail-${index}`;
-                const row = document.createElement('tr');
-                row.id = rowId;
-                // Highlight the first row (lowest price) with a distinct background
-                if (index === 0) {
-                    row.className = 'bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500';
-                } else {
-                    row.className = 'hover:bg-gray-50';
+            // Group options by bank
+            const groupedByBank = {};
+            options.forEach(option => {
+                if (!groupedByBank[option.bankName]) {
+                    groupedByBank[option.bankName] = [];
                 }
-                const monthsText = currentLanguage === 'en' ? 'months' : 'ամիս';
+                groupedByBank[option.bankName].push(option);
+            });
+
+            // Get bank names in order (as they appear in data)
+            const bankNames = [...new Set(options.map(opt => opt.bankName))];
+            
+            let globalIndex = 0; // Keep track of overall index for IDs
+            
+            // Display each bank group
+            bankNames.forEach((bankName, bankIndex) => {
+                const bankOptions = groupedByBank[bankName];
+                const bankId = `bank-${bankIndex}`;
+                const isBestOption = globalIndex === 0; // First option overall is the best
                 
-                // Create commission cell conditionally
-                const commissionCell = isSensitiveInfoVisible() 
-                    ? `<td class="border p-3 text-center w-24 text-orange-600 font-medium">${(option.commission * 100).toFixed(1)}%</td>`
-                    : '';
+                // Create bank header row
+                const bankHeaderRow = document.createElement('tr');
+                bankHeaderRow.className = 'bg-gradient-to-r from-blue-500 to-blue-600 text-white';
+                bankHeaderRow.id = `${bankId}-header`;
                 
-                // Create collapse button cell conditionally
-                const collapseButtonCell = isSensitiveInfoVisible() 
-                    ? `<td class="border p-3 text-center w-20">
-                        <button onclick="toggleLoanDetails('${detailRowId}')" class="text-blue-600 hover:text-blue-800 font-bold text-lg" aria-label="Toggle details">
-                            <span id="collapse-icon-${index}">+</span>
+                const colSpan = isSensitiveInfoVisible() ? 9 : 7;
+                
+                bankHeaderRow.innerHTML = `
+                    <td colspan="${colSpan}" class="border-2 border-blue-700 p-3">
+                        <button onclick="toggleBankGroup('${bankId}')" 
+                                class="w-full flex items-center justify-between hover:opacity-90 transition-opacity">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                                </svg>
+                                <span class="text-lg font-bold">${bankName}</span>
+                                <span class="text-sm bg-white/20 px-3 py-1 rounded-full">${bankOptions.length} ${currentLanguage === 'en' ? 'options' : 'տարբերակ'}</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                ${isBestOption ? `<span class="text-xs bg-green-400 text-green-900 px-3 py-1 rounded-full font-bold">${currentLanguage === 'en' ? '⭐ Best Option' : '⭐ Լավագույնը'}</span>` : ''}
+                                <svg id="${bankId}-icon" class="w-6 h-6 transform transition-transform duration-200" style="transform: rotate(-90deg);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
                         </button>
-                    </td>`
-                    : '';
-                
-                row.innerHTML = `
-                    <td class="border p-3 font-medium">${option.bankName}</td>
-                    <td class="border p-3 text-center w-32">${option.loanPeriod} ${monthsText}</td>
-                    <td class="border p-3 text-center w-24">${(option.interestRate * 100).toFixed(1)}%</td>
-                    ${commissionCell}
-                    ${collapseButtonCell}
-                    <td class="border p-3 text-center font-semibold text-green-600 w-40">${option.loanAmount.toLocaleString()}</td>
-                    <td class="border p-3 text-center font-semibold text-blue-600 w-36">${option.monthlyPayment.toLocaleString()}</td>
-                    <td class="border p-3 text-center font-semibold text-red-600 w-40">${Math.abs(option.totalInterest).toLocaleString()}</td>
-                    <td class="border p-3 text-center font-semibold text-purple-600 w-44">${option.totalAmount.toLocaleString()}</td>
+                    </td>
                 `;
-                tableBody.appendChild(row);
+                tableBody.appendChild(bankHeaderRow);
                 
-                // Add collapsible detail row (only if sensitive info is visible)
-                if (isSensitiveInfoVisible() && option.finalSystemPrice !== undefined) {
-                    const detailRow = document.createElement('tr');
-                    detailRow.id = detailRowId;
-                    detailRow.className = 'hidden bg-gray-50';
-                    detailRow.style.display = 'none';
+                // Create container for bank's loan options
+                bankOptions.forEach((option, optionIndex) => {
+                    const index = globalIndex;
+                    globalIndex++;
                     
-                    // Calculate breakdown values
-                    const baseCommission = option.baseCommission || (option.commission / 1.2);
-                    const totalCommissionAmount = option.loanAmountWithCommission - option.finalSystemPrice;
-                    const baseCommissionAmount = totalCommissionAmount / 1.2;
-                    const commissionTax = baseCommissionAmount * 0.2;
+                    const rowId = `loan-row-${index}`;
+                    const detailRowId = `loan-detail-${index}`;
+                    const row = document.createElement('tr');
+                    row.id = rowId;
+                    row.className = `bank-group-row ${bankId}-rows`;
+                    row.style.display = 'none'; // Collapsed by default
                     
-                    // Format numbers for display
-                    const formatNum = (num) => Math.ceil(num).toLocaleString();
-                    const formatPct = (pct) => (pct * 100).toFixed(1);
-                    const formatDecimal = (dec) => dec.toFixed(4);
+                    // Highlight the first row (lowest price) with a distinct background
+                    if (index === 0) {
+                        row.className += ' bg-green-50 hover:bg-green-100 border-l-4 border-green-500';
+                    } else {
+                        row.className += ' hover:bg-gray-50';
+                    }
                     
-                    // Calculate values for expressions
-                    const salesTeamPctDisplay = formatPct(option.salesTeamPctDecimal);
-                    const unexpectedPctDisplay = formatPct(option.unanticipatedExpensesPctDecimal);
-                    const baseCommissionPct = formatPct(baseCommission);
-                    const effectiveCommissionPct = formatPct(option.commission);
-                    const divisor = (1 - option.salesTeamPctDecimal - option.unanticipatedExpensesPctDecimal).toFixed(4);
+                    const monthsText = currentLanguage === 'en' ? 'months' : 'ամիս';
                     
-                    const detailText = currentLanguage === 'en' 
+                    // Create commission cell conditionally
+                    const commissionCell = isSensitiveInfoVisible() 
+                        ? `<td class="border p-3 text-center w-24 text-orange-600 font-medium">${(option.commission * 100).toFixed(1)}%</td>`
+                        : '';
+                    
+                    // Create collapse button cell conditionally
+                    const collapseButtonCell = isSensitiveInfoVisible() 
+                        ? `<td class="border p-3 text-center w-20">
+                            <button onclick="toggleLoanDetails('${detailRowId}')" class="text-blue-600 hover:text-blue-800 font-bold text-lg" aria-label="Toggle details">
+                                <span id="collapse-icon-${index}">+</span>
+                            </button>
+                        </td>`
+                        : '';
+                    
+                    row.innerHTML = `
+                        <td class="border p-3 font-medium pl-8 text-gray-600">${currentLanguage === 'en' ? 'Option' : 'Տարբերակ'} ${optionIndex + 1}</td>
+                        <td class="border p-3 text-center w-32">${option.loanPeriod} ${monthsText}</td>
+                        <td class="border p-3 text-center w-24">${(option.interestRate * 100).toFixed(1)}%</td>
+                        ${commissionCell}
+                        ${collapseButtonCell}
+                        <td class="border p-3 text-center font-semibold text-green-600 w-40">${option.loanAmount.toLocaleString()}</td>
+                        <td class="border p-3 text-center font-semibold text-blue-600 w-36">${option.monthlyPayment.toLocaleString()}</td>
+                        <td class="border p-3 text-center font-semibold text-red-600 w-40">${Math.abs(option.totalInterest).toLocaleString()}</td>
+                        <td class="border p-3 text-center font-semibold text-purple-600 w-44">${option.totalAmount.toLocaleString()}</td>
+                    `;
+                    tableBody.appendChild(row);
+                    
+                    // Add collapsible detail row (only if sensitive info is visible)
+                    if (isSensitiveInfoVisible() && option.finalSystemPrice !== undefined) {
+                        const detailRow = document.createElement('tr');
+                        detailRow.id = detailRowId;
+                        detailRow.className = `hidden bg-gray-50 bank-group-row ${bankId}-rows`;
+                        detailRow.style.display = 'none';
+                        
+                        // Calculate breakdown values
+                        const baseCommission = option.baseCommission || (option.commission / 1.2);
+                        const totalCommissionAmount = option.loanAmountWithCommission - option.finalSystemPrice;
+                        const baseCommissionAmount = totalCommissionAmount / 1.2;
+                        const commissionTax = baseCommissionAmount * 0.2;
+                        
+                        // Format numbers for display
+                        const formatNum = (num) => Math.ceil(num).toLocaleString();
+                        const formatPct = (pct) => (pct * 100).toFixed(1);
+                        const formatDecimal = (dec) => dec.toFixed(4);
+                        
+                        // Calculate values for expressions
+                        const salesTeamPctDisplay = formatPct(option.salesTeamPctDecimal);
+                        const unexpectedPctDisplay = formatPct(option.unanticipatedExpensesPctDecimal);
+                        const baseCommissionPct = formatPct(baseCommission);
+                        const effectiveCommissionPct = formatPct(option.commission);
+                        const divisor = (1 - option.salesTeamPctDecimal - option.unanticipatedExpensesPctDecimal).toFixed(4);
+                        
+                        const detailText = currentLanguage === 'en' 
                         ? `<td colspan="9" class="border p-4 bg-gray-50">
                             <div class="text-xs space-y-3 font-mono">
                                 <div class="font-semibold text-gray-800 mb-2 text-sm">Loan Amount Calculation Breakdown:</div>
                                 
                                 <div class="border-l-2 border-blue-300 pl-3 space-y-1">
-                                    <div class="font-semibold text-blue-700 text-xs mb-1">Step 1: System Price Calculation</div>
+                                    <div class="font-semibold text-blue-700 text-xs mb-1">Step 1: Calculate Base System Price (What Company Keeps)</div>
                                     <div class="pl-2 space-y-0.5">
-                                        <div>Base Price = <span class="font-semibold">${formatNum(option.basePrice)} AMD</span></div>
-                                        <div>Profit = <span class="font-semibold">${formatNum(option.profitAmount)} AMD</span></div>
+                                        <div>Base Installation Cost = <span class="font-semibold">${formatNum(option.basePrice)} AMD</span></div>
+                                        <div>Profit Margin = <span class="font-semibold">${formatNum(option.profitAmount)} AMD</span></div>
                                         <div>Inverter Price = <span class="font-semibold">${formatNum(option.inverterPrice)} AMD</span></div>
                                         <div>Panel Price = <span class="font-semibold">${formatNum(option.panelPrice)} AMD</span></div>
                                         ${option.accumulatorPrice > 0 ? `<div>Accumulator Price = <span class="font-semibold">${formatNum(option.accumulatorPrice)} AMD</span></div>` : ''}
@@ -3787,42 +3971,45 @@
                                         <div class="pl-4">= ${formatNum(option.subtotal)} - ${formatNum(option.totalSalesDiscount)}</div>
                                         <div class="pl-4 font-semibold">= <span class="text-blue-600">${formatNum(option.subtotalAfterDiscount)} AMD</span></div>
                                         ` : ''}
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Total System Price = Subtotal${option.totalSalesDiscount > 0 ? ' After Discount' : ''} ÷ (1 - Sales Team ${salesTeamPctDisplay}% - Unexpected ${unexpectedPctDisplay}%)</div>
-                                        <div class="pl-4">= ${formatNum(option.subtotalAfterDiscount)} ÷ (1 - ${formatDecimal(option.salesTeamPctDecimal)} - ${formatDecimal(option.unanticipatedExpensesPctDecimal)})</div>
-                                        <div class="pl-4">= ${formatNum(option.subtotalAfterDiscount)} ÷ ${divisor}</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-green-600">${formatNum(option.totalSystemPrice)} AMD</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Sales Team Amount = Total System Price × ${salesTeamPctDisplay}%</div>
-                                        <div class="pl-4">= ${formatNum(option.totalSystemPrice)} × ${formatDecimal(option.salesTeamPctDecimal)}</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-orange-600">${formatNum(option.salesTeamAmount)} AMD</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Unexpected Expenses = Total System Price × ${unexpectedPctDisplay}%</div>
-                                        <div class="pl-4">= ${formatNum(option.totalSystemPrice)} × ${formatDecimal(option.unanticipatedExpensesPctDecimal)}</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-orange-600">${formatNum(option.unexpectedExpensesAmount)} AMD</span></div>
-                                        <div class="border-t-2 border-green-500 pt-0.5 mt-0.5 font-semibold">Final System Price = <span class="text-green-600">${formatNum(option.finalSystemPrice)} AMD</span></div>
+                                        <div class="border-t-2 border-blue-500 pt-0.5 mt-0.5 font-semibold">Base System Price (Target to Keep) = <span class="text-blue-600">${formatNum(option.baseSystemPrice || option.subtotalAfterDiscount)} AMD</span></div>
+                                        <div class="text-xs text-blue-700 italic mt-1">↑ This is what the company must receive after ALL deductions</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="border-l-2 border-orange-300 pl-3 space-y-1">
+                                    <div class="font-semibold text-orange-700 text-xs mb-1">Step 2: Calculate Loan Principal (Working Backwards)</div>
+                                    <div class="pl-2 space-y-0.5">
+                                        <div class="text-xs text-orange-700 font-semibold mb-1">⚠️ KEY: We calculate BACKWARDS from target amount</div>
+                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Total Deductions:</div>
+                                        <div class="pl-4">• Bank Commission: ${effectiveCommissionPct}% (includes 20% tax)</div>
+                                        <div class="pl-4">• Sales Team: ${salesTeamPctDisplay}%</div>
+                                        <div class="pl-4">• Unexpected Expenses: ${unexpectedPctDisplay}%</div>
+                                        <div class="pl-4 font-semibold">Total: ${(option.totalDeductions * 100).toFixed(2)}%</div>
+                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Loan Principal Formula:</div>
+                                        <div class="pl-4">Loan Principal = Base System Price ÷ (1 - Total Deductions)</div>
+                                        <div class="pl-4">= ${formatNum(option.baseSystemPrice || option.subtotalAfterDiscount)} ÷ (1 - ${(option.totalDeductions).toFixed(4)})</div>
+                                        <div class="pl-4">= ${formatNum(option.baseSystemPrice || option.subtotalAfterDiscount)} ÷ ${(1 - option.totalDeductions).toFixed(4)}</div>
+                                        <div class="pl-4 font-semibold">= <span class="text-green-600">${formatNum(option.loanAmountWithCommission)} AMD</span></div>
                                     </div>
                                 </div>
                                 
                                 <div class="border-l-2 border-purple-300 pl-3 space-y-1">
-                                    <div class="font-semibold text-purple-700 text-xs mb-1">Step 2: Loan Amount with Commission</div>
+                                    <div class="font-semibold text-purple-700 text-xs mb-1">Step 3: Breakdown of Deductions from Loan Principal</div>
                                     <div class="pl-2 space-y-0.5">
-                                        <div>Base Commission = <span class="font-semibold">${baseCommissionPct}%</span></div>
-                                        <div>Effective Commission = Base Commission × 1.2 (includes 20% tax)</div>
-                                        <div class="pl-4">= ${baseCommissionPct}% × 1.2</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-purple-600">${effectiveCommissionPct}%</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Loan Amount with Commission = Final System Price ÷ (1 - Effective Commission)</div>
-                                        <div class="pl-4">= ${formatNum(option.finalSystemPrice)} ÷ (1 - ${formatDecimal(option.commission)})</div>
-                                        <div class="pl-4">= ${formatNum(option.finalSystemPrice)} ÷ ${(1 - option.commission).toFixed(4)}</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-purple-600">${formatNum(option.loanAmountWithCommission)} AMD</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Total Commission Amount = Loan Amount with Commission - Final System Price</div>
-                                        <div class="pl-4">= ${formatNum(option.loanAmountWithCommission)} - ${formatNum(option.finalSystemPrice)}</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-orange-600">${formatNum(totalCommissionAmount)} AMD</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Base Commission Amount = Total Commission Amount ÷ 1.2</div>
-                                        <div class="pl-4">= ${formatNum(totalCommissionAmount)} ÷ 1.2</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-blue-600">${formatNum(baseCommissionAmount)} AMD</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Commission Tax (20%) = Base Commission Amount × 0.2</div>
-                                        <div class="pl-4">= ${formatNum(baseCommissionAmount)} × 0.2</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-red-600">${formatNum(commissionTax)} AMD</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Verification: Base Commission + Tax = ${formatNum(baseCommissionAmount)} + ${formatNum(commissionTax)} = <span class="font-semibold text-orange-600">${formatNum(totalCommissionAmount)} AMD</span> ✓</div>
-                                        <div class="border-t-2 border-green-500 pt-0.5 mt-0.5 font-semibold">Final Loan Amount = <span class="text-green-600">${formatNum(option.loanAmount)} AMD</span></div>
+                                        <div>Loan Principal = <span class="font-semibold">${formatNum(option.loanAmountWithCommission)} AMD</span></div>
+                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Bank Commission (${effectiveCommissionPct}%)</div>
+                                        <div class="pl-4">= ${formatNum(option.loanAmountWithCommission)} × ${formatDecimal(option.commission)}</div>
+                                        <div class="pl-4 font-semibold">= <span class="text-red-600">${formatNum(option.bankCommissionAmount || Math.ceil(option.loanAmountWithCommission * option.commission))} AMD</span></div>
+                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Sales Team (${salesTeamPctDisplay}%)</div>
+                                        <div class="pl-4">= ${formatNum(option.loanAmountWithCommission)} × ${formatDecimal(option.salesTeamPctDecimal)}</div>
+                                        <div class="pl-4 font-semibold">= <span class="text-orange-600">${formatNum(option.salesTeamAmount)} AMD</span></div>
+                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Unexpected Expenses (${unexpectedPctDisplay}%)</div>
+                                        <div class="pl-4">= ${formatNum(option.loanAmountWithCommission)} × ${formatDecimal(option.unanticipatedExpensesPctDecimal)}</div>
+                                        <div class="pl-4 font-semibold">= <span class="text-orange-600">${formatNum(option.unexpectedExpensesAmount)} AMD</span></div>
+                                        <div class="border-t-2 border-green-500 pt-0.5 mt-0.5">Company Receives (After Deductions):</div>
+                                        <div class="pl-4">= ${formatNum(option.loanAmountWithCommission)} - ${formatNum(option.bankCommissionAmount || Math.ceil(option.loanAmountWithCommission * option.commission))} - ${formatNum(option.salesTeamAmount)} - ${formatNum(option.unexpectedExpensesAmount)}</div>
+                                        <div class="pl-4 font-semibold">= <span class="text-green-600">${formatNum(option.verifyBasePrice || option.baseSystemPrice)} AMD</span> ✓</div>
+                                        <div class="text-xs text-green-700 italic mt-1">↑ This matches our target base system price!</div>
                                     </div>
                                 </div>
                             </div>
@@ -3832,10 +4019,10 @@
                                 <div class="font-semibold text-gray-800 mb-2 text-sm">Վարկի գումարի հաշվարկման մանրամասներ:</div>
                                 
                                 <div class="border-l-2 border-blue-300 pl-3 space-y-1">
-                                    <div class="font-semibold text-blue-700 text-xs mb-1">Քայլ 1: Համակարգի գնի հաշվարկ</div>
+                                    <div class="font-semibold text-blue-700 text-xs mb-1">Քայլ 1: Բազային համակարգի գին (ինչ կպահի ընկերությունը)</div>
                                     <div class="pl-2 space-y-0.5">
-                                        <div>Բազային գին = <span class="font-semibold">${formatNum(option.basePrice)} AMD</span></div>
-                                        <div>Շահույթ = <span class="font-semibold">${formatNum(option.profitAmount)} AMD</span></div>
+                                        <div>Տեղադրման բազային արժեք = <span class="font-semibold">${formatNum(option.basePrice)} AMD</span></div>
+                                        <div>Շահույթի մարժա = <span class="font-semibold">${formatNum(option.profitAmount)} AMD</span></div>
                                         <div>Փոխակերպիչի գին = <span class="font-semibold">${formatNum(option.inverterPrice)} AMD</span></div>
                                         <div>Պանելների գին = <span class="font-semibold">${formatNum(option.panelPrice)} AMD</span></div>
                                         ${option.accumulatorPrice > 0 ? `<div>Մարտկոցի գին = <span class="font-semibold">${formatNum(option.accumulatorPrice)} AMD</span></div>` : ''}
@@ -3848,51 +4035,86 @@
                                         <div class="pl-4">= ${formatNum(option.subtotal)} - ${formatNum(option.totalSalesDiscount)}</div>
                                         <div class="pl-4 font-semibold">= <span class="text-blue-600">${formatNum(option.subtotalAfterDiscount)} AMD</span></div>
                                         ` : ''}
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Ընդհանուր համակարգի գին = Ենթագումար${option.totalSalesDiscount > 0 ? ' զեղչից հետո' : ''} ÷ (1 - Վաճառքի թիմ ${salesTeamPctDisplay}% - Անսպասելի ${unexpectedPctDisplay}%)</div>
-                                        <div class="pl-4">= ${formatNum(option.subtotalAfterDiscount)} ÷ (1 - ${formatDecimal(option.salesTeamPctDecimal)} - ${formatDecimal(option.unanticipatedExpensesPctDecimal)})</div>
-                                        <div class="pl-4">= ${formatNum(option.subtotalAfterDiscount)} ÷ ${divisor}</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-green-600">${formatNum(option.totalSystemPrice)} AMD</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Վաճառքի թիմի գումար = Ընդհանուր համակարգի գին × ${salesTeamPctDisplay}%</div>
-                                        <div class="pl-4">= ${formatNum(option.totalSystemPrice)} × ${formatDecimal(option.salesTeamPctDecimal)}</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-orange-600">${formatNum(option.salesTeamAmount)} AMD</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Անսպասելի ծախսեր = Ընդհանուր համակարգի գին × ${unexpectedPctDisplay}%</div>
-                                        <div class="pl-4">= ${formatNum(option.totalSystemPrice)} × ${formatDecimal(option.unanticipatedExpensesPctDecimal)}</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-orange-600">${formatNum(option.unexpectedExpensesAmount)} AMD</span></div>
-                                        <div class="border-t-2 border-green-500 pt-0.5 mt-0.5 font-semibold">Վերջնական համակարգի գին = <span class="text-green-600">${formatNum(option.finalSystemPrice)} AMD</span></div>
+                                        <div class="border-t-2 border-blue-500 pt-0.5 mt-0.5 font-semibold">Բազային համակարգի գին (թիրախ պահել) = <span class="text-blue-600">${formatNum(option.baseSystemPrice || option.subtotalAfterDiscount)} AMD</span></div>
+                                        <div class="text-xs text-blue-700 italic mt-1">↑ Սա այն գումարն է, որը ընկերությունը պետք է ստանա ԲՈԼՈՐ նվազեցումներից հետո</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="border-l-2 border-orange-300 pl-3 space-y-1">
+                                    <div class="font-semibold text-orange-700 text-xs mb-1">Քայլ 2: Վարկի գլխագումարի հաշվարկ (հակադարձ հաշվարկ)</div>
+                                    <div class="pl-2 space-y-0.5">
+                                        <div class="text-xs text-orange-700 font-semibold mb-1">⚠️ ԿԱՐԵՎՈՐ: Մենք հաշվարկում ենք ՀԱԿԱԴԱՐՁ թիրախ գումարից</div>
+                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Ընդհանուր նվազեցումներ:</div>
+                                        <div class="pl-4">• Բանկի կոմիսիա: ${effectiveCommissionPct}% (ներառում է 20% հարկ)</div>
+                                        <div class="pl-4">• Վաճառքի թիմ: ${salesTeamPctDisplay}%</div>
+                                        <div class="pl-4">• Անսպասելի ծախսեր: ${unexpectedPctDisplay}%</div>
+                                        <div class="pl-4 font-semibold">Ընդամենը: ${(option.totalDeductions * 100).toFixed(2)}%</div>
+                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Վարկի գլխագումարի բանաձև:</div>
+                                        <div class="pl-4">Վարկի գլխագումար = Բազային գին ÷ (1 - Ընդհանուր նվազեցումներ)</div>
+                                        <div class="pl-4">= ${formatNum(option.baseSystemPrice || option.subtotalAfterDiscount)} ÷ (1 - ${(option.totalDeductions).toFixed(4)})</div>
+                                        <div class="pl-4">= ${formatNum(option.baseSystemPrice || option.subtotalAfterDiscount)} ÷ ${(1 - option.totalDeductions).toFixed(4)}</div>
+                                        <div class="pl-4 font-semibold">= <span class="text-green-600">${formatNum(option.loanAmountWithCommission)} AMD</span></div>
                                     </div>
                                 </div>
                                 
                                 <div class="border-l-2 border-purple-300 pl-3 space-y-1">
-                                    <div class="font-semibold text-purple-700 text-xs mb-1">Քայլ 2: Վարկի գումար կոմիսիայով</div>
+                                    <div class="font-semibold text-purple-700 text-xs mb-1">Քայլ 3: Նվազեցումների բաշխում վարկի գլխագումարից</div>
                                     <div class="pl-2 space-y-0.5">
-                                        <div>Հիմնական կոմիսիա = <span class="font-semibold">${baseCommissionPct}%</span></div>
-                                        <div>Արդյունավետ կոմիսիա = Հիմնական կոմիսիա × 1.2 (ներառում է 20% հարկ)</div>
-                                        <div class="pl-4">= ${baseCommissionPct}% × 1.2</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-purple-600">${effectiveCommissionPct}%</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Վարկի գումար կոմիսիայով = Վերջնական համակարգի գին ÷ (1 - Արդյունավետ կոմիսիա)</div>
-                                        <div class="pl-4">= ${formatNum(option.finalSystemPrice)} ÷ (1 - ${formatDecimal(option.commission)})</div>
-                                        <div class="pl-4">= ${formatNum(option.finalSystemPrice)} ÷ ${(1 - option.commission).toFixed(4)}</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-purple-600">${formatNum(option.loanAmountWithCommission)} AMD</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Ընդհանուր կոմիսիայի գումար = Վարկի գումար կոմիսիայով - Վերջնական համակարգի գին</div>
-                                        <div class="pl-4">= ${formatNum(option.loanAmountWithCommission)} - ${formatNum(option.finalSystemPrice)}</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-orange-600">${formatNum(totalCommissionAmount)} AMD</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Հիմնական կոմիսիայի գումար = Ընդհանուր կոմիսիայի գումար ÷ 1.2</div>
-                                        <div class="pl-4">= ${formatNum(totalCommissionAmount)} ÷ 1.2</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-blue-600">${formatNum(baseCommissionAmount)} AMD</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Կոմիսիայի հարկ (20%) = Հիմնական կոմիսիայի գումար × 0.2</div>
-                                        <div class="pl-4">= ${formatNum(baseCommissionAmount)} × 0.2</div>
-                                        <div class="pl-4 font-semibold">= <span class="text-red-600">${formatNum(commissionTax)} AMD</span></div>
-                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Ստուգում: Հիմնական կոմիսիա + Հարկ = ${formatNum(baseCommissionAmount)} + ${formatNum(commissionTax)} = <span class="font-semibold text-orange-600">${formatNum(totalCommissionAmount)} AMD</span> ✓</div>
-                                        <div class="border-t-2 border-green-500 pt-0.5 mt-0.5 font-semibold">Վերջնական վարկի գումար = <span class="text-green-600">${formatNum(option.loanAmount)} AMD</span></div>
+                                        <div>Վարկի գլխագումար = <span class="font-semibold">${formatNum(option.loanAmountWithCommission)} AMD</span></div>
+                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Բանկի կոմիսիա (${effectiveCommissionPct}%)</div>
+                                        <div class="pl-4">= ${formatNum(option.loanAmountWithCommission)} × ${formatDecimal(option.commission)}</div>
+                                        <div class="pl-4 font-semibold">= <span class="text-red-600">${formatNum(option.bankCommissionAmount || Math.ceil(option.loanAmountWithCommission * option.commission))} AMD</span></div>
+                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Վաճառքի թիմ (${salesTeamPctDisplay}%)</div>
+                                        <div class="pl-4">= ${formatNum(option.loanAmountWithCommission)} × ${formatDecimal(option.salesTeamPctDecimal)}</div>
+                                        <div class="pl-4 font-semibold">= <span class="text-orange-600">${formatNum(option.salesTeamAmount)} AMD</span></div>
+                                        <div class="border-t border-gray-300 pt-0.5 mt-0.5">Անսպասելի ծախսեր (${unexpectedPctDisplay}%)</div>
+                                        <div class="pl-4">= ${formatNum(option.loanAmountWithCommission)} × ${formatDecimal(option.unanticipatedExpensesPctDecimal)}</div>
+                                        <div class="pl-4 font-semibold">= <span class="text-orange-600">${formatNum(option.unexpectedExpensesAmount)} AMD</span></div>
+                                        <div class="border-t-2 border-green-500 pt-0.5 mt-0.5">Ընկերությունը ստանում է (նվազեցումներից հետո):</div>
+                                        <div class="pl-4">= ${formatNum(option.loanAmountWithCommission)} - ${formatNum(option.bankCommissionAmount || Math.ceil(option.loanAmountWithCommission * option.commission))} - ${formatNum(option.salesTeamAmount)} - ${formatNum(option.unexpectedExpensesAmount)}</div>
+                                        <div class="pl-4 font-semibold">= <span class="text-green-600">${formatNum(option.verifyBasePrice || option.baseSystemPrice)} AMD</span> ✓</div>
+                                        <div class="text-xs text-green-700 italic mt-1">↑ Սա համապատասխանում է մեր թիրախային բազային համակարգի գնին!</div>
                                     </div>
                                 </div>
                             </div>
                         </td>`;
                     
-                    detailRow.innerHTML = detailText;
-                    tableBody.appendChild(detailRow);
+                        detailRow.innerHTML = detailText;
+                        tableBody.appendChild(detailRow);
+                    }
+                });
+            });
+        }
+        
+        // Toggle bank group visibility
+        function toggleBankGroup(bankId) {
+            const rows = document.querySelectorAll(`.${bankId}-rows`);
+            const icon = document.getElementById(`${bankId}-icon`);
+            
+            if (!rows.length) return;
+            
+            const isHidden = rows[0].style.display === 'none';
+            
+            rows.forEach(row => {
+                if (isHidden) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                    // Also hide any open detail rows
+                    if (row.id.includes('loan-detail-')) {
+                        row.classList.add('hidden');
+                    }
                 }
             });
+            
+            // Rotate icon
+            if (icon) {
+                if (isHidden) {
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    icon.style.transform = 'rotate(-90deg)';
+                }
+            }
         }
 
         // Toggle loan details breakdown
@@ -3949,6 +4171,17 @@
                                (currentUser.user_metadata && currentUser.user_metadata.role === 'admin') ||
                                currentUser.email === 'admin@tiamat.com' ||
                                currentUser.email === 'admin@gmail.com';
+                
+                // Check if user has sales_office role
+                const isSalesOffice = (currentUser.app_metadata && currentUser.app_metadata.role === 'sales_office') ||
+                                     (currentUser.user_metadata && currentUser.user_metadata.role === 'sales_office');
+                
+                // Show sales office controls if user has sales_office or admin role
+                if (isSalesOffice || isAdmin) {
+                    showSalesOfficeControls();
+                } else {
+                    hideSalesOfficeControls();
+                }
                 
                 if (isAdmin) {
                 isAdminLoggedIn = true;
@@ -4191,7 +4424,8 @@
             const adminElements = [
                 'adminPanelMain',
                 'adminDetails',
-                'profitPerKwDisplayContainer'
+                'profitPerKwDisplayContainer',
+                'percentageEditorContainer'
             ];
             
             adminElements.forEach(id => {
@@ -4201,6 +4435,11 @@
                     element.style.visibility = 'visible';
                 }
             });
+            
+            // Update percentage editor display with current database values
+            if (typeof updatePercentageEditorDisplay === 'function') {
+                updatePercentageEditorDisplay();
+            }
             
             // Show the Calculation Breakdown section(s) - use multiple selectors for robustness
             const breakdownSelectors = [
@@ -4263,7 +4502,8 @@
             const adminElements = [
                 'adminPanelMain',
                 'adminDetails',
-                'profitPerKwDisplayContainer'
+                'profitPerKwDisplayContainer',
+                'percentageEditorContainer'
             ];
             
             adminElements.forEach(id => {
@@ -4375,6 +4615,199 @@
             
             // Ensure sensitive info is hidden by default even for admin users
             hideAllSensitiveInfo();
+            
+            // Create percentage editor (initially hidden)
+            createPercentageEditor();
+        }
+        
+        // Create percentage editor UI for admin to adjust percentages
+        function createPercentageEditor() {
+            if (!isAdminLoggedIn) return;
+            
+            // Remove existing editor if it exists
+            const existingEditor = document.getElementById('percentageEditorContainer');
+            if (existingEditor) {
+                existingEditor.remove();
+            }
+            
+            // Create editor container
+            const editorContainer = document.createElement('div');
+            editorContainer.id = 'percentageEditorContainer';
+            editorContainer.className = 'bg-white rounded-lg shadow-md border border-gray-200 p-4 mb-4';
+            editorContainer.style.display = 'none'; // Hidden by default
+            
+            // Get current database values for default display
+            const currentSalesTeamPct = dbSalesCommissions?.salesCommissions?.data?.sales_team_pct?.value || 6;
+            const currentUnanticipatedExpensesPct = dbUnanticipatedExpenses?.unanticipatedExpenses?.data?.unanticipated_expenses_pct?.value || 2;
+            
+            editorContainer.innerHTML = `
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-gray-800" data-en="Adjust Percentages" data-hy="Կարգավորել տոկոսները">Adjust Percentages</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Sales Team Percentage (%)" data-hy="Վաճառքի թիմի տոկոս (%)">Sales Team Percentage (%)</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="customSalesTeamPct" 
+                                       value="${currentSalesTeamPct}" 
+                                       step="0.1" min="0" max="100"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                                <span class="text-sm text-gray-500">%</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1" data-en="Database value: ${currentSalesTeamPct}%" data-hy="Տվյալների բազայի արժեք: ${currentSalesTeamPct}%">Database value: ${currentSalesTeamPct}%</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2" data-en="Unexpected Expenses Percentage (%)" data-hy="Անսպասելի ծախսերի տոկոս (%)">Unexpected Expenses Percentage (%)</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="customUnanticipatedExpensesPct" 
+                                       value="${currentUnanticipatedExpensesPct}" 
+                                       step="0.1" min="0" max="100"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiamat-blue">
+                                <span class="text-sm text-gray-500">%</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1" data-en="Database value: ${currentUnanticipatedExpensesPct}%" data-hy="Տվյալների բազայի արժեք: ${currentUnanticipatedExpensesPct}%">Database value: ${currentUnanticipatedExpensesPct}%</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t">
+                        <button id="resetPercentagesBtn" 
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                                data-en="Reset to Database Values" 
+                                data-hy="Վերականգնել տվյալների բազայի արժեքները">
+                            Reset to Database Values
+                        </button>
+                        <button id="applyPercentagesBtn" 
+                                class="px-4 py-2 text-sm font-medium text-white bg-tiamat-blue rounded-md hover:bg-tiamat-dark-blue transition-colors"
+                                data-en="Apply & Recalculate" 
+                                data-hy="Կիրառել և վերահաշվարկել">
+                            Apply & Recalculate
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Insert after the toggle container
+            const toggleContainer = document.getElementById('toggleSensitiveInfoContainer');
+            if (toggleContainer && toggleContainer.parentElement) {
+                toggleContainer.parentElement.insertBefore(editorContainer, toggleContainer.nextSibling);
+            } else {
+                // Fallback: add to form area
+                const formArea = document.querySelector('.lg\\:col-span-7.bg-white.rounded-lg.shadow-md.p-6');
+                if (formArea) {
+                    formArea.insertBefore(editorContainer, formArea.firstChild);
+                }
+            }
+            
+            // Add event listeners
+            const salesTeamInput = document.getElementById('customSalesTeamPct');
+            const unanticipatedExpensesInput = document.getElementById('customUnanticipatedExpensesPct');
+            const resetBtn = document.getElementById('resetPercentagesBtn');
+            const applyBtn = document.getElementById('applyPercentagesBtn');
+            
+            // Auto-apply on input change (with debounce)
+            let debounceTimer;
+            const handleInputChange = () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    applyCustomPercentages();
+                }, 500); // 500ms debounce
+            };
+            
+            if (salesTeamInput) {
+                salesTeamInput.addEventListener('input', handleInputChange);
+            }
+            if (unanticipatedExpensesInput) {
+                unanticipatedExpensesInput.addEventListener('input', handleInputChange);
+            }
+            
+            // Reset button
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    customSalesTeamPct = null;
+                    customUnanticipatedExpensesPct = null;
+                    if (salesTeamInput) {
+                        salesTeamInput.value = currentSalesTeamPct;
+                    }
+                    if (unanticipatedExpensesInput) {
+                        unanticipatedExpensesInput.value = currentUnanticipatedExpensesPct;
+                    }
+                    // Recalculate with database values
+                    if (allLoanOptions.length > 0 || document.getElementById('systemPower')?.value) {
+                        calculateLoan();
+                    }
+                });
+            }
+            
+            // Apply button (explicit)
+            if (applyBtn) {
+                applyBtn.addEventListener('click', () => {
+                    applyCustomPercentages();
+                });
+            }
+        }
+        
+        // Apply custom percentages and recalculate
+        function applyCustomPercentages() {
+            const salesTeamInput = document.getElementById('customSalesTeamPct');
+            const unanticipatedExpensesInput = document.getElementById('customUnanticipatedExpensesPct');
+            
+            if (salesTeamInput && unanticipatedExpensesInput) {
+                const salesTeamValue = parseFloat(salesTeamInput.value);
+                const unanticipatedExpensesValue = parseFloat(unanticipatedExpensesInput.value);
+                
+                if (!isNaN(salesTeamValue) && salesTeamValue >= 0 && salesTeamValue <= 100) {
+                    customSalesTeamPct = salesTeamValue;
+                } else {
+                    customSalesTeamPct = null;
+                }
+                
+                if (!isNaN(unanticipatedExpensesValue) && unanticipatedExpensesValue >= 0 && unanticipatedExpensesValue <= 100) {
+                    customUnanticipatedExpensesPct = unanticipatedExpensesValue;
+                } else {
+                    customUnanticipatedExpensesPct = null;
+                }
+                
+                // Recalculate loan options with new percentages
+                if (allLoanOptions.length > 0 || document.getElementById('systemPower')?.value) {
+                    calculateLoan();
+                }
+            }
+        }
+        
+        // Update percentage editor database value display
+        function updatePercentageEditorDisplay() {
+            const editorContainer = document.getElementById('percentageEditorContainer');
+            if (!editorContainer) return;
+            
+            const currentSalesTeamPct = dbSalesCommissions?.salesCommissions?.data?.sales_team_pct?.value || 6;
+            const currentUnanticipatedExpensesPct = dbUnanticipatedExpenses?.unanticipatedExpenses?.data?.unanticipated_expenses_pct?.value || 2;
+            
+            // Update database value display text - find the <p> element after the input's parent div
+            const salesTeamInput = editorContainer.querySelector('#customSalesTeamPct');
+            if (salesTeamInput) {
+                const salesTeamDiv = salesTeamInput.closest('.flex')?.parentElement;
+                const salesTeamDbText = salesTeamDiv?.querySelector('p.text-xs.text-gray-500');
+                if (salesTeamDbText) {
+                    const lang = typeof currentLanguage !== 'undefined' ? currentLanguage : 'en';
+                    salesTeamDbText.textContent = lang === 'hy' 
+                        ? `Տվյալների բազայի արժեք: ${currentSalesTeamPct}%`
+                        : `Database value: ${currentSalesTeamPct}%`;
+                    salesTeamDbText.setAttribute('data-en', `Database value: ${currentSalesTeamPct}%`);
+                    salesTeamDbText.setAttribute('data-hy', `Տվյալների բազայի արժեք: ${currentSalesTeamPct}%`);
+                }
+            }
+            
+            const unanticipatedExpensesInput = editorContainer.querySelector('#customUnanticipatedExpensesPct');
+            if (unanticipatedExpensesInput) {
+                const unanticipatedExpensesDiv = unanticipatedExpensesInput.closest('.flex')?.parentElement;
+                const unanticipatedExpensesDbText = unanticipatedExpensesDiv?.querySelector('p.text-xs.text-gray-500');
+                if (unanticipatedExpensesDbText) {
+                    const lang = typeof currentLanguage !== 'undefined' ? currentLanguage : 'en';
+                    unanticipatedExpensesDbText.textContent = lang === 'hy' 
+                        ? `Տվյալների բազայի արժեք: ${currentUnanticipatedExpensesPct}%`
+                        : `Database value: ${currentUnanticipatedExpensesPct}%`;
+                    unanticipatedExpensesDbText.setAttribute('data-en', `Database value: ${currentUnanticipatedExpensesPct}%`);
+                    unanticipatedExpensesDbText.setAttribute('data-hy', `Տվյալների բազայի արժեք: ${currentUnanticipatedExpensesPct}%`);
+                }
+            }
         }
 
 
@@ -4734,6 +5167,92 @@
                 }
             });
         });
+        
+        // ============================================
+        // SALES OFFICE: Sales Team Percentage Control
+        // ============================================
+        
+        function showSalesOfficeControls() {
+            const controls = document.getElementById('salesOfficeControls');
+            if (controls) {
+                controls.classList.remove('hidden');
+                console.log('✅ Sales Office controls shown');
+            }
+        }
+        
+        function hideSalesOfficeControls() {
+            const controls = document.getElementById('salesOfficeControls');
+            if (controls) {
+                controls.classList.add('hidden');
+                console.log('ℹ️ Sales Office controls hidden');
+            }
+        }
+        
+        function toggleSalesOfficePanel() {
+            const panel = document.getElementById('salesOfficePanel');
+            const toggleBtn = document.getElementById('salesOfficeToggleBtn');
+            
+            if (!panel) return;
+            
+            const isHidden = panel.classList.contains('hidden');
+            
+            if (isHidden) {
+                panel.classList.remove('hidden');
+                // Change bar appearance when open
+                if (toggleBtn) {
+                    toggleBtn.classList.remove('h-3');
+                    toggleBtn.classList.add('h-2', 'opacity-50');
+                }
+                console.log('📊 Sales Office panel opened');
+            } else {
+                panel.classList.add('hidden');
+                // Restore bar appearance when closed
+                if (toggleBtn) {
+                    toggleBtn.classList.remove('h-2', 'opacity-50');
+                    toggleBtn.classList.add('h-3');
+                }
+                console.log('📊 Sales Office panel closed');
+            }
+        }
+        
+        function updateSalesTeamPercentage() {
+            const input = document.getElementById('customSalesTeamPctInput');
+            if (!input) return;
+            
+            let value = parseFloat(input.value);
+            
+            // Validate range
+            if (isNaN(value) || value < 0) {
+                value = 0;
+                input.value = 0;
+            } else if (value > 50) {
+                value = 50;
+                input.value = 50;
+            }
+            
+            // Update global variable
+            customSalesTeamPct = value;
+            
+            // Show feedback
+            console.log(`💼 Sales Team % updated to: ${value}%`);
+            
+            // Auto-recalculate if we have valid data
+            autoRecalculate();
+        }
+        
+        function resetSalesTeamPercentage() {
+            const input = document.getElementById('customSalesTeamPctInput');
+            if (input) {
+                input.value = 8.0;
+                customSalesTeamPct = null; // Reset to use database default
+                
+                console.log('🔄 Sales Team % reset to default (8%)');
+                
+                // Recalculate with default value
+                autoRecalculate();
+            }
+        }
+        
     </script>
 
     </div> <!-- Close appContainer -->

@@ -766,18 +766,16 @@ function calculateLoan() {
     const inverterCost = selectedInverter.price;
     const panelCost = selectedPanelOption.totalPrice;
     
-    // Calculate total system price
-    const totalSystemPrice = baseInstallationCost + profitAmount + inverterCost + panelCost;
+    // Calculate total system price (base price WITHOUT sales team and unexpected expenses)
+    const baseSystemPrice = baseInstallationCost + profitAmount + inverterCost + panelCost;
     
-    // Calculate sales team and unanticipated expenses
-    const salesTeamAmount = totalSystemPrice * salesTeamPctDecimal;
-    const unexpectedExpensesAmount = totalSystemPrice * unanticipatedExpensesPctDecimal;
+    // For cash payment: Calculate sales team and unexpected expenses from base system price
+    const cashSalesTeamAmount = baseSystemPrice * salesTeamPctDecimal;
+    const cashUnexpectedExpensesAmount = baseSystemPrice * unanticipatedExpensesPctDecimal;
+    const cashFinalTotal = baseSystemPrice + cashSalesTeamAmount + cashUnexpectedExpensesAmount;
     
-    // Calculate final total
-    const finalTotal = totalSystemPrice + salesTeamAmount + unexpectedExpensesAmount;
-    
-    // Generate loan options
-    generateLoanOptions(finalTotal);
+    // Generate loan options (sales team & unexpected expenses will be calculated per loan option)
+    generateLoanOptions(baseSystemPrice, salesTeamPctDecimal, unanticipatedExpensesPctDecimal);
     
     // Display results
     displayResults({
@@ -788,10 +786,10 @@ function calculateLoan() {
         profitAmount,
         inverterCost,
         panelCost,
-        totalSystemPrice,
-        salesTeamAmount,
-        unexpectedExpensesAmount,
-        finalTotal,
+        totalSystemPrice: baseSystemPrice,
+        salesTeamAmount: cashSalesTeamAmount,
+        unexpectedExpensesAmount: cashUnexpectedExpensesAmount,
+        finalTotal: cashFinalTotal,
         installationCostPerKw,
         profitPerKw,
         salesTeamPct,
@@ -800,7 +798,7 @@ function calculateLoan() {
 }
 
 // Loan options generation
-function generateLoanOptions(loanAmount) {
+function generateLoanOptions(baseSystemPrice, salesTeamPct, unexpectedExpensesPct) {
     allLoanOptions = [];
     
     banks.forEach(bank => {
@@ -809,36 +807,53 @@ function generateLoanOptions(loanAmount) {
                 const monthlyRate = option.interestRate / 12;
                 const totalPayments = period;
                 
-                let monthlyPayment, totalInterest, totalAmount;
+                // Step 1: Calculate what financing the base system price would cost (with interest)
+                let totalWithInterest, totalInterest, monthlyPayment;
                 
-                if (option.interestRate === 0) {
+                if (option.interestRate === 0 || monthlyRate === 0) {
                     // 0% interest loan
-                    monthlyPayment = loanAmount / period;
+                    totalWithInterest = baseSystemPrice;
                     totalInterest = 0;
-                    totalAmount = loanAmount;
                 } else {
-                    // Interest-bearing loan
-                    if (monthlyRate === 0) {
-                        monthlyPayment = loanAmount / period;
-                        totalInterest = 0;
-                        totalAmount = loanAmount;
-                    } else {
-                        monthlyPayment = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, period)) / 
+                    // Calculate monthly payment for base system price
+                    const baseMonthlyPayment = (baseSystemPrice * monthlyRate * Math.pow(1 + monthlyRate, period)) / 
                                        (Math.pow(1 + monthlyRate, period) - 1);
-                        totalAmount = monthlyPayment * period;
-                        totalInterest = totalAmount - loanAmount;
-                    }
+                    totalWithInterest = baseMonthlyPayment * period;
+                    totalInterest = totalWithInterest - baseSystemPrice;
                 }
+                
+                // Step 2: Calculate sales team and unexpected expenses from the TOTAL WITH INTEREST
+                // This is the key change: percentages are based on what customer pays back (including interest)
+                const salesTeamAmount = totalWithInterest * salesTeamPct;
+                const unexpectedExpensesAmount = totalWithInterest * unexpectedExpensesPct;
+                
+                // Step 3: Add these amounts to the base price to get the principal to finance
+                const principalToFinance = baseSystemPrice + salesTeamAmount + unexpectedExpensesAmount;
+                
+                // Step 4: Calculate the actual monthly payment and total for the new principal
+                if (option.interestRate === 0 || monthlyRate === 0) {
+                    monthlyPayment = principalToFinance / period;
+                    totalInterest = 0;
+                } else {
+                    monthlyPayment = (principalToFinance * monthlyRate * Math.pow(1 + monthlyRate, period)) / 
+                                   (Math.pow(1 + monthlyRate, period) - 1);
+                }
+                
+                const totalAmount = monthlyPayment * period;
+                const finalTotalInterest = totalAmount - principalToFinance;
                 
                 allLoanOptions.push({
                     bankName: bank.name,
                     interestRate: option.interestRate,
                     commission: option.commission,
                     loanPeriod: period,
-                    loanAmount: loanAmount,
+                    loanAmount: principalToFinance,
                     monthlyPayment: monthlyPayment,
-                    totalInterest: totalInterest,
-                    totalAmount: totalAmount
+                    totalInterest: finalTotalInterest,
+                    totalAmount: totalAmount,
+                    salesTeamAmount: salesTeamAmount,
+                    unexpectedExpensesAmount: unexpectedExpensesAmount,
+                    baseSystemPrice: baseSystemPrice
                 });
             });
         });
