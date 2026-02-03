@@ -516,7 +516,7 @@
                     <thead>
                         <tr class="bg-gray-50">
                             <th class="border p-3 text-left font-medium cursor-pointer hover:bg-gray-100" onclick="sortTable('bankName')">
-                                <span data-en="Bank / Option" data-hy="Բանկ / Տարբերակ">Bank / Option</span> <span id="bankSortIcon" class="ml-1">↕</span>
+                                <span data-en="Bank Option" data-hy="Բանկի տարբերակ">Bank Option</span> <span id="bankSortIcon" class="ml-1">↕</span>
                             </th>
                             <th class="border p-3 text-center font-medium w-32 cursor-pointer hover:bg-gray-100" onclick="sortTable('loanPeriod')">
                                 <span data-en="Loan Period" data-hy="Վարկի ժամկետ">Loan Period</span> <span id="periodSortIcon" class="ml-1">↕</span>
@@ -1632,6 +1632,7 @@
                         
                         loanOptions.push({
                             bankName: bank.name,
+                            optionName: option.name || `${(option.interestRate * 100).toFixed(0)}% ${period}m`, // Store bank option name
                             interestRate: option.interestRate,
                             commission: effectiveCommission, // Store effective commission (with 20% tax)
                             baseCommission: option.commission, // Store original commission before 20% adjustment
@@ -3912,7 +3913,7 @@
                         : '';
                     
                     row.innerHTML = `
-                        <td class="border p-3 font-medium pl-8 text-gray-600">${currentLanguage === 'en' ? 'Option' : 'Տարբերակ'} ${optionIndex + 1}</td>
+                        <td class="border p-3 font-medium pl-8 text-gray-700">${option.optionName}</td>
                         <td class="border p-3 text-center w-32">${option.loanPeriod} ${monthsText}</td>
                         <td class="border p-3 text-center w-24">${(option.interestRate * 100).toFixed(1)}%</td>
                         ${commissionCell}
